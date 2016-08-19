@@ -1,0 +1,4 @@
+# DS9 region file for PSF fitting to MUSE field UDF07.
+fk5
+# Exclude a problematic point source from the PSF fit.
+-circle(53.1322655, -27.7828554, 2.5")
