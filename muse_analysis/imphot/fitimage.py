@@ -12,7 +12,7 @@ from mpdaf.obj import Image
 
 from . import ds9regions
 from .core import (UserError, FittedValue, FittedPhotometry, HstFilterInfo,
-                   image_grids_aligned)
+                   image_grids_aligned, _default_hst_fwhm, _default_hst_beta)
 from .mp import _FitPhotometryMP
 
 __all__ = ['fit_image_photometry', 'FittedImagePhotometry',
@@ -25,9 +25,11 @@ _bevel_width = 9   # Integer pixels
 
 def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
                          fix_bg=None, fix_dx=None, fix_dy=None,
-                         fix_fwhm=None, fix_beta=None, margin=2.0,
-                         segment=False, display=False, nowait=False,
-                         hardcopy=None, title=None,
+                         fix_fwhm=None, fix_beta=None,
+                         hst_fwhm=_default_hst_fwhm,
+                         hst_beta=_default_hst_beta,
+                         margin=2.0, segment=False, display=False,
+                         nowait=False, hardcopy=None, title=None,
                          star=None, save=False, fig=None):
 
     """Given a MUSE image and an HST image that has been regridded and aligned
@@ -95,6 +97,18 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
     fix_beta : float or None
        The beta exponent of the Moffat PSF is fixed to the specified value
        while fitting, unless the value is None.
+    hst_fwhm : float
+       The FWHM of a Moffat model of the effective PSF of the HST.
+       The default value that is used if this parameter is not
+       specified, came from Moffat fits to stars within HST UDF
+       images. To obtain the closest estimate to the dithered
+       instrumental PSF, these fits were made to images with the
+       smallest available pixel size (30mas).
+    hst_beta : float
+       The beta parameter of a Moffat model of the effective PSF of
+       the HST.  The default value came from Moffat fits to stars
+       within HST UDF images, as described above for the hst_fwhm
+       parameter.
     margin : float
        The width (arcsec) of a margin of zeros to add around the image
        before processing. A margin is needed because most of the
@@ -368,9 +382,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
     # Convolve the muse function with the PSF of the original HST
     # image.
 
-    hst_moffat_fwhm, hst_moffat_beta = _hst_psf_fwhm_beta(hst)
-    _convolve_hst_psf(mfft, shape, dy, dx, hst_moffat_fwhm,
-                     hst_moffat_beta)
+    _convolve_hst_psf(mfft, shape, dy, dx, hst_fwhm, hst_beta)
 
     # Compute the spatial frequencies along the X and Y axes
     # of the above power spectra.
@@ -667,38 +679,6 @@ def _xy_moffat_model_fn(fx, fy, rsq, hstfft, wfft, dx, dy,
     # imaginary floats.
 
     return model.view(dtype=float)
-
-
-def _hst_psf_fwhm_beta(hst):
-    """For the HST imaging filter listed in the header of an HST image,
-    return the FWHM and Beta values of a Moffat model of the HST PSF
-    in the corresponding 30mas resolution HST UDF image. These values
-    were obtained by fitting Moffat functions to 5 unsaturated stars
-    in the HST UDF image of the filter. Note that the 5 brightest stars
-    in the HST UDF field are all saturated in the HST images, so these
-    were not used.
-
-    Parameters
-    ----------
-    hst : `mpdaf.obj.Image`
-       An HST image taken using the same filter.
-
-    Returns
-    -------
-    out : float
-       The circularly symmetric FWHM (arcseconds)
-    """
-
-    # Look up information about the filter cited in the header of the
-    # HST image.
-
-    filter_info = HstFilterInfo(hst)
-
-    # Return the Moffat PSF FWHM and beta values associated with the
-    # filter.
-
-    return filter_info.psf_fwhm, filter_info.psf_beta
-
 
 def _plot_2d_array(data, axes, vmin=None, vmax=None, pixw=None, pixh=None,
                    cmap=None, xlabel=None, ylabel=None, title=None,

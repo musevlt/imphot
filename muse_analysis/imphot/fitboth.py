@@ -1,7 +1,8 @@
 from .mp import _FitPhotometryMP
 from .fitimage import fit_image_photometry
 from .fitstar import fit_star_photometry
-from .core import (extract_function_args, UserError)
+from .core import (extract_function_args, UserError, _default_hst_fwhm,
+                   _default_hst_beta)
 from mpdaf.obj import Image
 
 __all__ = ['fit_image_and_star_photometry', 'FitImageAndStarPhotometryMP']
@@ -9,6 +10,8 @@ __all__ = ['fit_image_and_star_photometry', 'FitImageAndStarPhotometryMP']
 def fit_image_and_star_photometry(hst, muse, star, regions="star",
                                   fix_scale=None, fix_bg=None, fix_dx=None,
                                   fix_dy=None, fix_fwhm=None, fix_beta=None,
+                                  hst_fwhm=_default_hst_fwhm,
+                                  hst_beta=_default_hst_beta,
                                   margin=2.0, segment=False, display=False,
                                   nowait=False, hardcopy=None, title=None,
                                   save=False, fig=None):
@@ -97,6 +100,18 @@ def fit_image_and_star_photometry(hst, muse, star, regions="star",
        while fitting, unless the value is None.
        This parameter affects both the image fit and the beta parameter of
        the star profile that is fit to the MUSE image.
+    hst_fwhm : float
+       The FWHM of a Moffat model of the effective PSF of the HST.
+       The default value that is used if this parameter is not
+       specified, came from Moffat fits to stars within HST UDF
+       images. To obtain the closest estimate to the dithered
+       instrumental PSF, these fits were made to images with the
+       smallest available pixel size (30mas).
+    hst_beta : float
+       The beta parameter of a Moffat model of the effective PSF of
+       the HST.  The default value that is used if this parameter is
+       not specified, came from Moffat fits to stars within HST UDF
+       images, as described above for the hst_fwhm parameter.
     margin : float
        The width (arcsec) of a margin of zeros to add around the image
        before processing. A margin is needed because most of the
@@ -171,6 +186,7 @@ def fit_image_and_star_photometry(hst, muse, star, regions="star",
                                          fix_scale=fix_scale, fix_bg=fix_bg,
                                          fix_dx=fix_dx, fix_dy=fix_dy,
                                          fix_fwhm=fix_fwhm, fix_beta=fix_beta,
+                                         hst_fwhm=hst_fwhm, hst_beta=hst_beta,
                                          margin=margin, segment=segment,
                                          display=display,
                                          nowait=nowait,

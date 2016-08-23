@@ -12,6 +12,11 @@ __all__ = ['FittedValue', 'UserError', 'WorkerError',
            'FittedPhotometry', 'HstFilterInfo', 'rescale_hst_like_muse',
            'regrid_hst_like_muse', 'image_grids_aligned']
 
+# Set default parameters for the HST Moffat PSF.
+
+_default_hst_fwhm = 0.085
+_default_hst_beta = 1.6
+
 # Define a class that will hold the fitted value of a single parameter.
 
 class FittedValue(object):
@@ -297,6 +302,8 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           fitting. The default value is "none", which means
                           that the parameter will be fitted.'''))
 
+        if ((FIT_IMAGE | FIT_STAR) & functions):
+
             self.add_argument('--fix_fwhm',  default=None,
                           metavar="arcsec",
                           type=_string_to_float_or_none,
@@ -316,6 +323,36 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           Moffat PSF to the specified value while fitting.
                           The default value is 2.5. Change this to "none"
                           if you wish this parameter to be fitted.'''))
+
+        if FIT_IMAGE & functions:
+
+            self.add_argument('--hst_fwhm', default=_default_hst_fwhm,
+                          type=float, metavar="arcsec",
+                          help=dedent('''\
+                          DEFAULT=%(default)s (arcseconds)
+                          The FWHM of a Moffat model of the effective PSF of
+                          the HST. The default value that is used if this
+                          parameter is not specified, came from Moffat fits to
+                          stars within HST UDF images. To obtain the closest
+                          estimate to the dithered instrumental PSF, these fits
+                          were made to images with the smallest available pixel
+                          size (30mas).'''))
+
+            self.add_argument('--hst_beta', default=_default_hst_beta,
+                          type=float, metavar="value",
+                          help=dedent('''\
+                          DEFAULT=%(default)s
+                          The beta parameter of a Moffat model of the effective
+                          PSF of the HST.  The default value that is used if
+                          this parameter is not specified, came from Moffat
+                          fits to stars within HST UDF images, as described
+                          above for the hst_fwhm parameter. This term is
+                          covariant with other terms in the star fits, so there
+                          was significant scatter in the fitted values. From
+                          this range, a value was selected that yielded the
+                          least scatter in the fitted MUSE PSFs in many MUSE
+                          images from different MUSE fields and at different
+                          wavelengths.'''))
 
             self.add_argument('--margin',  default=2.0, type=float,
                           metavar="arcsec",
@@ -548,12 +585,6 @@ class HstFilterInfo(object):
     photbw : float
        The effective bandwidth of the filter (Angstrom)
        (from ``http://www.stsci.edu/hst/acs/analysis/bandwidths``)
-    psf_fwhm : float
-      The full-width at half maximum of a Moffat profile fitted to
-      a star in the HST XDF (arcsec)
-    psf_beta : float
-      The beta value of a Moffat profile fitted to a star in the
-      HST XDF.
 
     """
 
@@ -563,17 +594,13 @@ class HstFilterInfo(object):
 
     _filters = {
         "F606W" :  {"abmag_zero" : 26.51,    "photplam"  : 5921.1,
-                    "photflam"   : 7.73e-20, "photbw"    : 672.3,
-                    "psf_fwhm"   : 0.085,    "psf_beta"  : 1.6},
+                    "photflam"   : 7.73e-20, "photbw"    : 672.3},
         "F775W" :  {"abmag_zero" : 25.69,    "photplam"  : 7692.4,
-                    "photflam"   : 9.74e-20, "photbw"    : 434.4,
-                    "psf_fwhm"   : 0.085,    "psf_beta"  : 1.6},
+                    "photflam"   : 9.74e-20, "photbw"    : 434.4},
         "F814W" :  {"abmag_zero" : 25.94,    "photplam"  : 8057.0,
-                    "photflam"   : 7.05e-20, "photbw"    : 652.0,
-                    "psf_fwhm"   : 0.085,    "psf_beta"  : 1.6},
+                    "photflam"   : 7.05e-20, "photbw"    : 652.0},
         "F850LP" : {"abmag_zero" : 24.87,    "photplam"  : 9033.1,
-                    "photflam"   : 1.50e-19, "photbw"    : 525.7,
-                    "psf_fwhm"   : 0.085,    "psf_beta"  : 1.6}
+                    "photflam"   : 1.50e-19, "photbw"    : 525.7}
     }
 
     def __init__(self, hst):
@@ -600,8 +627,6 @@ class HstFilterInfo(object):
         self.photflam = info['photflam']
         self.photplam = info['photplam']
         self.photbw = info['photbw']
-        self.psf_fwhm = info['psf_fwhm']
-        self.psf_beta = info['psf_beta']
 
         for attr in info:
             setattr(self, attr, info[attr])

@@ -12,7 +12,8 @@ more provided python functions. The command-line options of the
   usage: fit_photometry [-h] [--regions file-star-notstar-or-none]
                         [--star ra dec radius] [--segment] [--fix_scale factor]
                         [--fix_bg offset] [--fix_dx arcsec] [--fix_dy arcsec]
-                        [--fix_fwhm arcsec] [--fix_beta value] [--margin arcsec]
+                        [--fix_fwhm arcsec] [--fix_beta value]
+                        [--hst_fwhm arcsec] [--hst_beta value] [--margin arcsec]
                         [--save] [--display] [--nowait]
                         [--hardcopy format-or-none] [--title text] [--verbose]
                         hst_image muse_images [muse_images ...]
@@ -126,6 +127,20 @@ more provided python functions. The command-line options of the
                           Moffat PSF to the specified value while fitting.
                           The default value is 2.5. Change this to "none"
                           if you wish this parameter to be fitted.
+    --hst_fwhm arcsec     DEFAULT=0.085 (arcseconds)
+                          The FWHM of a Moffat model of the effective PSF of
+                          the HST. The default value that is used if this
+                          parameter is not specified, came from Moffat fits to
+                          stars within HST UDF images. To obtain the closest
+                          estimate to the dithered instrumental PSF, these fits
+                          were made to images with the smallest available pixel
+                          size (30mas).
+    --hst_beta value      DEFAULT=1.6
+                          The beta parameter of a Moffat model of the effective
+                          PSF of the HST.  The default value that is used if
+                          this parameter is not specified, came from Moffat
+                          fits to stars within HST UDF images, as described
+                          above for the hst_fwhm parameter.
     --margin arcsec       DEFAULT=2.0 (arcseconds)
                           The width of a margin of zeros to add around the
                           image before processing. A margin is needed because
