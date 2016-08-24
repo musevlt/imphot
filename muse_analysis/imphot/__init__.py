@@ -83,7 +83,7 @@ just invoke the main function within the imphot module::
 
 from __future__ import division, absolute_import, print_function
 
-__all__ = ['core', 'fitimage', 'fitstar', 'fitboth', 'programs', 'ds9regions']
+__all__ = ['ds9regions']
 
 # Make all public functions and their documentation visible at the
 # package level. In the following, for each file add its public

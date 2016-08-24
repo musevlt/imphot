@@ -4,15 +4,15 @@ Imphot source-code documentation
 ================================
 
 The following documentation comes from the doc-strings of the
-`imphot` module and its public functions and classes.
+`muse_analysis.imphot` module and its public functions and classes.
 
-.. automodule:: imphot
+.. automodule:: muse_analysis.imphot
    :members:
    :inherited-members:
 
 imphot.ds9regions source-code documentation
 -------------------------------------------
 
-.. automodule:: imphot.ds9regions
+.. automodule:: muse_analysis.imphot.ds9regions
    :members:
    :inherited-members:
