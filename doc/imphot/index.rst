@@ -13,22 +13,22 @@ photometric parameters of a MUSE image are estimated by comparing it
 to an HST image of the same region of sky. Two algorithms are
 provided:
 
-1. An overall image fitting algorithm uses the HST image as an
-   estimate of the flux distribution on the sky. It uses the HST image
-   to reproduce the MUSE image by convolving the HST image with a PSF
-   that best reproduces the resolution of the MUSE image, scales and
-   offsets the HST image with numbers that best reproduce the fluxes
-   of the MUSE image, and shifts the HST image by an amount that best
-   lines up features in the two images. The PSF parameters,
-   calibration factors and pointing offsets that best reproduce the
-   MUSE image, are the outputs of this algorithm.
+1. An overall image fitting algorithm is provided that uses the HST
+   image as an estimate of the flux distribution on the sky. It uses
+   the HST image to reproduce the MUSE image by convolving the HST
+   image with a PSF that best reproduces the resolution of the MUSE
+   image, scales and offsets the HST image with numbers that best
+   reproduce the fluxes of the MUSE image, and shifts the HST image by
+   an amount that best lines up features in the two images. The PSF
+   parameters, calibration factors and pointing offsets that best
+   reproduce the MUSE image, are the outputs of this algorithm.
 
 2. A star fitting algorithm is also provided. This fits a Moffat PSF
    profile to a given star in both the MUSE image and the HST
-   image. The FWHM and beta parameter fitted to the star in the MUSE
-   observation, are reported as the fitted PSF parameters of the
-   image, whereas the calibration errors and pointing errors of the
-   MUSE image are determined by comparing the total fluxes, flux
+   image. The FWHM and beta parameters that are fitted to the star in
+   the MUSE observation, are reported as the fitted PSF parameters of
+   the image, whereas the calibration errors and pointing errors of
+   the MUSE image are determined by comparing the total fluxes, flux
    offsets and positions of the star fits in the two images.
 
 The imphot module provides scripts that perform these algorithms,
@@ -37,8 +37,8 @@ and objects that can be used to perform these fits as part of external
 scripts. In both cases, multi-process iterators are available for
 efficiently fitting multiple MUSE exposures of a single field in
 parallel. The fitting procedures also provide the option of plotting
-each fit as it completes and of generating verbose or summarized
-textual reports on the fitted parameters.
+the results of each fit, as it completes, and of generating either
+verbose or summarized textual reports about the fitted parameters.
 
 General Usage Instructions
 ==========================
@@ -48,13 +48,15 @@ one or more exposures of a single field.
 
 - Preparatory steps:
 
-  1. Obtain HST images taken with one or more of the F606W, F775W,
-     F814W and F850LP WFC imaging filters.
-  2. Obtain the cubes of one or more MUSE observations of the target
-     field.
-  3. Extract images from the MUSE cube that have the same spectral
-     characteristics as each of the HST images, as described in
-     section:
+  1. For each of the following HST WFC imaging filters, F606W, F775W,
+     F814W and F850LP, obtain an HST image of the target field.
+
+  2. Obtain one or more MUSE exposures of the target field. These
+     should be MUSE cubes.
+
+  3. For each of the HST images, use the filter curve of that image to
+     extract a MUSE image with an equivalent spectral response from
+     each MUSE cube, as described in section:
 
      :ref:`make_wideband_image`
 
@@ -63,22 +65,32 @@ one or more exposures of a single field.
 
      :ref:`regrid_hst_to_muse`.
 
+  5. Identify any bright stars and QSOs in the target field and use
+     ds9 to create a region file that excludes all of them. If you are
+     interested in an individual star or QSO in the field, also create
+     a separate region-file for it that selects a circular area around
+     it of about 3 arcsec radius.
+
 - Fitting steps:
 
   1. Run the image and/or star fitting procedures on each of the
-     extracted MUSE images of the field.
+     extracted MUSE images of the field. If the region contains any
+     stars, it is usually best to exclude them, as described in the
+     :ref:`pitfalls<pitfalls>` section.
 
-  2. Repeat the fitting procedure as many times as desired, possibly
-     selecting different stars to fit, or changing which photometric
-     parameters are held fixed at specified values, or restricting the
-     fit to operate on different parts of the field, to check that the
-     results are consistent from one part of the field to another.
+  2. Repeat the fitting procedure as many times as desired, such as
+     experimenting with star fits, or changing which photometric
+     parameters are to be held fixed at specified values, or
+     restricting the fit to operate on different parts of the field,
+     to check that the results are consistent from one part of the
+     field to another.
 
-Tutorial
-========
-A tutorial on photometric fitting can be found in section:
+Tutorials
+=========
 
- :ref:`tutorial`
+* :ref:`tutorial`
+
+* :ref:`pitfalls`
 
 Resources
 =========
@@ -211,6 +223,6 @@ Page index
    make_wideband_image.rst
    fit_photometry.rst
    tutorial.rst
+   pitfalls.rst
    docstrings.rst
    whitepapers.rst
-
