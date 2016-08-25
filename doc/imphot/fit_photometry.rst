@@ -339,11 +339,11 @@ Region files for the MUSE UDF fields
 The following region files are provided for use with the MUSE
 UDF fields.
 
-.. _UDF01.reg: _static/UDF01.reg
-.. _UDF04.reg: _static/UDF04.reg
-.. _UDF05.reg: _static/UDF05.reg
-.. _UDF06.reg: _static/UDF06.reg
-.. _UDF07.reg: _static/UDF07.reg
+.. _UDF01.reg: ../_static/imphot/UDF01.reg
+.. _UDF04.reg: ../_static/imphot/UDF04.reg
+.. _UDF05.reg: ../_static/imphot/UDF05.reg
+.. _UDF06.reg: ../_static/imphot/UDF06.reg
+.. _UDF07.reg: ../_static/imphot/UDF07.reg
 
    +-----------+-----------------------------------+-------------+
    |UDF field  |  Purpose                          | Region file |
@@ -451,7 +451,7 @@ the FWHM, :math:`w`, as:
 The following figure shows a comparison of a Moffat profile of
 :math:`\beta=2.5` to a Gaussian profile of the same FWHM:
 
-.. image:: _static/moffat_vs_gaussian.png
+.. image:: ../_static/imphot/moffat_vs_gaussian.png
 
 In general, near the peak of the PSF, Moffat profiles are similar to
 Gaussian profiles. However they have wider wings, as can be seen in
