@@ -557,8 +557,9 @@ class HstFilterInfo(object):
 
     Parameters
     ----------
-    hst : `mpdaf.obj.Image`
-       The HST image to be characterized.
+    hst : `mpdaf.obj.Image` or str
+       The HST image to be characterized, or the name of an HST filter,
+       such as "F606W.
 
     Attributes
     ----------
@@ -605,10 +606,14 @@ class HstFilterInfo(object):
 
     def __init__(self, hst):
 
-        # Get the name of the HST filter from the FITS header of the
-        # HST image, and convert the name to upper case.
+        # If an image has been given, get the name of the HST filter
+        # from the FITS header of the HST image, and convert the name
+        # to upper case. Otherwise get it from the specified filter
+        # name.
 
-        if "FILTER" in hst.primary_header:
+        if isinstance(hst, str):
+            self.filter_name = hst.upper()
+        elif "FILTER" in hst.primary_header:
             self.filter_name = hst.primary_header['FILTER'].upper()
         else:
             raise UserError("Missing FILTER keyword in HST image header")
@@ -627,9 +632,6 @@ class HstFilterInfo(object):
         self.photflam = info['photflam']
         self.photplam = info['photplam']
         self.photbw = info['photbw']
-
-        for attr in info:
-            setattr(self, attr, info[attr])
 
 def rescale_hst_like_muse(hst, muse, inplace=True):
     """Rescale an HST image to have the same flux units as a given MUSE image.
