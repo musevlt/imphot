@@ -19,7 +19,7 @@ generally leads to other sources in the field not being well aligned.
 If many observations of a field are taken over a long period, their
 relative positions must be aligned before the images can be summed to
 generate a higher SNR image. The alignment procedure is generally
-automated, using either auto-correlation, or an image fitting
+automated, using either cross-correlation, or an image fitting
 procedure like the one implemented by the `imphot` module. It is
 critically important that any stars in the images be masked out before
 this procedure is performed. Stars are usually the brightest and
