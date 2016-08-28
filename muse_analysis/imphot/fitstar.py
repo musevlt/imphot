@@ -1,4 +1,5 @@
 from os.path import basename
+import re
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -154,7 +155,8 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
     # x and y, and the initial guess at the moffat flux to the sum of
     # the pixel values.
 
-    fitmod = Model(_circular_moffat_profile, independent_vars=["x", "y"])
+    fitmod = Model(_circular_moffat_profile,
+                   independent_vars=["x", "y", "pixel_area"])
     if fix_fwhm is None:
         fitmod.set_param_hint('fwhm', value=0.5, min=0.0)
     else:
@@ -166,13 +168,14 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
         fitmod.set_param_hint('beta', value=fix_beta, vary=False)
     fitmod.set_param_hint('dx', value=np.average(x, weights=muse_values))
     fitmod.set_param_hint('dy', value=np.average(y, weights=muse_values))
-    fitmod.set_param_hint('flux', value=muse_values.sum()*pixel_area, min=0.0)
+    fitmod.set_param_hint('flux', value=muse_values.sum(), min=0.0)
     fitmod.set_param_hint('bg', value=0.0)
     fitmod.make_params()
 
     # Fit the model to the MUSE data.
 
-    muse_results = fitmod.fit(muse_values, x=x, y=y, weights=10.0)
+    muse_results = fitmod.fit(muse_values, x=x, y=y, pixel_area=pixel_area,
+                              weights=10.0)
 
     # Get the values of the HST pixels at each element of x and y.
 
@@ -183,18 +186,20 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
     # to the flux-weighted means of x and y, and the initial guess at
     # the moffat flux to the sum of the pixel values.
 
-    fitmod = Model(_circular_moffat_profile, independent_vars=["x", "y"])
+    fitmod = Model(_circular_moffat_profile,
+                   independent_vars=["x", "y", "pixel_area"])
     fitmod.set_param_hint('fwhm', value=0.5, min=0.0)
     fitmod.set_param_hint('beta', value=10.0, min=0.0)
     fitmod.set_param_hint('dx', value=np.average(x, weights=hst_values))
     fitmod.set_param_hint('dy', value=np.average(y, weights=hst_values))
-    fitmod.set_param_hint('flux', value=hst_values.sum()*pixel_area, min=0.0)
+    fitmod.set_param_hint('flux', value=hst_values.sum(), min=0.0)
     fitmod.set_param_hint('bg', value=0.0)
     fitmod.make_params()
 
     # Fit the model to the HST data.
 
-    hst_results = fitmod.fit(hst_values, x=x, y=y, weights=10.0)
+    hst_results = fitmod.fit(hst_values, x=x, y=y, pixel_area=pixel_area,
+                             weights=10.0)
 
     # If a hardcopy format has been specified, construct the filename
     # for the saved plot.
@@ -288,8 +293,8 @@ class FittedStarPhotometry(FittedPhotometry):
        The fitted flux zero-offset under the fitted Moffat PSF in
        the MUSE image of the star.
     muse_flux : `FittedValue`
-       The fitted total flux of the Moffat PSF fitted to the star
-       in the MUSE image.
+       The fitted total flux of the Moffat PSF that was fitted to the star
+       in the MUSE image, using the flux units of the MUSE image.
     muse.rchi : float
        The reduced chi-squared of the fit of the Moffat PSF to the
        star in the MUSE image.
@@ -311,7 +316,7 @@ class FittedStarPhotometry(FittedPhotometry):
        the HST image of the star.
     hst_flux : `FittedValue`
        The fitted total flux of the Moffat PSF fitted to the star
-       in the HST image.
+       in the HST image, using the flux units of the MUSE image.
     hst_rchi : float
        The reduced chi-squared of the fit of the Moffat PSF to the
        star in the HST image.
@@ -467,6 +472,11 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
 
     gs = gridspec.GridSpec(2,2)
 
+    # Calculate the area of a pixel.
+
+    dy, dx = muse.wcs.get_step(unit=u.arcsec)
+    pixel_area = dx * dy
+
     # Decide the maximum radius to plot.
 
     xmax = 1.01 * radius
@@ -489,7 +499,7 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
         # Calculated the fitted star model at x,y.
 
         model = _circular_moffat_profile(
-            x, y,
+            x, y, pixel_area,
             results.best_values['dx'],   results.best_values['dy'],
             results.best_values['bg'],   results.best_values['flux'],
             results.best_values['fwhm'], results.best_values['beta'])
@@ -502,7 +512,7 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
         # Also calculate the model at the finely sampled radii.
 
         moffat_values = _circular_moffat_profile(
-            moffat_r, 0.0, 0.0, 0.0,
+            moffat_r, 0.0, pixel_area, 0.0, 0.0,
             results.best_values['bg'],   results.best_values['flux'],
             results.best_values['fwhm'], results.best_values['beta'])
 
@@ -511,6 +521,42 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
         ymin = min(0.0, values.min())
         ymax = max(values.max(), moffat_values[0])
 
+        # Render the flux units of the pixels as a latex string,
+        # excluding any scale factor.
+
+        units_label = u.Unit(muse.unit/muse.unit.scale).to_string("latex_inline")
+
+        # Matplotlib doesn't yet support \mathring, so replace
+        # the anstrom symbol, \mathring{A}, by the smaller
+        # unicode angstrom character.
+
+        units_label = units_label.replace(r'\mathring{A}', u"\u00c5")
+
+        # Also remove the excessive '\,' spaces that astropy.units
+        # adds after exponents.
+
+        units_label = re.sub(r'(\^\{-?[0-9]+\})\\,', r'\1', units_label)
+
+        # To ensure that the Y-axis flux and residual flux labels
+        # don't end up dominated by lots of zeros before the decimal
+        # point, calculate the power-of-10 scale factor needed to
+        # scale the maximum flux value to have 2 digits before the
+        # decimal point.
+
+        y_multiplier = 10.0**(-np.floor(np.log10(abs(ymax))) + 1)
+
+        # Compose a units label for labelling the Y-axis.
+
+        y_units_label = "%s%s" % (u.Unit(muse.unit.scale / y_multiplier).to_string("latex_inline"), units_label)
+
+        # Rescale the y-axis values and the y-axis range.
+
+        ymin *= y_multiplier
+        ymax *= y_multiplier
+        values *= y_multiplier
+        moffat_values *= y_multiplier
+        model *= y_multiplier
+
         # Plot the actual PSF and the model Moffat function.
 
         ax = fig.add_subplot(gs[0,col])
@@ -518,13 +564,21 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
         if col==0:
-            ax.set_ylabel("Flux")
+            ax.set_ylabel(y_units_label)
         traces = []; labels = []
-        traces.append(ax.plot(r, values, ls="",marker=".")[0])
-        labels.append("Actual %s fluxes" % name)
-        traces.append(ax.plot(moffat_r, moffat_values)[0])
-        labels.append("Moffat\nfwhm=%.2g\nbeta=%.2g" % (results.best_values['fwhm'], results.best_values['beta']))
-        ax.legend(traces, labels, loc='upper right', fontsize=10)
+        ax.plot(r, values, ls="",marker=".")
+        ax.plot(moffat_r, moffat_values)
+
+        # Label the contents of the graph.
+
+        ax.text(0.2, 0.95, (("%s pixels plotted over a\n" % name) +
+                            "Moffat model of total flux:"),
+                transform=ax.transAxes, ha="left", va="top")
+        ax.text(0.28, 0.82,
+                u"%.3g %s\nfwhm: %.2g arcsec\nMoffat beta: %.2g" % (
+                    results.best_values['flux']*muse.unit.scale, units_label,
+                    results.best_values['fwhm'], results.best_values['beta']),
+                transform=ax.transAxes, ha="left", va="top")
 
         # Plot the residuals between the actual PSF and the Moffat PSF.
 
@@ -532,18 +586,16 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
         ax.set_autoscale_on(False)
         ax.set_xlim(xmin, xmax)
         if col==0:
-            ax.set_ylabel("Residual flux")
+            ax.set_ylabel(y_units_label)
         ax.set_xlabel("Radius (arcsec)")
-        residuals = values - model
+        residuals = (values - model)
         res_min = residuals.min()
         res_max = residuals.max()
         res_margin = (res_max - res_min)*0.5
         ax.set_ylim(res_min - res_margin, res_max + res_margin)
-        traces = []; labels = []
-        traces.append(ax.plot(r, residuals,
-                              ls="", marker=".")[0])
-        labels.append("%s residual\n(Actual - Moffat)" % name)
-        ax.legend(traces, labels, loc='upper right', fontsize=10)
+        ax.plot(r, residuals, ls="", marker=".")
+        ax.text(0.5, 0.95, "%s residuals (pixels - model)" % name,
+                transform=ax.transAxes, ha="center", va="top")
 
     # Display the plot?
 
@@ -560,24 +612,29 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
         fig.savefig(plotfile, orientation="landscape", dpi=600)
 
 
-def _circular_moffat_profile(x, y, dx, dy, bg, flux, fwhm, beta):
+def _circular_moffat_profile(x, y, pixel_area, dx, dy, bg, flux, fwhm, beta):
 
-    """Return the value of a circularly symmetric Moffat profile at a
-    specified value of the radius-squared from the center of the
-    profile.
+    """Return the flux/pixel of a circularly symmetric Moffat profile at a
+    specified x, y position.
 
     Parameters
     ----------
     x    :  float
-       The X-axis distance from the center of the Moffat
-       profile (arcsec).
+       The X-axis position at which to evaluate the moffat
+       function (arcsec).
     y    :  float
-       The Y-axis distance from the center of the Moffat
-       profile (arcsec).
+       The Y-axis position at which to evaluate the moffat
+       function (arcsec).
+    pixel_area : float
+       The area of the pixel being sampled (arcsec**2).
+       The returned flux density will be the brightness at
+       x,y scaled by this area.
     dx     :  float
-       The X-axis offset of the center of the Moffat function.
+       The X-axis offset of the center of the Moffat function
+       from the origin of X.
     dy     :  float
-       The Y-axis offset of the center of the Moffat function.
+       The Y-axis offset of the center of the Moffat function
+       from the origin of Y.
     bg     :  float
        The flux offset to which the Moffat function is to be added.
     flux   :  float
@@ -595,7 +652,7 @@ def _circular_moffat_profile(x, y, dx, dy, bg, flux, fwhm, beta):
     Returns
     -------
     out : numpy.ndarray
-       The value of the Moffat profile at each radius-squared in rsq.
+       The value of the Moffat profile at x,y, in units of flux/pixel.
 
     """
 
@@ -611,9 +668,11 @@ def _circular_moffat_profile(x, y, dx, dy, bg, flux, fwhm, beta):
 
     peak = flux * (beta - 1.0) / (np.pi * asq)
 
-    # Compute the Moffat function at each pixel of the image.
+    # Compute the brightness of the Moffat function at x,y,
+    # scaled by the specified pixel area, to convert the brightness
+    # to a flux density per pixel.
 
-    return bg + peak / (1.0 + ((x-dx)**2+(y-dy)**2) / asq)**beta
+    return bg + pixel_area * peak / (1.0 + ((x-dx)**2+(y-dy)**2) / asq)**beta
 
 class FitStarPhotometryMP(_FitPhotometryMP):
     """A multiprocessing iterator that creates a pool or worker
