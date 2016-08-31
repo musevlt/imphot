@@ -1,0 +1,3 @@
+# DS9 region file that selects a bright QSO in MUSE field UDF01.
+fk5
+circle(53.162822, -27.767150, 3.0")

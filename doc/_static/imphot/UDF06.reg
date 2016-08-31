@@ -1,7 +1,0 @@
-# DS9 region file for PSF fitting to MUSE field UDF06.
-fk5
-
-# Fit to the bright star within the following region.
-# Beware that the following star has significant proper motion,
-# and it clearly moved between the HST and MUSE observations.
-circle(53.176719, -27.799669, 4.0")

@@ -1,0 +1,3 @@
+# DS9 region file that selects a bright star in MUSE field UDF05.
+fk5
+circle(53.158344, -27.794921, 2.5")

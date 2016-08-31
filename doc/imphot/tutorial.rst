@@ -240,22 +240,30 @@ that contain lots of sources after the problematic ones have been
 removed. The way to do this is to use the :ref:`--regions<regions>`
 option with a ds9 region file that defines a small region to be
 excluded around the star. We will use the region file,
-:download:`UDF04.reg<../_static/imphot/UDF04.reg>`, which contains the following
-lines::
+:download:`exclude_udf_stars.reg<../_static/imphot/exclude_udf_stars.reg>`,
+which includes the following lines, among others::
 
-  # DS9 region file for PSF fitting to MUSE field UDF04.
   fk5
-  # Exclude a problematic point source from the PSF fit.
   -circle(53.148540, -27.770139, 2.0")
 
-The minus sign that precedes the circular region definition, indicates
-that this region is to be excluded from the fit. The region file was
-created by running ds9 on the MUSE image and using the mouse to define
-a 2.0 arcsecond circular region, centered on the star. The region file
-is passed to the :ref:`fit_photometry<fit_photometry>` script as
-follows::
+The minus sign that precedes the *circle* line, indicates that the
+region is to be excluded from the fit. The first two numbers within
+the brackets are the fk5 Right Ascension and Declination of the center
+of the circle in degrees, and the final number is the radius of the
+circular region. In this case the radius is followed by ``"`` to
+indicate that it is given in arcseconds. Without this, the radius
+would be assumed to be in degrees.
 
-  % fit_photometry hst_F775W_for_UDF04.fits wfc_F775W_udf04_image.fits --regions UDF04.reg --display
+The
+:download:`exclude_udf_stars.reg<../_static/imphot/exclude_udf_stars.reg>`
+region file also contains similar exclusion lines for stars that are
+to be excluded in other UDF fields.  The file was created by running
+ds9 on the MUSE image and using the mouse to define circular regions,
+centered on each star. The region file is passed to the
+:ref:`fit_photometry<fit_photometry>` script, via the
+:ref:`--regions<regions>` parameter, as follows::
+
+  % fit_photometry hst_F775W_for_UDF04.fits wfc_F775W_udf04_image.fits --regions exclude_udf_stars.reg --display
   # MUSE observation ID              Method    Flux    FWHM    beta      Flux  x-offset  y-offset
   #                                           scale     (")            offset       (")       (")
   #--------------------------------- ------  ------  ------  ------  --------  --------  --------

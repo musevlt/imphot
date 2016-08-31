@@ -1,0 +1,5 @@
+# DS9 region file that selects a bright star in MUSE field UDF07.
+fk5
+
+# Fit the the bright star.
+circle(53.1322655, -27.7828554, 4.0")

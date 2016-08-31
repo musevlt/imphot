@@ -339,25 +339,31 @@ Region files for the MUSE UDF fields
 The following region files are provided for use with the MUSE
 UDF fields.
 
-.. _UDF01.reg: ../_static/imphot/UDF01.reg
-.. _UDF04.reg: ../_static/imphot/UDF04.reg
-.. _UDF05.reg: ../_static/imphot/UDF05.reg
-.. _UDF06.reg: ../_static/imphot/UDF06.reg
-.. _UDF07.reg: ../_static/imphot/UDF07.reg
+.. _exclude_udf_stars.reg: ../_static/imphot/exclude_udf_stars.reg
+.. _udf01_star.reg: ../_static/imphot/udf01_star.reg
+.. _udf01_qso.reg: ../_static/imphot/udf01_qso.reg
+.. _udf04_star.reg: ../_static/imphot/udf04_star.reg
+.. _udf05_star.reg: ../_static/imphot/udf05_star.reg
+.. _udf06_star.reg: ../_static/imphot/udf06_star.reg
+.. _udf07_star.reg: ../_static/imphot/udf07_star.reg
 
-   +-----------+-----------------------------------+-------------+
-   |UDF field  |  Purpose                          | Region file |
-   +===========+===================================+=============+
-   | UDF01     | Limit the fit to a bright star    | UDF01.reg_  |
-   +-----------+-----------------------------------+-------------+
-   | UDF04     | Exclude a source that doesn't fit | UDF04.reg_  |
-   +-----------+-----------------------------------+-------------+
-   | UDF05     | Limit the fit to a bright star    | UDF05.reg_  |
-   +-----------+-----------------------------------+-------------+
-   | UDF06     | Limit the fit to a bright star    | UDF06.reg_  |
-   +-----------+-----------------------------------+-------------+
-   | UDF07     | Exclude a source that doesn't fit | UDF07.reg_  |
-   +-----------+-----------------------------------+-------------+
+   +------------------------+-----------------------------------+
+   | Region file            |  Purpose                          |
+   +========================+===================================+
+   | exclude_udf_stars.reg_ | Exclude bright stars and QSOs     |
+   +------------------------+-----------------------------------+
+   | udf01_star.reg_        | Select the bright star in UDF01   |
+   +------------------------+-----------------------------------+
+   | udf01_qso.reg_         | Select the bright QSO in UDF01    |
+   +------------------------+-----------------------------------+
+   | udf04_star.reg_        | Select the bright star in UDF04   |
+   +------------------------+-----------------------------------+
+   | udf05_star.reg_        | Select the bright star in UDF05   |
+   +------------------------+-----------------------------------+
+   | udf06_star.reg_        | Select the bright star in UDF06   |
+   +------------------------+-----------------------------------+
+   | udf07_star.reg_        | Select the bright star in UDF07   |
+   +------------------------+-----------------------------------+
 
 .. _star_fitting:
 

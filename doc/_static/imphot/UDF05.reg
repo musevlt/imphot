@@ -1,5 +1,0 @@
-# DS9 region file for PSF fitting to MUSE field UDF05.
-fk5
-
-# Fit to the bright star within the following region.
-circle(53.158344, -27.794921, 2.5")
