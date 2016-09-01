@@ -3,4 +3,4 @@ fk5
 
 # This star moved so much between the HST and MUSE UDF that a wide
 # circle is needed to select it in both images.
-circle(53.176719, -27.799669, 4.0")
+circle(53.176719, -27.799669, 3.0")

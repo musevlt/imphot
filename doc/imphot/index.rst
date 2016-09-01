@@ -92,6 +92,8 @@ Tutorials
 
 * :ref:`pitfalls`
 
+* :ref:`udf_photometry`
+
 Resources
 =========
 
@@ -226,3 +228,4 @@ Page index
    pitfalls.rst
    docstrings.rst
    whitepapers.rst
+   udf_photometry.rst
