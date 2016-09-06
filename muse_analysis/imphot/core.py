@@ -615,6 +615,12 @@ class HstFilterInfo(object):
             self.filter_name = hst.upper()
         elif "FILTER" in hst.primary_header:
             self.filter_name = hst.primary_header['FILTER'].upper()
+        elif ("FILTER1" in hst.primary_header and
+              hst.primary_header['FILTER1'] != 'CLEAR1L'):
+            self.filter_name = hst.primary_header['FILTER1'].upper()
+        elif ("FILTER2" in hst.primary_header and
+              hst.primary_header['FILTER2'] != 'CLEAR2L'):
+            self.filter_name = hst.primary_header['FILTER2'].upper()
         else:
             raise UserError("Missing FILTER keyword in HST image header")
 
