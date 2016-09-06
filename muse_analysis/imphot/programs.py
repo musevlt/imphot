@@ -6,6 +6,7 @@ import sys
 from os.path import basename
 import argparse
 import astropy.units as u
+from astropy.io import fits
 import numpy as np
 import re
 from textwrap import dedent
@@ -280,7 +281,19 @@ def regrid_hst_to_muse_main(argv):
             try:
                 if not options.quiet:
                     print("Reading HST image: %s" % hst_image)
-                hst = Image(hst_image)
+
+                # If there is no DATA or SCI extension, MPDAF will
+                # refuse to read the file unless it is told which
+                # extension to read. Tell it to read the primary data
+                # array in this case.
+
+                hdulist = fits.open(hst_image)
+                ext = None if ('DATA' in hdulist or 'SCI' in hdulist) else 0
+
+                # Read the HST image.
+
+                hst = Image(hdulist=hdulist, ext=ext)
+
             except Exception as e:
                 print("Error reading: %s (%s)" % (hst_image, e),
                       file=sys.stderr)
