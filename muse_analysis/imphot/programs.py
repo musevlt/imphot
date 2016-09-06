@@ -289,10 +289,11 @@ def regrid_hst_to_muse_main(argv):
 
                 hdulist = fits.open(hst_image)
                 ext = None if ('DATA' in hdulist or 'SCI' in hdulist) else 0
+                del hdulist
 
                 # Read the HST image.
 
-                hst = Image(hdulist=hdulist, ext=ext)
+                hst = Image(hst_image, ext=ext)
 
             except Exception as e:
                 print("Error reading: %s (%s)" % (hst_image, e),
