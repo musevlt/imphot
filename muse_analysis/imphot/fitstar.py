@@ -177,6 +177,18 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
     muse_results = fitmod.fit(muse_values, x=x, y=y, pixel_area=pixel_area,
                               weights=10.0)
 
+    # Calculated the fitted MUSE star model at x,y.
+
+    muse_model = _circular_moffat_profile(
+        x, y, pixel_area,
+        muse_results.best_values['dx'],   muse_results.best_values['dy'],
+        muse_results.best_values['bg'],   muse_results.best_values['flux'],
+        muse_results.best_values['fwhm'], muse_results.best_values['beta'])
+
+    # Calculate the RMS of the residual image pixels.
+
+    muse_rms_error = np.sqrt(np.mean((muse_values - muse_model)**2))
+
     # Get the values of the HST pixels at each element of x and y.
 
     hst_values = hst.data.filled(0.0).ravel()[sorted_indexes]
@@ -220,7 +232,7 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
     # Return an object that contains the results.
 
     return FittedStarPhotometry(muse.filename, muse_results, hst_results,
-                                ra, dec)
+                                muse_rms_error, ra, dec)
 
 # Define the class that holds information returned by
 # fit_star_photometry().
@@ -245,6 +257,10 @@ class FittedStarPhotometry(FittedPhotometry):
        The right-ascension used for the origin of the fit (degrees)
     dec : float
        The declination used for the origin of the fit (degrees)
+    rms_error : float
+       The root-mean square of the pixel residuals of the fit to the
+       star in the MUSE image, in the same units as the pixels of the
+       original MUSE image.
 
     Attributes
     ----------
@@ -271,6 +287,10 @@ class FittedStarPhotometry(FittedPhotometry):
     beta : `FittedValue`
        The best-fit value and error of the beta parameter of the
        Moffat PSF. This is the same as muse_beta.
+    rms_error : float
+       The root-mean square of the pixel residuals of the fit to the
+       star in the MUSE image, in the same units as the pixels of the
+       original MUSE image.
 
     ra  : float
        The right-ascension used for the origin of the fit (degrees)
@@ -322,12 +342,16 @@ class FittedStarPhotometry(FittedPhotometry):
        star in the HST image.
 
     """
-    def __init__(self, filename, muse_results, hst_results, ra, dec):
+    def __init__(self, filename, muse_results, hst_results, rms_error, ra, dec):
 
         # Record the reference RA and Dec of the fits.
 
         self.ra = ra
         self.dec = dec
+
+        # Record the RMS of the residuals in the MUSE image.
+
+        self.rms_error = rms_error
 
         # Get the best-fit values for the star in the MUSE image.
 
@@ -389,7 +413,8 @@ class FittedStarPhotometry(FittedPhotometry):
         FittedPhotometry.__init__(self, method="stars", filename=filename,
                                   fit_report=report,
                                   scale=scale, bg=bg, dx=dx, dy=dy,
-                                  fwhm=self.muse_fwhm, beta=self.muse_beta)
+                                  fwhm=self.muse_fwhm, beta=self.muse_beta,
+                                  rms_error=rms_error)
 
 def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
                               x, y, muse_values, hst_values,

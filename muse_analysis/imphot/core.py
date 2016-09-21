@@ -480,6 +480,10 @@ class FittedPhotometry(object):
     beta : `FittedValue`
         The best-fit value and error of the beta parameter of the
         Moffat PSF.
+    rms_error : float
+        The root-mean square of the pixel residuals of the fit in the
+        MUSE image, in the same units as the pixels of the original
+        MUSE image.
 
     Attributes
     ----------
@@ -505,11 +509,15 @@ class FittedPhotometry(object):
     beta : `FittedValue`
         The best-fit value and error of the beta parameter of the
         Moffat PSF.
+    rms_error : float
+        The root-mean square of the pixel residuals of the fit in the
+        MUSE image, in the same units as the pixels of the original
+        MUSE image.
 
     """
 
     def __init__(self, method, filename, fit_report, scale, bg, dx, dy,
-                 fwhm, beta):
+                 fwhm, beta, rms_error):
         self.method = method
         self.name = basename(filename).replace(".fits","")
         self.fit_report = fit_report
@@ -519,6 +527,7 @@ class FittedPhotometry(object):
         self.dy = dy
         self.fwhm = fwhm
         self.beta = beta
+        self.rms_error = rms_error
 
     def __str__(self):
         return "Report of HST %s photometry fit of MUSE observation %s\n" % (self.method, self.name) + self.fit_report
@@ -539,16 +548,16 @@ class FittedPhotometry(object):
 
         if header:
             name_width = 34
-            s = "# MUSE observation ID              Method    Flux    FWHM    beta      Flux  x-offset  y-offset\n"
-            s += "#                                           scale     (\")            offset       (\")       (\")\n"
-            s += "#--------------------------------- ------  ------  ------  ------  --------  --------  --------\n"
+            s = "# MUSE observation ID              Method    Flux    FWHM    beta      Flux  x-offset  y-offset   RMS  \n"
+            s += "#                                           scale     (\")            offset       (\")       (\")  error\n"
+            s += "#--------------------------------- ------  ------  ------  ------  --------  --------  --------  ------\n"
 
         # Format the fitted values.
 
-        s += "%34s %6s % 6.4f % 7.4f % 7.4f % 9.5f % 9.5f % 9.5f" % (
+        s += "%34s %6s % 6.4f % 7.4f % 7.4f % 9.5f % 9.5f % 9.5f %7.4f" % (
             self.name, self.method, self.scale.value, self.fwhm.value,
             self.beta.value, self.bg.value,
-            self.dx.value, self.dy.value)
+            self.dx.value, self.dy.value, self.rms_error)
         return s
 
 class HstFilterInfo(object):

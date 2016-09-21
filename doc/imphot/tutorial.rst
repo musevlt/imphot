@@ -158,10 +158,10 @@ by performing a fit using default parameters of the
 the fit be shown::
 
   % fit_photometry hst_F775W_for_UDF04.fits wfc_F775W_udf04_image.fits --display
-  # MUSE observation ID              Method    Flux    FWHM    beta      Flux  x-offset  y-offset
-  #                                           scale     (")            offset       (")       (")
-  #--------------------------------- ------  ------  ------  ------  --------  --------  --------
-               wfc_F775W_udf04_image  image  0.9819  0.5697  2.5000   0.04191  -0.00188  -0.01732
+  # MUSE observation ID              Method    Flux    FWHM    beta      Flux  x-offset  y-offset   RMS
+  #                                           scale     (")            offset       (")       (")  error
+  #--------------------------------- ------  ------  ------  ------  --------  --------  --------  ------
+               wfc_F775W_udf04_image  image  0.9819  0.5697  2.5000   0.04191  -0.00188  -0.01732  0.0699
   %
 
 With the default arguments, this reports a summary of the fitting
@@ -264,10 +264,10 @@ centered on each star. The region file is passed to the
 :ref:`--regions<regions>` parameter, as follows::
 
   % fit_photometry hst_F775W_for_UDF04.fits wfc_F775W_udf04_image.fits --regions exclude_udf_stars.reg --display
-  # MUSE observation ID              Method    Flux    FWHM    beta      Flux  x-offset  y-offset
-  #                                           scale     (")            offset       (")       (")
-  #--------------------------------- ------  ------  ------  ------  --------  --------  --------
-               wfc_F775W_udf04_image  image  0.9768  0.5730  2.5000   0.04169   0.01401  -0.01656
+  # MUSE observation ID              Method    Flux    FWHM    beta      Flux  x-offset  y-offset   RMS
+  #                                           scale     (")            offset       (")       (")  error
+  #--------------------------------- ------  ------  ------  ------  --------  --------  --------  ------
+               wfc_F775W_udf04_image  image  0.9768  0.5730  2.5000   0.04169   0.01401  -0.01656  0.0675
   %
 
 The results are very similar to those of the previous step, which
@@ -305,11 +305,11 @@ since this is given on the command-line, there is no need for a region
 file::
 
   % fit_photometry hst_F775W_for_UDF04.fits wfc_F775W_udf04_image.fits --star 53.148540 -27.770139 3.0 --display
-  # MUSE observation ID              Method    Flux    FWHM    beta      Flux  x-offset  y-offset
-  #                                           scale     (")            offset       (")       (")
-  #--------------------------------- ------  ------  ------  ------  --------  --------  --------
-               wfc_F775W_udf04_image  image  1.1581  0.5711  2.5000   0.08863  -0.13003  -0.02434
-               wfc_F775W_udf04_image  stars  1.2289  0.5658  2.5000   0.06651  -0.13615  -0.02581
+  # MUSE observation ID              Method    Flux    FWHM    beta      Flux  x-offset  y-offset   RMS
+  #                                           scale     (")            offset       (")       (")  error
+  #--------------------------------- ------  ------  ------  ------  --------  --------  --------  ------
+               wfc_F775W_udf04_image  image  1.1581  0.5711  2.5000   0.08863  -0.13003  -0.02434  0.0217
+               wfc_F775W_udf04_image  stars  1.2289  0.5658  2.5000   0.06651  -0.13615  -0.02581  0.0815
   %
 
 Note that this generated two lines of fitted photometric
