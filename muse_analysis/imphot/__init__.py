@@ -113,6 +113,11 @@ from .fitboth import *
 __all__.extend(fitboth.__all__)
 del(fitboth)
 
+from . import makeimage
+from .makeimage import *
+__all__.extend(makeimage.__all__)
+del(makeimage)
+
 from . import programs
 from .programs import *
 __all__.extend(programs.__all__)

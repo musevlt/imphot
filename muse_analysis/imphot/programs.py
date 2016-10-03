@@ -15,6 +15,7 @@ from .core import *
 from .fitimage import *
 from .fitstar import *
 from .fitboth import *
+from .makeimage import *
 
 __all__ = ['fit_photometry_main', 'regrid_hst_to_muse_main',
            'make_wideband_image_main']
@@ -463,8 +464,8 @@ def make_wideband_image_main(argv):
 
             if not options.quiet:
                 print("Computing the output image.")
-            image = cube.bandpass_image(curve[:,0], curve[:,1],
-                                        unit_wave=options.wave_units)
+            image = bandpass_image(cube, curve[:,0], curve[:,1],
+                                   unit_wave=options.wave_units)
 
             # Get the input filename.
 

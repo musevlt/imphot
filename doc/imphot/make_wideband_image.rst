@@ -16,7 +16,9 @@ of the HST image. This can be done using the
 
 The :ref:`make_wideband_image<make_wideband_image>` script takes a
 MUSE cube and a filter curve and generates a wide-band MUSE image that
-has the spectral response of the filter curve.
+has the spectral response of the filter curve. A function that does
+the equivalent operation is also available, called
+`imphot.bandpass_image()`
 
 The arguments of the function can be obtained by running it with the
 ``-h`` option::
@@ -102,7 +104,7 @@ Arbitrary python scripts can obtain the same result as the
   import numpy as np
   cube = Cube(hst_filename)
   w, s = np.hsplit(np.loadtxt(bandpass_filename, usecols=(0,1)), 2)
-  cube.bandpass_image(wavelengths=w, sensitivities=s, unit_wave=u.angstrom)
+  imphot.bandpass_image(cube, wavelengths=w, sensitivities=s, unit_wave=u.angstrom)
 
 .. _hst_filter_curves:
 
