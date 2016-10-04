@@ -22,7 +22,8 @@ The arguments of the function can be obtained by running it with the
                             muse_image hst_images [hst_images ...]
 
   positional arguments:
-    muse_image      The filename of a template MUSE image in FITS format.
+    muse_image      The filename of a template MUSE image or MUSE cube in FITS
+                    format.
     hst_images      The filenames of one or more HST images with 30mas pixels.
 
   optional arguments:

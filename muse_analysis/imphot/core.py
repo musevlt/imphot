@@ -655,8 +655,8 @@ def rescale_hst_like_muse(hst, muse, inplace=True):
     ----------
     hst : `mpdaf.obj.Image`
        The HST image to be resampled.
-    muse : `mpdaf.obj.Image`
-       The MUSE image with the target flux units.
+    muse : `mpdaf.obj.Image` or `mpdaf.obj.Cube`
+       A MUSE image or cube with the target flux units.
     inplace : bool
        (This defaults to True, because HST images tend to be large)
        If True, replace the contents of the input HST image object
@@ -695,14 +695,15 @@ def rescale_hst_like_muse(hst, muse, inplace=True):
     return hst
 
 def regrid_hst_like_muse(hst, muse, inplace=True):
-    """Resample an HST image onto the coordinate grid of a given MUSE image.
+    """Resample an HST image onto the spatial coordinate grid of a given
+    MUSE image or MUSE cube.
 
     Parameters
     ----------
     hst : `mpdaf.obj.Image`
        The HST image to be resampled.
-    muse : `mpdaf.obj.Image`
-       The MUSE image to use as the template for the HST image.
+    muse : `mpdaf.obj.Image` of `mpdaf.obj.Cube`
+       The MUSE image or cube to use as the template for the HST image.
     inplace : bool
        (This defaults to True, because HST images tend to be large)
        If True, replace the contents of the input HST image object
@@ -721,6 +722,12 @@ def regrid_hst_like_muse(hst, muse, inplace=True):
 
     if not inplace:
         hst = hst.copy()
+
+    # If a MUSE cube was provided, extract a single-plane image to use
+    # as the template.
+
+    if muse.ndim > 2:
+        muse = muse[0,:,:]
 
     # Mask the zero-valued blank margins of the HST image.
 

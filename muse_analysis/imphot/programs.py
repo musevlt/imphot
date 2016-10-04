@@ -196,10 +196,11 @@ def _report_results(results, showheader, options):
 def regrid_hst_to_muse_main(argv):
     """This is the main function of the regrid_hst_to_muse script.
 
-    Given a MUSE image and one or more HST images with 30mas pixels,
-    it resamples the HST images onto the pixel grid of the MUSE image,
-    and scales their flux units from electrons/s to the flux units of
-    the MUSE image (usually 1e-20 erg/cm^2/s/Angstrom).
+    Given a MUSE image or MUSE cube and one or more HST images with
+    30mas pixels, it resamples the HST images onto the pixel grid of
+    the MUSE image, and scales their flux units from electrons/s to
+    the flux units of the MUSE image (usually 1e-20
+    erg/cm^2/s/Angstrom).
 
     Parameters
     ----------
@@ -247,8 +248,8 @@ def regrid_hst_to_muse_main(argv):
 
         parser.add_argument('muse_image',
                             help='''
-                            The filename of a template MUSE image in
-                            FITS format.
+                            The filename of a template MUSE image or MUSE
+                            cube in FITS format.
                             ''')
 
         parser.add_argument('hst_images', nargs="+",
@@ -262,12 +263,20 @@ def regrid_hst_to_muse_main(argv):
 
         options = parser.parse_args(argv[1:])
 
-        # Read the MUSE image.
+        # Read the MUSE image or MUSE cube.
 
         try:
             if not options.quiet:
                 print("Reading MUSE image: %s" % options.muse_image)
-            muse = Image(options.muse_image)
+            try:
+                muse = Image(options.muse_image)
+                if muse.ndim != 2:
+                    raise ValueError("Invalid image dimensions")
+            except:
+                muse = Cube(options.muse_image)
+                if muse.ndim != 3:
+                    raise ValueError("Invalid cube dimensions")
+
         except Exception as e:
             print("Error reading: %s (%s)" % (options.muse_image, e),
                   file=sys.stderr)
