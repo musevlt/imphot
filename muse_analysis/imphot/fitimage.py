@@ -290,6 +290,17 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
     hdata = hdata[crop_indexes]
     mask = mask[crop_indexes]
 
+    # Get the median of the unmasked parts of the MUSE image, to use
+    # as an initial estimate of the constant part of the background.
+
+    subtracted = np.ma.median(mdata)
+
+    # Subtract the estimated background, such that when the masked
+    # areas are replaced with zeros below, they aren't significantly
+    # different from the normal background of the image.
+
+    mdata -= subtracted
+
     # Get ndarray versions of the above arrays with masked pixels
     # filled with zeros. Note that the choice of zeros (as opposed
     # to median values) prevents these pixels from biasing the
@@ -418,12 +429,13 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
     # algorithm.
 
     fitmod = Model(_xy_moffat_model_fn,
-                   independent_vars=["fx", "fy", "rsq", "hstfft", "wfft"])
+                   independent_vars=["fx", "fy", "rsq", "hstfft", "wfft",
+                                     "subtracted"])
 
     # Describe each of the parameters of the model to the least-squares fitter.
 
     if fix_bg is None:
-        fitmod.set_param_hint('bg', value=0.0)
+        fitmod.set_param_hint('bg', value=subtracted)
     else:
         fitmod.set_param_hint('bg', value=fix_bg,
                                 vary=False)
@@ -458,11 +470,11 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
     results = fitmod.fit(mfft.ravel().view(dtype=float),
                          fx=fx2d.ravel(), fy=fy2d.ravel(),
                          rsq=rsq, hstfft=hfft.ravel(),
-                         wfft=weight_fft.ravel())
+                         wfft=weight_fft.ravel(), subtracted=subtracted)
 
     # Compute the FFT of the modified HST image.
 
-    hfft = _xy_moffat_model_fn(fx2d, fy2d, rsq, hfft, weight_fft,
+    hfft = _xy_moffat_model_fn(fx2d, fy2d, rsq, hfft, weight_fft, subtracted,
                                results.best_values['dx'],
                                results.best_values['dy'],
                                results.best_values['bg'],
@@ -583,7 +595,7 @@ class FittedImagePhotometry(FittedPhotometry):
                                   rms_error=rms_error)
         self.rchi = results.redchi
 
-def _xy_moffat_model_fn(fx, fy, rsq, hstfft, wfft, dx, dy,
+def _xy_moffat_model_fn(fx, fy, rsq, hstfft, wfft, subtracted, dx, dy,
                        bg, scale, fwhm, beta):
 
     """This function is designed to be passed to lmfit to fit the FFT of
@@ -612,11 +624,6 @@ def _xy_moffat_model_fn(fx, fy, rsq, hstfft, wfft, dx, dy,
     fy : numpy.ndarray
        The Y-axis spatial-frequency coordinate (cycles/arcsec) of each
        pixel in the HST FFT.
-    hstfft : numpy.ndarray
-       The FFT of the HST image.
-    wfft : numpy.ndarray
-       The FFT of the weighting array that has been applied to the
-       pixels of the image.
     rsq : numpy.ndarray
        The radius-squared of each pixel of an image of the same
        dimensions as the image that was forier transformed to obtain
@@ -626,6 +633,14 @@ def _xy_moffat_model_fn(fx, fy, rsq, hstfft, wfft, dx, dy,
        using np.fft.fftfreq(nx,1.0/(nx*dx)), where nx is the number of
        pixels along the x axis, and dx is the pixel width in
        arcseconds.  Similarly for the y offsets of each pixel.
+    hstfft : numpy.ndarray
+       The FFT of the HST image.
+    wfft : numpy.ndarray
+       The FFT of the weighting array that has been applied to the
+       pixels of the image.
+    subtracted : float
+       A constant background value that has was already subtracted from
+       the MUSE image before it was FFT'd.
     dx: float
        The position offset along the X axis of the image.
     dy: float
@@ -692,7 +707,7 @@ def _xy_moffat_model_fn(fx, fy, rsq, hstfft, wfft, dx, dy,
     # scaled by the fitted scaling factor, smoothed to a lower resolution
     # by the above 2D Moffat function, and shifted by dx and dy.
 
-    model = bg * wfft + hstfft * scale * moffat_ft * np.exp(argx*fx + argy*fy)
+    model = (bg - subtracted) * wfft + hstfft * scale * moffat_ft * np.exp(argx*fx + argy*fy)
 
     # The model-fitting function can't handle complex numbers, so
     # return the complex FFT model as an array of alternating real and
