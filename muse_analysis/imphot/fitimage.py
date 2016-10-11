@@ -493,8 +493,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
 
     # Extract relevant results for return.
 
-    imfit = FittedImagePhotometry(muse.filename, results=results,
-                                  rms_error=rms_error)
+    imfit = FittedImagePhotometry(muse, results=results, rms_error=rms_error)
 
     # If a hardcopy format has been specified, construct the filename
     # for the saved plot.
@@ -539,8 +538,8 @@ class FittedImagePhotometry(FittedPhotometry):
 
     Parameters
     ----------
-    filename : str
-       The name of the original MUSE file.
+    muse : `mpdaf.obj.Image`
+       The MUSE image that the fit was performed on.
     results : `lmfit.ModelResult`
        The model fitting results.
     rms_error : float
@@ -583,8 +582,8 @@ class FittedImagePhotometry(FittedPhotometry):
 
     """
 
-    def __init__(self, filename, results, rms_error):
-        FittedPhotometry.__init__(self, method="image", filename=filename,
+    def __init__(self, muse, results, rms_error):
+        FittedPhotometry.__init__(self, method="image", muse=muse,
                                   fit_report=results.fit_report(),
                                   scale=FittedValue(results.params['scale']),
                                   bg=FittedValue(results.params['bg']),
