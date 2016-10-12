@@ -19,7 +19,7 @@ __all__ = ['bandpass_image']
 
 def bandpass_image(cube, wavelengths, sensitivities,
                    unit_wave=u.angstrom, interpolation="linear",
-                   truncation_warning=True):
+                   truncation_warning=True, nprocess=0):
     """Given a cube of images versus wavelength and the bandpass
     filter-curve of a wide-band monochromatic instrument, extract
     an image from the cube that has the spectral response of the
@@ -88,6 +88,11 @@ def bandpass_image(cube, wavelengths, sensitivities,
       By default, a warning is reported if the filter bandpass exceeds
       the wavelength range of the cube. The warning can be disabled
       by setting this argument to False.
+    nprocess : int
+       The number of worker processes to use. The default is
+       0, which creates multiprocessing.cpu_count() processes.
+       Alternatively, if a negative number, -n, is specified, then
+       max(multiprocessing.cpu_count()-n,1) processes are created.
 
     Returns
     -------
@@ -208,113 +213,235 @@ def bandpass_image(cube, wavelengths, sensitivities,
                 "%.2g%% of the integrated " % (lossage*100.0) +
                 "filter curve is beyond the edges of the cube.")
 
-    # Use multiple processes to combine successive ranges of
-    # spectral planes.
+    # If only one process has been requested, perform the computation
+    # here.
 
-    with _WidebandImageMP(cube, start, stop, lowave, hiwave, spline, 500) as mp:
-        mp.run()
+    if nprocess == 1:
+        sums = _SpectralPlaneSums.combine_spectral_planes(
+            cube=cube, start=start, stop=stop, lowave=lowave,
+            hiwave=hiwave, spline=spline)
+
+    # Use multiple processes to combine successive ranges of spectral planes?
+
+    else:
+        with _WidebandImageMP(cube=cube, start=start, stop=stop,
+                              lowave=lowave, hiwave=hiwave,
+                              spline=spline, max_planes_per_job=500,
+                              nprocess=nprocess) as mp:
+            mp.run()
+        sums = mp.sums
 
     # Compute the filter-curve weighted mean data and variance images
 
-    data = mp.wdsum / mp.wsum
-    if mp.w2vsum is None:
-        var = False
-    else:
-        var = mp.w2vsum / mp.wsum**2
+    data, var = sums.combined_data_var()
 
     # Encapsulate the data and variance images in an MPDAF Image
     # object, and return this.
 
     return Image.new_from_obj(cube, data=data, var=var)
 
-def _combine_spectral_planes(cube, start, stop, lowave, hiwave, spline):
-    """For a specified range of spectral planes of a cube, and a
-    spline filter curve, return images of:
+class _SpectralPlaneSums(object):
 
-       wsum   = Sum[weights]
-       wdsum  = Sum[data * weights]
-       w2vsum = Sum[var * weights**2]   (None if cube._var is None)
-
-    Where the weight for each spectral plane is computed by
-    integrating the spline over the wavelength width of that plane,
-    scaled by 0 for masked elements and 1 for unmasked elements.
+    '''A class that accumulates the weighted sums of images from multiple
+    spectral planes of a MUSE cube, weighted by a filter throughput curve.
 
     Parameters
     ----------
-    cube : mpdaf.obj.Cube
-       The cube to be processed.
-    start : int
-       The index of the first spectral plane to be combined.
-    stop : int
-       The index of the last spectral plane, plus one.
-    spline :  scipy.interpolate.interp1d
-       The spline to use to interpolate the filter throughput
-       curve, indexed by spectral plane index.
+    cube : `mpdaf.obj.Cube`
+       The cube whose images are being summed.
+    wsum : `numpy.ndarray`
+       Default = None
+       An image of the sum of the weights of each pixel. The weight of
+       each pixel is the integrated value of the filter curve over the
+       wavelength range of its spectral plane, or zero if the pixel is
+       masked.
 
-    Returns
-    -------
-    out : (np.array, np.array, np.array) or (np.array, np.array, None)
-       Three 2D image arrays, containing:
+       If this argument is passed None (the default), then arrays of
+       zeros are subsituted for the wsum, wdsum and w2vsum arguments.
+    wdsum : `numpy.ma.MaskedArray`
+       Default = None
+       An image of the sum of the flux of each pixel scaled by its weight.
+       This is ignored if wsum is None.
+    w2vsum : `numpy.ma.MaskedArray` or None
+       Default = None
+       An image of the sum of the variance of each pixel scaled by its
+       weight squared.
+       This is ignored if wsum is None.
 
-         wsum   = Sum[weights]
-         wdsum  = Sum[data * weights]
-         w2vsum = Sum[var * weights**2]   (or None if cube._var is None)
-    """
+    Attributes
+    ----------
+    wsum : `numpy.ndarray`
+       An image of the sum of the weights of each pixel. The weight of
+       each pixel is the integrated value of the filter curve over the
+       wavelength range of its spectral plane, or zero if the pixel is
+       masked.
+    wdsum : `numpy.ma.MaskedArray`
+       An image of the sum of the flux of each pixel scaled by its weight.
+    w2vsum : `numpy.ma.MaskedArray` or None
+       An image of the sum of the variance of each pixel scaled by its
+       weight squared.
 
-    # Integrate the bandpass over the range of each spectral pixel
-    # to determine the weights of each pixel. For the moment skip
-    # the first and last pixels, which need special treatment.
-    # Integer pixel indexes refer to the centers of pixels,
-    # so for integer pixel index k, we need to integrate from
-    # k-0.5 to k+0.5.
+    '''
 
-    w = np.empty((stop - start))
-    for k in range(start, stop):
-        w[k - start], err = integrate.quad(spline, lowave[k], hiwave[k])
+    def __init__(self, cube, wsum=None, wdsum=None, w2vsum=None):
 
-    # Obtain a sub-cube of the selected spectral planes.
+        # Get the shape of the images in the cube.
 
-    subcube = cube[start:stop, :, :]
+        image_shape = cube.shape[1:]
 
-    # Temporarily assume there are no variances.
+        # Create the arrays in which the intermediate image sums will
+        # be accumulated. Using masked arrays for all except the sum
+        # of weights.
 
-    var = None
-    w2vsum = None
+        if wsum is None:
+            self.wsum = np.zeros(image_shape)             # Sum[weight]
+            self.wdsum = ma.array(np.zeros(image_shape),  # Sum[data * weight]
+                                  mask=np.ones(image_shape, dtype=bool))
+            self.w2vsum = ma.array(np.zeros(image_shape), # Sum[var * weight^2]
+                                   mask=np.ones(image_shape, dtype=bool))
+        else:
+            self.wsum = wsum
+            self.wdsum = wdsum
+            self.w2vsum = w2vsum
 
-    # Obtain masked arrays of the data and variances for the sums.
+    def accumulate_sums(self, sums):
+        """Add the image sums from combine_spectral_planes() to the
+        sums held by self.
 
-    if subcube._mask is ma.nomask:
+        Parameters
+        ----------
+        sums : _SpectralPlaneSums
+           The sums to be added to those in self.
+        """
 
-        # Create a mask tha masks all invalid values in both data and var.
+        # The weight array is not a masked array, and should not
+        # contain any invalid values, so we can simply sum successive
+        # contributions as a normal numpy array.
 
-        mask = ~np.isfinite(subcube._data)
-        if subcube._var is not None:
-            mask |= ~np.isfinite(subcube._var)
+        self.wsum += sums.wsum
 
-        # Create masked arrays that use the above mask.
+        # The weighted sums of the data and variances are masked
+        # arrays.  Unfortunately, summing two numpy masked arrays
+        # masks any elements that are masked in either of the arrays,
+        # whereas we want to sum just the unmasked values, and only
+        # mask the sums of elements in the two arrays that are both
+        # masked. The masked arrays returned by _weighted_image_sums()
+        # are returned by np.ma.sum(), which zeros the underlying
+        # values of masked elements. This means that we can add the
+        # underlying values of masked elements without affecting the
+        # final sums, then take the logical AND of the masked values
+        # to determine whether to mask the sums.
 
-        data = ma.array(subcube._data, mask=mask)
-        if subcube._var is not None:
-            var = ma.array(subcube._var, mask=mask)
-    else:
-        data = subcube.data
-        if subcube._var is not None:
-            var = subcube.var
+        self.wdsum.data[:] += sums.wdsum.data
+        self.wdsum.mask[:] &= sums.wdsum.mask
 
-    # Create an array of weights for each pixel of the sub-cube, with
-    # masked weights zero, and unmasked values equal to the weight of
-    # the spectral plane that they belong to.
+        if sums.w2vsum is not None:
+            self.w2vsum.data[:] += sums.w2vsum.data
+            self.w2vsum.mask[:] &= sums.w2vsum.mask
+        else:
+            self.w2vsum = None
 
-    wcube = w[:, np.newaxis, np.newaxis] * ~data.mask
+    def combined_data_var(self):
+        '''Return the filter-curve weighted mean data and variance images
+        by dividing the weighted sums by the sum of their weights.
 
-    # Calculate the weighted sums for the pixels of the sub-cube.
+        Returns
+        -------
+        out : (`numpy.ma.MaskedArray`, `numpy.ma.MaskedArray` or None)
+           The final image and either the corresponding image of pixel
+           variances, or None if the input cube had no variance
+           information.
+        '''
 
-    wsum = wcube.sum(axis=0)
-    wdsum = ma.sum(data * wcube, axis=0)
-    if var is not None:
-        w2vsum = ma.sum(var * wcube**2, axis=0)
+        data = self.wdsum / self.wsum
+        if self.w2vsum is None:
+            var = False
+        else:
+            var = self.w2vsum / self.wsum**2
+        return (data, var)
 
-    return (wsum, wdsum, w2vsum)
+    @classmethod
+    def combine_spectral_planes(cls, cube, start, stop, lowave, hiwave,
+                                spline):
+        """For a specified range of spectral planes of a cube, and a spline
+        filter curve, return filter-weighted image sums that can later
+        either be combined with other weighted sums, or be divided by
+        the sum of weights to yield the final combined data and
+        variance images.
+
+        Parameters
+        ----------
+        cube : mpdaf.obj.Cube
+           The cube to be processed.
+        start : int
+           The index of the first spectral plane to be combined.
+        stop : int
+           The index of the last spectral plane, plus one.
+        spline :  scipy.interpolate.interp1d
+           The spline to use to interpolate the filter throughput
+           curve, indexed by spectral plane index.
+
+        Returns
+        -------
+        out : _SpectralPlaneSums
+           An object containing the weighted sums.
+
+        """
+
+        # Integrate the bandpass over the range of each spectral pixel
+        # to determine the weights of each pixel. For the moment skip
+        # the first and last pixels, which need special treatment.
+        # Integer pixel indexes refer to the centers of pixels,
+        # so for integer pixel index k, we need to integrate from
+        # k-0.5 to k+0.5.
+
+        w = np.empty((stop - start))
+        for k in range(start, stop):
+            w[k - start], err = integrate.quad(spline, lowave[k], hiwave[k])
+
+        # Obtain a sub-cube of the selected spectral planes.
+
+        subcube = cube[start:stop, :, :]
+
+        # Temporarily assume there are no variances.
+
+        var = None
+        w2vsum = None
+
+        # Obtain masked arrays of the data and variances for the sums.
+
+        if subcube._mask is ma.nomask:
+
+            # Create a mask tha masks all invalid values in both data and var.
+
+            mask = ~np.isfinite(subcube._data)
+            if subcube._var is not None:
+                mask |= ~np.isfinite(subcube._var)
+
+            # Create masked arrays that use the above mask.
+
+            data = ma.array(subcube._data, mask=mask)
+            if subcube._var is not None:
+                var = ma.array(subcube._var, mask=mask)
+        else:
+            data = subcube.data
+            if subcube._var is not None:
+                var = subcube.var
+
+        # Create an array of weights for each pixel of the sub-cube, with
+        # masked weights zero, and unmasked values equal to the weight of
+        # the spectral plane that they belong to.
+
+        wcube = w[:, np.newaxis, np.newaxis] * ~data.mask
+
+        # Calculate the weighted sums for the pixels of the sub-cube.
+
+        wsum = wcube.sum(axis=0)
+        wdsum = ma.sum(data * wcube, axis=0)
+        if var is not None:
+            w2vsum = ma.sum(var * wcube**2, axis=0)
+
+        return cls(cube, wsum, wdsum, w2vsum)
 
 class _WidebandImageWP(Process):
     """A worker process for the WidebandImageMP class.
@@ -385,10 +512,10 @@ class _WidebandImageWP(Process):
 
                 # Combine the specified range of spectral planes.
 
-                (wsum, wdsum, w2vsum) = _combine_spectral_planes(
+                sums = _SpectralPlaneSums.combine_spectral_planes(
                     self.cube, start=start, stop=stop, lowave=self.lowave,
                     hiwave=self.hiwave, spline=self.spline)
-                results = [wsum, wdsum, w2vsum, start, stop]
+                results = [sums, start, stop]
                 self.result_queue.put((job, "results", results))
 
         except Exception as e:
@@ -430,20 +557,17 @@ class _WidebandImageMP(object):
        times. Larger values may result in the script attempting to use
        more memory than is available.
     nprocess : int
-       The number of worker processes to use. The default is
-       0, which creates multiprocessing.cpu_count() processes.
-       Alternatively, if a negative number, -n, is specified, then
+       The number of processes to use. The default is 0, which creates
+       multiprocessing.cpu_count() processes.  Alternatively, if a
+       negative number, -n, is specified, then
        max(multiprocessing.cpu_count()-n,1) processes are created.
 
     Attributes
     ----------
-    wsum : numpy.ndarray
-       Sum over spectral planes of a 2D image of weights.
-    wdsum : numpy.MaskedArray
-       Sum over spectral planes of a 2D image of [data * weights]
-    w2vsum : numpy.MaskedArray or None
-       Sum over spectral planes of a 2D image of [var * weights**2]
-       This will be None if cube.var is None.
+    sums : _SpectralPlaneSums
+       Weighted sums of multiple spectral plane images and their
+       variances (if any).
+
     """
     def __init__(self, cube, start, stop, lowave, hiwave, spline,
                  max_planes_per_job, nprocess=0):
@@ -481,21 +605,9 @@ class _WidebandImageMP(object):
         self.image_shape = self.cube.shape[1:]
 
         # Create the arrays in which the intermediate image sums will
-        # be accumulated. Using masked arrays for all except the sum
-        # of weights.
+        # be accumulated.
 
-        self.wsum = np.zeros(self.image_shape)         # Sum of weights
-        self.wdsum = ma.array(self.wsum, copy=True, # Sum of weights*data
-                              mask=np.ones(self.image_shape, dtype=bool))
-
-        # We only need the following array if the cube has variance
-        # information. However determining whether there are variances
-        # by looking at cube.var causes a large delay, because it
-        # causes MPDAF to read the variance information, so for now
-        # create the array, and delete it as soon any worker reports
-        # no variance sum.
-
-        self.w2vsum = self.wdsum.copy() # Sum of weights^2 * var
+        self.sums = _SpectralPlaneSums(self.cube)
 
         # If the number of workers is given as zero or a negative
         # number, substitute (number_of_cpus - abs(nprocess)), making
@@ -675,7 +787,7 @@ class _WidebandImageMP(object):
 
             # No exception occured, so get the latest results.
 
-            (wsum, wdsum, w2vsum, start, stop) = r[2]
+            (sums, start, stop) = r[2]
 
             # If any jobs remain to be sent to workers, send a new one
             # to replace the one that just finished.
@@ -684,7 +796,7 @@ class _WidebandImageMP(object):
 
             # Add the latest results to the sums of all spectral planes.
 
-            self._accumulate_sums(wsum, wdsum, w2vsum)
+            self.sums.accumulate_sums(sums)
 
             # Record the completion of this job.
 
@@ -701,33 +813,8 @@ class _WidebandImageMP(object):
         for worker in self.workers:
             worker.join()
 
-    def _accumulate_sums(self, wsum, wdsum, w2vsum):
-        """Add the image sums from _combine_spectral_planes() to the
-        sums held by self."""
 
-        # The weight array is not a masked array, and should not
-        # contain any invalid values, so we can simply sum successive
-        # contributions as a normal numpy array.
 
-        self.wsum += wsum
 
-        # The weighted sums of the data and variances are masked
-        # arrays.  Unfortunately, summing two numpy masked arrays
-        # masks any elements that are masked in either of the arrays,
-        # whereas we want to sum just the unmasked values, and only
-        # mask the sums of elements in the two arrays that are both
-        # masked. The masked arrays returned by _weighted_image_sums()
-        # are returned by np.ma.sum(), which zeros the underlying
-        # values of masked elements. This means that we can add the
-        # underlying values of masked elements without affecting the
-        # final sums, then take the logical AND of the masked values
-        # to determine whether to mask the sums.
 
-        self.wdsum.data[:] += wdsum.data
-        self.wdsum.mask[:] &= wdsum.mask
 
-        if w2vsum is not None:
-            self.w2vsum.data[:] += w2vsum.data
-            self.w2vsum.mask[:] &= w2vsum.mask
-        else:
-            self.w2vsum = None
