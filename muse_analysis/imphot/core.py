@@ -458,8 +458,8 @@ class FittedPhotometry(object):
     ----------
     method : str
         A short word that identifies the method used to fit the photometry.
-    filename : str
-        The name of the original MUSE file.
+    muse : `mpdaf.obj.Image`
+       The MUSE image that the fit was performed on.
     fit_report : str
         A multi-line string that contains a verbose report about the
         final least-squares fit or fits.
@@ -504,6 +504,15 @@ class FittedPhotometry(object):
     dy : `FittedValue`
         The best-fit value and error of the y-axis pointing offset,
         MUSE.y-HST.y.
+    dxdec : `FittedValue`
+        The dx,dy vector resolved along the cross-declination axis
+        (arcsec). Note that cross-declination is an axis on the sky
+        that crosses the declination axis at the reference ra,dec of
+        the observation, and is perpendicular to the declination axis.
+        It increases in the same sense as right-ascension, but is only
+        perfectly parallel to right ascension at the equator.
+    ddec : `FittedValue`
+        The dx,dy vector resolved along the declination axis (arcsec).
     fwhm : `FittedValue`
         The best-fit value and error of the FWHM of the Moffat PSF.
     beta : `FittedValue`
@@ -516,10 +525,10 @@ class FittedPhotometry(object):
 
     """
 
-    def __init__(self, method, filename, fit_report, scale, bg, dx, dy,
+    def __init__(self, method, muse, fit_report, scale, bg, dx, dy,
                  fwhm, beta, rms_error):
         self.method = method
-        self.name = basename(filename).replace(".fits","")
+        self.name = basename(muse.filename).replace(".fits","")
         self.fit_report = fit_report
         self.scale = scale
         self.bg = bg
@@ -528,6 +537,39 @@ class FittedPhotometry(object):
         self.fwhm = fwhm
         self.beta = beta
         self.rms_error = rms_error
+
+        # Convert the X and Y axis corrections, and their standard
+        # deviations, from arcsec to pixel counts.
+
+        steps = muse.wcs.get_step(unit=u.arcsec)
+        py,px = np.array([dy.value, dx.value]) / steps
+        sy,sx = np.array([dy.stdev, dx.stdev]) / steps
+
+        # Get the FITS coordinate conversion matrix, so that we have a
+        # way to convert pixel offsets to cross-declination and
+        # declination offsets.
+
+        cd = muse.wcs.get_cd()
+
+        # Convert the X and Y axis corrections to equivalent
+        # cross-declination and declination corrections, and
+        # compute their propagated uncertainties.
+
+        xdec, dec = np.dot(cd, np.array([[px], [py]]))
+        sxdec, sdec = np.sqrt(np.dot(cd**2, np.array([[sx**2], [sy**2]])))
+
+        # Get the factor needed to convert from the units produced by
+        # the CD matrix, and arcseconds.
+
+        arcsec = muse.wcs.unit.to(u.arcsec)
+
+        # Record the cross-declination and declination pointing corrections
+        # in arcseconds.
+
+        self.dxdec = FittedValue(value = xdec*arcsec, stdev = sxdec*arcsec,
+                                 fixed = dx.fixed and dy.fixed)
+        self.ddec = FittedValue(value = dec*arcsec, stdev = sdec*arcsec,
+                                fixed = dx.fixed and dy.fixed)
 
     def __str__(self):
         return "Report of HST %s photometry fit of MUSE observation %s\n" % (self.method, self.name) + self.fit_report
@@ -547,17 +589,18 @@ class FittedPhotometry(object):
         # Include header lines?
 
         if header:
-            name_width = 34
-            s = "# MUSE observation ID              Method    Flux    FWHM    beta      Flux  x-offset  y-offset   RMS  \n"
-            s += "#                                           scale     (\")            offset       (\")       (\")  error\n"
-            s += "#--------------------------------- ------  ------  ------  ------  --------  --------  --------  ------\n"
+            name_width = len(self.name)
+            s = "#%-*s Method  Flux    FWHM    beta     Flux    x-offset  y-offset  xdec-off   dec-off    RMS\n" % (name_width-1, " MUSE observation ID")
+            s += "#%*s         scale  (\")            offset     (\")       (\")     (\")      (\")     error\n" % (name_width-1, "")
+            s +=  "#%s ------ ------- ------- ------- --------- --------- --------- --------- --------- -------\n" % ('-' * (name_width - 1))
 
         # Format the fitted values.
 
-        s += "%34s %6s % 6.4f % 7.4f % 7.4f % 9.5f % 9.5f % 9.5f %7.4f" % (
+        s += "%s %6s % 7.4f % 7.4f % 7.4f % 9.5f % 9.5f % 9.5f % 9.5f % 9.5f %7.4f" % (
             self.name, self.method, self.scale.value, self.fwhm.value,
             self.beta.value, self.bg.value,
-            self.dx.value, self.dy.value, self.rms_error)
+            self.dx.value, self.dy.value, self.dxdec.value, self.ddec.value,
+            self.rms_error)
         return s
 
 class HstFilterInfo(object):

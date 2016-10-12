@@ -231,7 +231,7 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
 
     # Return an object that contains the results.
 
-    return FittedStarPhotometry(muse.filename, muse_results, hst_results,
+    return FittedStarPhotometry(muse, muse_results, hst_results,
                                 muse_rms_error, ra, dec)
 
 # Define the class that holds information returned by
@@ -247,8 +247,8 @@ class FittedStarPhotometry(FittedPhotometry):
 
     Parameters
     ----------
-    filename : str
-       The name of the original MUSE file.
+    muse : `mpdaf.obj.Image`
+       The MUSE image that the fit was performed on.
     muse_results : `lmfit.ModelResult`
        The results of fitting a 2D Moffat to a star in the MUSE image.
     hst_results : `lmfit.ModelResult`
@@ -342,7 +342,7 @@ class FittedStarPhotometry(FittedPhotometry):
        star in the HST image.
 
     """
-    def __init__(self, filename, muse_results, hst_results, rms_error, ra, dec):
+    def __init__(self, muse, muse_results, hst_results, rms_error, ra, dec):
 
         # Record the reference RA and Dec of the fits.
 
@@ -410,7 +410,7 @@ class FittedStarPhotometry(FittedPhotometry):
 
         # Set the values of the superclass.
 
-        FittedPhotometry.__init__(self, method="stars", filename=filename,
+        FittedPhotometry.__init__(self, method="stars", muse=muse,
                                   fit_report=report,
                                   scale=scale, bg=bg, dx=dx, dy=dy,
                                   fwhm=self.muse_fwhm, beta=self.muse_beta,
