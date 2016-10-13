@@ -564,6 +564,15 @@ class FittedImagePhotometry(FittedPhotometry):
     dy : `FittedValue`
        The best-fit value and error of the y-axis pointing offset,
        (MUSE.y - HST.y).
+    dxdec : `FittedValue`
+       The dx,dy vector resolved along the cross-declination axis
+       (arcsec). Note that cross-declination is an axis on the sky
+       that crosses the declination axis at the reference ra,dec of
+       the observation, and is perpendicular to the declination axis.
+       It increases in the same sense as right-ascension, but is only
+       perfectly parallel to right ascension at the equator.
+    ddec : `FittedValue`
+       The dx,dy vector resolved along the declination axis (arcsec).
     fwhm : `FittedValue`
        The best-fit value and error of the FWHM of the Moffat PSF.
     beta : `FittedValue`
