@@ -295,18 +295,17 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
 
     subtracted = np.ma.median(mdata)
 
-    # Subtract the estimated background, such that when the masked
-    # areas are replaced with zeros below, they aren't significantly
-    # different from the normal background of the image.
-
-    mdata -= subtracted
-
     # Get ndarray versions of the above arrays with masked pixels
     # filled with zeros. Note that the choice of zeros (as opposed
     # to median values) prevents these pixels from biasing the
     # fitted values of the image offset and scale factors.
+    #
+    # Before doing this, subtract the estimated MUSE background from
+    # the MUSE image, such that when the masked areas are replaced
+    # with zeros, they aren't significantly different from the normal
+    # background of the image.
 
-    mdata = ma.filled(mdata, 0.0)
+    mdata = ma.filled(mdata - subtracted, 0.0)
     hdata = ma.filled(hdata, 0.0)
 
     # When a position offset in the image plane is performed by
