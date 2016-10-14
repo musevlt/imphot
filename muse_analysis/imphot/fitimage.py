@@ -550,43 +550,64 @@ class FittedImagePhotometry(FittedPhotometry):
     name : str
        The basename of the MUSE FITS without the .fits extension.
     fit_report : str
-       A printable report on the fit from the least-squares
+       A printable report on the fit from the least-squares\n
        fitting function.
     scale  : `FittedValue`
-       The best-fit value and error of the calibration scale
+       The best-fit value and error of the calibration scale\n
        factor, (MUSE.flux / HST.flux).
     bg  : `FittedValue`
-       The best-fit value and error of the calibration offset,
+       The best-fit value and error of the calibration offset,\n
        (MUSE.flux - HST.flux).
     dx : `FittedValue`
-       The best-fit value and error of the x-axis pointing offset,
-       (MUSE.x - HST.x).
+       The best-fit value and error of the x-axis pointing offset,\n
+       MUSE.x-HST.x (arcsec). This is the distance that features\n
+       in the HST image had to be moved to the right, in the\n
+       direction of increasing x-axis pixel index, to line them up\n
+       with the same features in the MUSE image. One way to\n
+       correct the pointing error of the MUSE observation, is to\n
+       divide 'dx' by the pixel size along the x-axis (usually\n
+       0.2 arcsec), then add the resulting pixel offset to the\n
+       CRPIX1 header parameter.
     dy : `FittedValue`
-       The best-fit value and error of the y-axis pointing offset,
-       (MUSE.y - HST.y).
-    dxdec : `FittedValue`
-       The dx,dy vector resolved along the cross-declination axis
-       (arcsec). Note that cross-declination is an axis on the sky
-       that crosses the declination axis at the reference ra,dec of
-       the observation, and is perpendicular to the declination axis.
-       It increases in the same sense as right-ascension, but is only
-       perfectly parallel to right ascension at the equator.
+       The best-fit value and error of the y-axis pointing offset,\n
+       MUSE.y-HST.y (arcsec). This is the distance that features\n
+       in the HST image had to be moved upwards, in the direction\n
+       of increasing y-axis pixel index, to line them up with the\n
+       same features in the MUSE image. One way to correct the\n
+       pointing error of the MUSE observation, is to divide 'dy'\n
+       by the pixel size along the y-axis (usually 0.2 arcsec),\n
+       then add the resulting pixel offset to the CRPIX2 header\n
+       parameter.
+    dra : `FittedValue`
+       The right-ascension error (arcsec) that corresponds to the\n
+       pointing error dx,dy. This is the angular distance that\n
+       features in the HST image had to be moved towards increased\n
+       right-ascension, to line them up with the same feaures in\n
+       the MUSE image. One way to correct the pointing error of\n
+       the MUSE observation is to subtract 'dra' from the CRVAL1\n
+       header value of the MUSE observation.
     ddec : `FittedValue`
-       The dx,dy vector resolved along the declination axis (arcsec).
+       The declination error (arcsec) that corresponds to the\n
+       pointing error dx,dy. This is the angular distance that\n
+       features in the HST image had to be moved towards increased\n
+       declination, to line them up with the same feaures in\n
+       the MUSE image. One way to correct the pointing error of\n
+       the MUSE observation is to subtract 'ddec' from the CRVAL2\n
+       header value of the MUSE observation.
     fwhm : `FittedValue`
        The best-fit value and error of the FWHM of the Moffat PSF.
     beta : `FittedValue`
-       The best-fit value and error of the beta parameter of the
+       The best-fit value and error of the beta parameter of the\n
        Moffat PSF
     rchi : float
-       The reduced chi-squared value of the fit. Beware that the
-       absolute value of this number is not very useful, because the
-       fit is performed to the complex pixels of zero-padded FFTs,
-       which are not independent observables, rather than to image
-       pixels.
+       The reduced chi-squared value of the fit. Beware that the\n
+       absolute value of this number is not very useful, because\n
+       the fit is performed to the complex pixels of zero-padded\n
+       FFTs, which are not independent observables, rather than to\n
+       image pixels.
     rms_error : float
-       The root-mean square of the residual image pixels, in the same
-       units as the pixels of the original MUSE image.
+       The root-mean square of the residual image pixels, in the\n
+       same units as the pixels of the original MUSE image.
 
     """
 
