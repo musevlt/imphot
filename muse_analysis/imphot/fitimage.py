@@ -1269,12 +1269,12 @@ def _write_image_to_fits(template, crop_indexes, data, filename):
 
     # Copy selected keywords from the template image.
 
-    if template.data_header is not None:
-        data_header = template.data_header
-        for key in ['ORIGIN', 'TELESCOP', 'MJD-OBS', 'DATE-OBS', 'OBSERVER',
-                    'OBJECT', 'DATE', 'BUNIT', 'FILTER']:
-            if key in data_header:
-                hdu.header[key] = (data_header[key], data_header.comments[key])
+    for hdr in [template.primary_header, template.data_header]:
+        if hdr is not None:
+            for key in ['ORIGIN', 'TELESCOP', 'MJD-OBS', 'DATE-OBS', 'OBSERVER',
+                        'OBJECT', 'DATE', 'BUNIT', 'FILTER']:
+                if key in hdr:
+                    hdu.header[key] = (hdr[key], hdr.comments[key])
 
     # Save the file.
 
@@ -1300,12 +1300,14 @@ def _write_fft_to_fits(template, data, filename):
 
     # Copy selected keywords from the template image.
 
-    if template.data_header is not None:
-        data_header = template.data_header
-        for key in ['ORIGIN', 'TELESCOP', 'MJD-OBS', 'DATE-OBS', 'OBSERVER',
-                    'OBJECT', 'DATE', 'BUNIT', 'FILTER']:
-            if key in data_header:
-                hdu.header[key] = (data_header[key], data_header.comments[key])
+    # Copy selected keywords from the template image.
+
+    for hdr in [template.primary_header, template.data_header]:
+        if hdr is not None:
+            for key in ['ORIGIN', 'TELESCOP', 'MJD-OBS', 'DATE-OBS', 'OBSERVER',
+                        'OBJECT', 'DATE', 'BUNIT', 'FILTER']:
+                if key in hdr:
+                    hdu.header[key] = (hdr[key], hdr.comments[key])
 
     # Calculate the spatial-frequency increment in cycles per degree.
 
