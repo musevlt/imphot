@@ -1224,7 +1224,7 @@ def _save_fitted_images(muse, muse_im, muse_ft, hst, hst_im, hst_ft,
                          prefix + "_image.fits")
     _write_image_to_fits(hst, crop_indexes, hst_im,
                          prefix + "_hst_model.fits")
-    _write_image_to_fits(hst, crop_indexes, muse_im - hst_im,
+    _write_image_to_fits(muse, crop_indexes, muse_im - hst_im,
                          prefix + "_residual.fits")
 
     # Write the absolute values of the image FFTs to FITS files.
