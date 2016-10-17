@@ -518,7 +518,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
         # Save the images?
 
         if save:
-            _save_fitted_images(muse, muse_im, muse_ft, hst_im, hst_ft)
+            _save_fitted_images(muse[crop_indexes], muse_im, muse_ft, hst_im, hst_ft)
 
     # Return the results in an object.
 
@@ -1212,22 +1212,20 @@ def _save_fitted_images(muse, muse_im, muse_ft, hst_im, hst_ft, prefix=None):
     im = Image.new_from_obj(muse, data=muse_im)
     im.write(prefix + "_image.fits")
 
-    im = Image.new_from_obj(hst, data=hst_im)
+    im = Image.new_from_obj(muse, data=hst_im)
     im.write(prefix + "_hst_model.fits")
 
-    im.data = mdata - hdata
+    im.data = muse_im - hst_im
     im.write(prefix + "_residual.fits")
 
-    im = Image.new_from_obj(muse, data=abs(muse_ft))
-    im.write(prefix + "_fft.fits")
+    # im = Image.new_from_obj(muse, data=abs(muse_ft))
+    # im.write(prefix + "_fft.fits")
 
-    im = Image.new_from_obj(hst, data=abs(hst_ft))
-    im.write(prefix + "_hst_model_fft.fits")
+    # im = Image.new_from_obj(muse, data=abs(hst_ft))
+    # im.write(prefix + "_hst_model_fft.fits")
 
-    im.data = abs(muse_ft - hst_ft)
-    im.write(prefix + "_residual_fft.fits")
-
-    del(im)
+    # im.data = abs(muse_ft - hst_ft)
+    # im.write(prefix + "_residual_fft.fits")
 
 def _generate_fft_images(mfft, hfft):
     """Convert half-plane FFTs of the the best-fit MUSE and HST images
