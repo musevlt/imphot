@@ -1,7 +1,9 @@
+from __future__ import division
 from os.path import basename
 import numpy as np
 from numpy import ma
 import astropy.units as u
+from astropy.io import fits
 from scipy.ndimage.morphology import (grey_opening, grey_dilation, binary_erosion)
 from scipy.ndimage.filters import convolve
 from lmfit import Model
@@ -518,7 +520,8 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
         # Save the images?
 
         if save:
-            _save_fitted_images(muse, muse_im, muse_ft, hst_im, hst_ft)
+            _save_fitted_images(muse, muse_im, muse_ft,
+                                hst, hst_im, hst_ft, crop_indexes)
 
     # Return the results in an object.
 
@@ -1182,22 +1185,28 @@ def _plot_fitted_image_results(muse, imfit, muse_im, muse_ft, hst_im, hst_ft,
     if plotfile is not None:
         fig.savefig(plotfile, orientation="landscape", dpi=600)
 
-def _save_fitted_images(muse, muse_im, muse_ft, hst_im, hst_ft, prefix=None):
+def _save_fitted_images(muse, muse_im, muse_ft, hst, hst_im, hst_ft,
+                        crop_indexes, prefix=None):
     """Save the best-fit images from `fit_image_photometry()` to
     FITS files.
 
     Parameters
     ----------
-    muse : mpdaf.obj.Imagea
+    muse : mpdaf.obj.Image
        The original MUSE image.
     muse_im : numpy.ndarray
        The fitted version of the MUSE image.
     muse_ft : numpy.ndarray
        The FFT of muse_im.
+    hst : mpdaf.obj.Image
+       The original HST image.
     hst_im : numpy.ndarray
        The fitted version of the HST image.
     hst_ft : numpy.ndarray
        The FFT of hst_im.
+    crop_indexes : [slice, slice]
+       The slice indexes that were used to extract subimages
+       from the MUSE and HST images.
     prefix : str or None
        The filename prefix to which to append the distinguishing
        suffixes of each image file. If this is None, the original
@@ -1209,25 +1218,114 @@ def _save_fitted_images(muse, muse_im, muse_ft, hst_im, hst_ft, prefix=None):
     if prefix is None:
         prefix = basename(muse.filename).replace(".fits","")
 
-    im = Image.new_from_obj(muse, data=muse_im)
-    im.write(prefix + "_image.fits")
+    # Write the images to FITS files.
 
-    im = Image.new_from_obj(hst, data=hst_im)
-    im.write(prefix + "_hst_model.fits")
+    _write_image_to_fits(muse, crop_indexes, muse_im,
+                         prefix + "_image.fits")
+    _write_image_to_fits(hst, crop_indexes, hst_im,
+                         prefix + "_hst_model.fits")
+    _write_image_to_fits(hst, crop_indexes, muse_im - hst_im,
+                         prefix + "_residual.fits")
 
-    im.data = mdata - hdata
-    im.write(prefix + "_residual.fits")
+    # Write the absolute values of the image FFTs to FITS files.
 
-    im = Image.new_from_obj(muse, data=abs(muse_ft))
-    im.write(prefix + "_fft.fits")
+    _write_fft_to_fits(muse, muse_ft, prefix + "_fft.fits")
+    _write_fft_to_fits(hst, hst_ft, prefix + "_hst_model_fft.fits")
+    _write_fft_to_fits(muse, muse_ft - hst_ft, prefix + "_residual_fft.fits")
 
-    im = Image.new_from_obj(hst, data=abs(hst_ft))
-    im.write(prefix + "_hst_model_fft.fits")
+def _write_image_to_fits(template, crop_indexes, data, filename):
+    """Write an image to a simple FITS file, using
+    a specified MPDAF image as a template.
 
-    im.data = abs(muse_ft - hst_ft)
-    im.write(prefix + "_residual_fft.fits")
+    Parameters
+    ----------
+    template : `mpdaf.obj.Image`
+       The MPDAF image from which the image originated.
+    crop_indexes : [slice, slice]
+       The slice indexes that were used to extract the
+       image from the template before it was processed.
+    data : `numpy.ndarray`
+       The 2D image array to be written to the file.
+    filename : str
+       The filename to give the FITS file.
+    """
 
-    del(im)
+    # Create a primary HDU for the image.
+
+    hdu = fits.PrimaryHDU(data)
+
+    # Get a cropped WCS object to represent the coordinate axes of
+    # the image.
+
+    wcs = template.wcs[crop_indexes]
+
+    # Get header keywords for the cropped wcs information.
+
+    wcs_header = wcs.to_header()
+
+    # Add the WCS keywords to the header of the primary HDU.
+
+    hdu.header.extend(wcs_header)
+
+    # Copy selected keywords from the template image.
+
+    if template.data_header is not None:
+        data_header = template.data_header
+        for key in ['ORIGIN', 'TELESCOP', 'MJD-OBS', 'DATE-OBS', 'OBSERVER',
+                    'OBJECT', 'DATE', 'BUNIT', 'FILTER']:
+            if key in data_header:
+                hdu.header[key] = (data_header[key], data_header.comments[key])
+
+    # Save the file.
+
+    hdu.writeto(filename, clobber=True)
+
+def _write_fft_to_fits(template, data, filename):
+    """Write the absolute values of an FFT of a 2D image to a
+    simple FITS file.
+
+    Parameters
+    ----------
+    template : `mpdaf.obj.Image`
+       The MPDAF image from which the FFT was obtained.
+    data : `numpy.ndarray`
+       The 2D fft array to be written to the file.
+    filename : str
+       The filename to give the FITS file.
+    """
+
+    # Create a primary HDU for the image.
+
+    hdu = fits.PrimaryHDU(np.abs(data))
+
+    # Copy selected keywords from the template image.
+
+    if template.data_header is not None:
+        data_header = template.data_header
+        for key in ['ORIGIN', 'TELESCOP', 'MJD-OBS', 'DATE-OBS', 'OBSERVER',
+                    'OBJECT', 'DATE', 'BUNIT', 'FILTER']:
+            if key in data_header:
+                hdu.header[key] = (data_header[key], data_header.comments[key])
+
+    # Calculate the spatial-frequency increment in cycles per degree.
+
+    im_steps = template.get_step(unit=u.deg)
+    ft_steps = 1.0 / im_steps / np.asarray(data.shape)
+
+    # Add header keywords to describe the coordinates.
+
+    hdu.header['CRPIX1'] = data.shape[1] // 2 + 1
+    hdu.header['CRPIX2'] = data.shape[0] // 2 + 1
+    hdu.header['CRVAL1'] = (0.0, 'The x-axis spatial-frequency origin')
+    hdu.header['CRVAL2'] = (0.0, 'The y-axis spatial-frequency origin')
+    hdu.header['CD1_1'] = (ft_steps[1], 'cycles/degree')
+    hdu.header['CD1_2'] = 0.0
+    hdu.header['CD2_1'] = 0.0
+    hdu.header['CD2_2'] = (ft_steps[0], 'cycles/degree')
+
+    # Save the file.
+
+    hdu.writeto(filename, clobber=True)
 
 def _generate_fft_images(mfft, hfft):
     """Convert half-plane FFTs of the the best-fit MUSE and HST images
