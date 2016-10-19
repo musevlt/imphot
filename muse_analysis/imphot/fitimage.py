@@ -20,11 +20,6 @@ from .mp import _FitPhotometryMP
 __all__ = ['fit_image_photometry', 'FittedImagePhotometry',
            'FitImagePhotometryMP']
 
-# Set the width of the chamfer to apply to image masks. This should be
-# an odd valued integer, to make it symmetric about a central pixel.
-
-_bevel_width = 9   # Integer pixels
-
 def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
                          fix_bg=None, fix_dx=None, fix_dy=None,
                          fix_fwhm=None, fix_beta=None,
@@ -32,7 +27,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
                          hst_beta=_default_hst_beta,
                          margin=2.0, segment=False, display=False,
                          nowait=False, hardcopy=None, title=None,
-                         star=None, save=False, fig=None):
+                         star=None, save=False, fig=None, taper=9):
 
     """Given a MUSE image and an HST image that has been regridded and aligned
     onto the same coordinate grid as the MUSE image, use the HST image as a
@@ -152,6 +147,24 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
     save : bool
        If True, save the result images of each input image to
        FITS files.
+    fig : `matplotlib.figure.Figure`
+       When display==True, a matplot figure is automatically generated
+       for the plots if fig is None. Alternatively a specific
+       matplotlib figure can be specified via this argument.
+    taper : int
+       This argument controls how transitions between unmasked and
+       masked regions are softened. Because the fitting algorithm
+       replaces masked pixels with zeros, bright sources that are
+       truncted by masked regions cause sharp changes in brightness
+       that look like real features and bias the fitted position
+       error. To reduce this effect, pixels close to the boundary of a
+       masked region are smoothly tapered towards zero over a distance
+       specified by the taper argument. The method used to smooth the
+       transition requires that the taper argument be an odd number of
+       pixels, so if a floating point or even-valued integer is
+       specified, this is quietly rounded up to the next highest odd
+       number. Alternatively, the softening algorithm can be disabled
+       by passing 0 (or any value below 2).
 
     Returns
     -------
@@ -359,12 +372,15 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
     mask = tmp
 
     # Compute a multiplicative pixel scaling image that inverts the
-    # mask to be True for pixels that are to be kept, and zero for
-    # pixels that are to be removed, then smoothly bevel the edges of
-    # the areas of ones to reduce the effects of sharp edges on the
-    # fitted position offsets.
+    # mask to be 1 for pixels that are to be kept, and 0 for pixels
+    # that are to be removed, then smoothly bevel the edges of the
+    # areas of ones to reduce the effects of sharp edges on the fitted
+    # position offsets.
 
-    weight_img = _bevel_mask(~mask, _bevel_width)
+    if taper >= 2:
+        weight_img = _bevel_mask(~mask, 2*(taper//2)+1)
+    else:
+        weight_img = (~mask).astype(float)
 
     # Also obtain the FFT of the mask for fitting the background flux
     # offset in the Fourier plane.

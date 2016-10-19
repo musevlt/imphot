@@ -375,6 +375,30 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           Save the result images of each input image to FITS
                           files.'''))
 
+            self.add_argument('--taper',  default=9, type=int,
+                          metavar="pixels",
+                          help=dedent('''\
+                          DEFAULT=%(default)s (pixels)
+                          This argument controls how transitions
+                          between unmasked and masked regions are
+                          softened. Because the fitting algorithm
+                          replaces masked pixels with zeros, bright
+                          sources that are truncted by masked regions
+                          cause sharp changes in brightness that look
+                          like real features and bias the fitted
+                          position error. To reduce this effect,
+                          pixels close to the boundary of a masked
+                          region are tapered towards zero over a
+                          distance specified by the --taper argument.
+                          The method used to smooth the transition
+                          requires that the --taper argument be an odd
+                          number of pixels, so if an even-valued
+                          integer is specified, this is quietly
+                          rounded up to the next highest odd
+                          number. Alternatively, the softening
+                          algorithm can be disabled by specifying 0
+                          (or any value below 2).'''))
+
         # Describe command-line arguments that are common to
         # both fit_image_photometry() and fit_star_photometry().
 
