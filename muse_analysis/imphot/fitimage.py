@@ -1,7 +1,9 @@
+from __future__ import division
 from os.path import basename
 import numpy as np
 from numpy import ma
 import astropy.units as u
+from astropy.io import fits
 from scipy.ndimage.morphology import (grey_opening, grey_dilation, binary_erosion)
 from scipy.ndimage.filters import convolve
 from lmfit import Model
@@ -18,11 +20,6 @@ from .mp import _FitPhotometryMP
 __all__ = ['fit_image_photometry', 'FittedImagePhotometry',
            'FitImagePhotometryMP']
 
-# Set the width of the chamfer to apply to image masks. This should be
-# an odd valued integer, to make it symmetric about a central pixel.
-
-_bevel_width = 9   # Integer pixels
-
 def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
                          fix_bg=None, fix_dx=None, fix_dy=None,
                          fix_fwhm=None, fix_beta=None,
@@ -30,7 +27,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
                          hst_beta=_default_hst_beta,
                          margin=2.0, segment=False, display=False,
                          nowait=False, hardcopy=None, title=None,
-                         star=None, save=False, fig=None):
+                         star=None, save=False, fig=None, taper=9):
 
     """Given a MUSE image and an HST image that has been regridded and aligned
     onto the same coordinate grid as the MUSE image, use the HST image as a
@@ -150,6 +147,24 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
     save : bool
        If True, save the result images of each input image to
        FITS files.
+    fig : `matplotlib.figure.Figure`
+       When display==True, a matplot figure is automatically generated
+       for the plots if fig is None. Alternatively a specific
+       matplotlib figure can be specified via this argument.
+    taper : int
+       This argument controls how transitions between unmasked and
+       masked regions are softened. Because the fitting algorithm
+       replaces masked pixels with zeros, bright sources that are
+       truncted by masked regions cause sharp changes in brightness
+       that look like real features and bias the fitted position
+       error. To reduce this effect, pixels close to the boundary of a
+       masked region are smoothly tapered towards zero over a distance
+       specified by the taper argument. The method used to smooth the
+       transition requires that the taper argument be an odd number of
+       pixels, so if a floating point or even-valued integer is
+       specified, this is quietly rounded up to the next highest odd
+       number. Alternatively, the softening algorithm can be disabled
+       by passing 0 (or any value below 2).
 
     Returns
     -------
@@ -295,18 +310,17 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
 
     subtracted = np.ma.median(mdata)
 
-    # Subtract the estimated background, such that when the masked
-    # areas are replaced with zeros below, they aren't significantly
-    # different from the normal background of the image.
-
-    mdata -= subtracted
-
     # Get ndarray versions of the above arrays with masked pixels
     # filled with zeros. Note that the choice of zeros (as opposed
     # to median values) prevents these pixels from biasing the
     # fitted values of the image offset and scale factors.
+    #
+    # Before doing this, subtract the estimated MUSE background from
+    # the MUSE image, such that when the masked areas are replaced
+    # with zeros, they aren't significantly different from the normal
+    # background of the image.
 
-    mdata = ma.filled(mdata, 0.0)
+    mdata = ma.filled(mdata - subtracted, 0.0)
     hdata = ma.filled(hdata, 0.0)
 
     # When a position offset in the image plane is performed by
@@ -358,12 +372,15 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
     mask = tmp
 
     # Compute a multiplicative pixel scaling image that inverts the
-    # mask to be True for pixels that are to be kept, and zero for
-    # pixels that are to be removed, then smoothly bevel the edges of
-    # the areas of ones to reduce the effects of sharp edges on the
-    # fitted position offsets.
+    # mask to be 1 for pixels that are to be kept, and 0 for pixels
+    # that are to be removed, then smoothly bevel the edges of the
+    # areas of ones to reduce the effects of sharp edges on the fitted
+    # position offsets.
 
-    weight_img = _bevel_mask(~mask, _bevel_width)
+    if taper >= 2:
+        weight_img = _bevel_mask(~mask, 2*(taper//2)+1)
+    else:
+        weight_img = (~mask).astype(float)
 
     # Also obtain the FFT of the mask for fitting the background flux
     # offset in the Fourier plane.
@@ -519,7 +536,8 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
         # Save the images?
 
         if save:
-            _save_fitted_images(muse, muse_im, muse_ft, hst_im, hst_ft)
+            _save_fitted_images(muse, muse_im, muse_ft,
+                                hst, hst_im, hst_ft, crop_indexes)
 
     # Return the results in an object.
 
@@ -551,34 +569,64 @@ class FittedImagePhotometry(FittedPhotometry):
     name : str
        The basename of the MUSE FITS without the .fits extension.
     fit_report : str
-       A printable report on the fit from the least-squares
+       A printable report on the fit from the least-squares\n
        fitting function.
     scale  : `FittedValue`
-       The best-fit value and error of the calibration scale
+       The best-fit value and error of the calibration scale\n
        factor, (MUSE.flux / HST.flux).
     bg  : `FittedValue`
-       The best-fit value and error of the calibration offset,
+       The best-fit value and error of the calibration offset,\n
        (MUSE.flux - HST.flux).
     dx : `FittedValue`
-       The best-fit value and error of the x-axis pointing offset,
-       (MUSE.x - HST.x).
+       The best-fit value and error of the x-axis pointing offset,\n
+       MUSE.x-HST.x (arcsec). This is the distance that features\n
+       in the HST image had to be moved to the right, in the\n
+       direction of increasing x-axis pixel index, to line them up\n
+       with the same features in the MUSE image. One way to\n
+       correct the pointing error of the MUSE observation, is to\n
+       divide 'dx' by the pixel size along the x-axis (usually\n
+       0.2 arcsec), then add the resulting pixel offset to the\n
+       CRPIX1 header parameter.
     dy : `FittedValue`
-       The best-fit value and error of the y-axis pointing offset,
-       (MUSE.y - HST.y).
+       The best-fit value and error of the y-axis pointing offset,\n
+       MUSE.y-HST.y (arcsec). This is the distance that features\n
+       in the HST image had to be moved upwards, in the direction\n
+       of increasing y-axis pixel index, to line them up with the\n
+       same features in the MUSE image. One way to correct the\n
+       pointing error of the MUSE observation, is to divide 'dy'\n
+       by the pixel size along the y-axis (usually 0.2 arcsec),\n
+       then add the resulting pixel offset to the CRPIX2 header\n
+       parameter.
+    dra : `FittedValue`
+       The right-ascension error (arcsec) that corresponds to the\n
+       pointing error dx,dy. This is the angular distance that\n
+       features in the HST image had to be moved towards increased\n
+       right-ascension, to line them up with the same feaures in\n
+       the MUSE image. One way to correct the pointing error of\n
+       the MUSE observation is to subtract 'dra' from the CRVAL1\n
+       header value of the MUSE observation.
+    ddec : `FittedValue`
+       The declination error (arcsec) that corresponds to the\n
+       pointing error dx,dy. This is the angular distance that\n
+       features in the HST image had to be moved towards increased\n
+       declination, to line them up with the same feaures in\n
+       the MUSE image. One way to correct the pointing error of\n
+       the MUSE observation is to subtract 'ddec' from the CRVAL2\n
+       header value of the MUSE observation.
     fwhm : `FittedValue`
        The best-fit value and error of the FWHM of the Moffat PSF.
     beta : `FittedValue`
-       The best-fit value and error of the beta parameter of the
+       The best-fit value and error of the beta parameter of the\n
        Moffat PSF
     rchi : float
-       The reduced chi-squared value of the fit. Beware that the
-       absolute value of this number is not very useful, because the
-       fit is performed to the complex pixels of zero-padded FFTs,
-       which are not independent observables, rather than to image
-       pixels.
+       The reduced chi-squared value of the fit. Beware that the\n
+       absolute value of this number is not very useful, because\n
+       the fit is performed to the complex pixels of zero-padded\n
+       FFTs, which are not independent observables, rather than to\n
+       image pixels.
     rms_error : float
-       The root-mean square of the residual image pixels, in the same
-       units as the pixels of the original MUSE image.
+       The root-mean square of the residual image pixels, in the\n
+       same units as the pixels of the original MUSE image.
 
     """
 
@@ -1153,22 +1201,28 @@ def _plot_fitted_image_results(muse, imfit, muse_im, muse_ft, hst_im, hst_ft,
     if plotfile is not None:
         fig.savefig(plotfile, orientation="landscape", dpi=600)
 
-def _save_fitted_images(muse, muse_im, muse_ft, hst_im, hst_ft, prefix=None):
+def _save_fitted_images(muse, muse_im, muse_ft, hst, hst_im, hst_ft,
+                        crop_indexes, prefix=None):
     """Save the best-fit images from `fit_image_photometry()` to
     FITS files.
 
     Parameters
     ----------
-    muse : mpdaf.obj.Imagea
+    muse : mpdaf.obj.Image
        The original MUSE image.
     muse_im : numpy.ndarray
        The fitted version of the MUSE image.
     muse_ft : numpy.ndarray
        The FFT of muse_im.
+    hst : mpdaf.obj.Image
+       The original HST image.
     hst_im : numpy.ndarray
        The fitted version of the HST image.
     hst_ft : numpy.ndarray
        The FFT of hst_im.
+    crop_indexes : [slice, slice]
+       The slice indexes that were used to extract subimages
+       from the MUSE and HST images.
     prefix : str or None
        The filename prefix to which to append the distinguishing
        suffixes of each image file. If this is None, the original
@@ -1180,25 +1234,116 @@ def _save_fitted_images(muse, muse_im, muse_ft, hst_im, hst_ft, prefix=None):
     if prefix is None:
         prefix = basename(muse.filename).replace(".fits","")
 
-    im = Image.new_from_obj(muse, data=muse_im)
-    im.write(prefix + "_image.fits")
+    # Write the images to FITS files.
 
-    im = Image.new_from_obj(hst, data=hst_im)
-    im.write(prefix + "_hst_model.fits")
+    _write_image_to_fits(muse, crop_indexes, muse_im,
+                         prefix + "_image.fits")
+    _write_image_to_fits(hst, crop_indexes, hst_im,
+                         prefix + "_hst_model.fits")
+    _write_image_to_fits(muse, crop_indexes, muse_im - hst_im,
+                         prefix + "_residual.fits")
 
-    im.data = mdata - hdata
-    im.write(prefix + "_residual.fits")
+    # Write the absolute values of the image FFTs to FITS files.
 
-    im = Image.new_from_obj(muse, data=abs(muse_ft))
-    im.write(prefix + "_fft.fits")
+    _write_fft_to_fits(muse, muse_ft, prefix + "_fft.fits")
+    _write_fft_to_fits(hst, hst_ft, prefix + "_hst_model_fft.fits")
+    _write_fft_to_fits(muse, muse_ft - hst_ft, prefix + "_residual_fft.fits")
 
-    im = Image.new_from_obj(hst, data=abs(hst_ft))
-    im.write(prefix + "_hst_model_fft.fits")
+def _write_image_to_fits(template, crop_indexes, data, filename):
+    """Write an image to a simple FITS file, using
+    a specified MPDAF image as a template.
 
-    im.data = abs(muse_ft - hst_ft)
-    im.write(prefix + "_residual_fft.fits")
+    Parameters
+    ----------
+    template : `mpdaf.obj.Image`
+       The MPDAF image from which the image originated.
+    crop_indexes : [slice, slice]
+       The slice indexes that were used to extract the
+       image from the template before it was processed.
+    data : `numpy.ndarray`
+       The 2D image array to be written to the file.
+    filename : str
+       The filename to give the FITS file.
+    """
 
-    del(im)
+    # Create a primary HDU for the image.
+
+    hdu = fits.PrimaryHDU(data)
+
+    # Get a cropped WCS object to represent the coordinate axes of
+    # the image.
+
+    wcs = template.wcs[crop_indexes]
+
+    # Get header keywords for the cropped wcs information.
+
+    wcs_header = wcs.to_header()
+
+    # Add the WCS keywords to the header of the primary HDU.
+
+    hdu.header.extend(wcs_header)
+
+    # Copy selected keywords from the template image.
+
+    for hdr in [template.primary_header, template.data_header]:
+        if hdr is not None:
+            for key in ['ORIGIN', 'TELESCOP', 'MJD-OBS', 'DATE-OBS', 'OBSERVER',
+                        'OBJECT', 'DATE', 'BUNIT', 'FILTER']:
+                if key in hdr:
+                    hdu.header[key] = (hdr[key], hdr.comments[key])
+
+    # Save the file.
+
+    hdu.writeto(filename, clobber=True)
+
+def _write_fft_to_fits(template, data, filename):
+    """Write the absolute values of an FFT of a 2D image to a
+    simple FITS file.
+
+    Parameters
+    ----------
+    template : `mpdaf.obj.Image`
+       The MPDAF image from which the FFT was obtained.
+    data : `numpy.ndarray`
+       The 2D fft array to be written to the file.
+    filename : str
+       The filename to give the FITS file.
+    """
+
+    # Create a primary HDU for the image.
+
+    hdu = fits.PrimaryHDU(np.abs(data))
+
+    # Copy selected keywords from the template image.
+
+    # Copy selected keywords from the template image.
+
+    for hdr in [template.primary_header, template.data_header]:
+        if hdr is not None:
+            for key in ['ORIGIN', 'TELESCOP', 'MJD-OBS', 'DATE-OBS', 'OBSERVER',
+                        'OBJECT', 'DATE', 'BUNIT', 'FILTER']:
+                if key in hdr:
+                    hdu.header[key] = (hdr[key], hdr.comments[key])
+
+    # Calculate the spatial-frequency increment in cycles per degree.
+
+    im_steps = template.get_step(unit=u.deg)
+    ft_steps = 1.0 / im_steps / np.asarray(data.shape)
+
+    # Add header keywords to describe the coordinates.
+
+    hdu.header['CRPIX1'] = data.shape[1] // 2 + 1
+    hdu.header['CRPIX2'] = data.shape[0] // 2 + 1
+    hdu.header['CRVAL1'] = (0.0, 'The x-axis spatial-frequency origin')
+    hdu.header['CRVAL2'] = (0.0, 'The y-axis spatial-frequency origin')
+    hdu.header['CD1_1'] = (ft_steps[1], 'cycles/degree')
+    hdu.header['CD1_2'] = 0.0
+    hdu.header['CD2_1'] = 0.0
+    hdu.header['CD2_2'] = (ft_steps[0], 'cycles/degree')
+
+    # Save the file.
+
+    hdu.writeto(filename, clobber=True)
 
 def _generate_fft_images(mfft, hfft):
     """Convert half-plane FFTs of the the best-fit MUSE and HST images

@@ -411,6 +411,21 @@ def make_wideband_image_main(argv):
                             option is not specified, angstroms are
                             assumed.''')
 
+        parser.add_argument('--nprocess', nargs='?', default=0,
+                            metavar="number-of-processes",
+                            type=int,
+                            help='''DEFAULT=%(default)s.
+                            The number of worker processes to use. The
+                            default is 0, which creates one process
+                            per CPU.  Alternatively, if a negative
+                            number, -n, is specified, then max(ncpu -
+                            n,1) processes are created, where ncpu is
+                            the number of available CPUs. To prevent
+                            the use of any worker processes, pass 1 to
+                            this argument, and the computation will be
+                            performed entirely within the current
+                            process.''')
+
         # Add mandatory arguments for the MUSE image and the HST images.
 
         parser.add_argument('filter_curve',
@@ -474,7 +489,8 @@ def make_wideband_image_main(argv):
             if not options.quiet:
                 print("Computing the output image.")
             image = bandpass_image(cube, curve[:,0], curve[:,1],
-                                   unit_wave=options.wave_units)
+                                   unit_wave=options.wave_units,
+                                   nprocess=options.nprocess)
 
             # Get the input filename.
 

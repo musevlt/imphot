@@ -34,7 +34,7 @@ class FittedValue(object):
     stdev : float
        The estimated 1-sigma uncertainty in the best-fit value.
     fixed : bool
-       True if the value of this parameter was fixed during the
+       True if the value of this parameter was fixed during the\n
        fit. False if the parameter was free to vary.
     """
 
@@ -375,6 +375,30 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           Save the result images of each input image to FITS
                           files.'''))
 
+            self.add_argument('--taper',  default=9, type=int,
+                          metavar="pixels",
+                          help=dedent('''\
+                          DEFAULT=%(default)s (pixels)
+                          This argument controls how transitions
+                          between unmasked and masked regions are
+                          softened. Because the fitting algorithm
+                          replaces masked pixels with zeros, bright
+                          sources that are truncted by masked regions
+                          cause sharp changes in brightness that look
+                          like real features and bias the fitted
+                          position error. To reduce this effect,
+                          pixels close to the boundary of a masked
+                          region are tapered towards zero over a
+                          distance specified by the --taper argument.
+                          The method used to smooth the transition
+                          requires that the --taper argument be an odd
+                          number of pixels, so if an even-valued
+                          integer is specified, this is quietly
+                          rounded up to the next highest odd
+                          number. Alternatively, the softening
+                          algorithm can be disabled by specifying 0
+                          (or any value below 2).'''))
+
         # Describe command-line arguments that are common to
         # both fit_image_photometry() and fit_star_photometry().
 
@@ -457,71 +481,93 @@ class FittedPhotometry(object):
     Parameters
     ----------
     method : str
-        A short word that identifies the method used to fit the photometry.
+       A short word that identifies the method used to fit the photometry.
     muse : `mpdaf.obj.Image`
        The MUSE image that the fit was performed on.
     fit_report : str
-        A multi-line string that contains a verbose report about the
-        final least-squares fit or fits.
+       A multi-line string that contains a verbose report about the
+       final least-squares fit or fits.
     scale : `FittedValue`
-        The best-fit value and error of the calibration scale
-        factor, MUSE/HST.
+       The best-fit value and error of the calibration scale
+       factor, MUSE/HST.
     bg : `FittedValue`
-        The best-fit value and error of the calibration offset,
-        MUSE-HST.
+       The best-fit value and error of the calibration offset,
+       MUSE-HST.
     dx : `FittedValue`
-        The best-fit value and error of the x-axis pointing offset,
-        MUSE.x-HST.x.
+       The best-fit value and error of the x-axis pointing offset,
+       MUSE.x-HST.x.
     dy : `FittedValue`
-        The best-fit value and error of the y-axis pointing offset,
-        MUSE.y-HST.y.
+       The best-fit value and error of the y-axis pointing offset,
+       MUSE.y-HST.y.
     fwhm : `FittedValue`
-        The best-fit value and error of the FWHM of the Moffat PSF.
+       The best-fit value and error of the FWHM of the Moffat PSF.
     beta : `FittedValue`
-        The best-fit value and error of the beta parameter of the
-        Moffat PSF.
+       The best-fit value and error of the beta parameter of the
+       Moffat PSF.
     rms_error : float
-        The root-mean square of the pixel residuals of the fit in the
-        MUSE image, in the same units as the pixels of the original
-        MUSE image.
+       The root-mean square of the pixel residuals of the fit in the
+       MUSE image, in the same units as the pixels of the original
+       MUSE image.
 
     Attributes
     ----------
     name : str
-        The basename of the MUSE FITS without the .fits extension.
+       The basename of the MUSE FITS without the .fits extension.
     fit_report : str
-        A printable report on the fit from the least-squares
-        fitting function.
+       A printable report on the fit from the least-squares\n
+       fitting function.
     scale : `FittedValue`
-        The best-fit value and error of the calibration scale
-        factor, MUSE/HST.
+       The best-fit value and error of the calibration scale\n
+       factor, MUSE/HST.
     bg : `FittedValue`
-        The best-fit value and error of the calibration offset,
-        MUSE-HST.
+       The best-fit value and error of the calibration offset,\n
+       MUSE-HST.
     dx : `FittedValue`
-        The best-fit value and error of the x-axis pointing offset,
-        MUSE.x-HST.x.
+       The best-fit value and error of the x-axis pointing offset,\n
+       MUSE.x-HST.x (arcsec). This is the distance that features\n
+       in the HST image had to be moved to the right, in the\n
+       direction of increasing x-axis pixel index, to line them up\n
+       with the same features in the MUSE image. One way to\n
+       correct the pointing error of the MUSE observation, is to\n
+       divide 'dx' by the pixel size along the x-axis (usually\n
+       0.2 arcsec), then add the resulting pixel offset to the\n
+       CRPIX1 header parameter.
     dy : `FittedValue`
-        The best-fit value and error of the y-axis pointing offset,
-        MUSE.y-HST.y.
-    dxdec : `FittedValue`
-        The dx,dy vector resolved along the cross-declination axis
-        (arcsec). Note that cross-declination is an axis on the sky
-        that crosses the declination axis at the reference ra,dec of
-        the observation, and is perpendicular to the declination axis.
-        It increases in the same sense as right-ascension, but is only
-        perfectly parallel to right ascension at the equator.
+       The best-fit value and error of the y-axis pointing offset,\n
+       MUSE.y-HST.y (arcsec). This is the distance that features\n
+       in the HST image had to be moved upwards, in the direction\n
+       of increasing y-axis pixel index, to line them up with the\n
+       same features in the MUSE image. One way to correct the\n
+       pointing error of the MUSE observation, is to divide 'dy'\n
+       by the pixel size along the y-axis (usually 0.2 arcsec),\n
+       then add the resulting pixel offset to the CRPIX2 header\n
+       parameter.
+    dra : `FittedValue`
+       The right-ascension error (arcsec) that corresponds to the\n
+       pointing error dx,dy. This is the angular distance that\n
+       features in the HST image had to be moved towards increased\n
+       right-ascension, to line them up with the same feaures in\n
+       the MUSE image. One way to correct the pointing error of\n
+       the MUSE observation is to subtract 'dra' from the CRVAL1\n
+       header value of the MUSE observation.
     ddec : `FittedValue`
-        The dx,dy vector resolved along the declination axis (arcsec).
+       The declination error (arcsec) that corresponds to the\n
+       pointing error dx,dy. This is the angular distance that\n
+       features in the HST image had to be moved towards increased\n
+       declination, to line them up with the same feaures in\n
+       the MUSE image. One way to correct the pointing error of\n
+       the MUSE observation is to subtract 'ddec' from the CRVAL2\n
+       header value of the MUSE observation.
     fwhm : `FittedValue`
-        The best-fit value and error of the FWHM of the Moffat PSF.
+       The best-fit value and error of the FWHM of the Moffat\n
+       PSF.
     beta : `FittedValue`
-        The best-fit value and error of the beta parameter of the
-        Moffat PSF.
+       The best-fit value and error of the beta parameter of the\n
+       Moffat PSF.
     rms_error : float
-        The root-mean square of the pixel residuals of the fit in the
-        MUSE image, in the same units as the pixels of the original
-        MUSE image.
+       The root-mean square of the pixel residuals of the fit in\n
+       the MUSE image, in the same units as the pixels of the\n
+       original MUSE image.
 
     """
 
@@ -542,33 +588,27 @@ class FittedPhotometry(object):
         # deviations, from arcsec to pixel counts.
 
         steps = muse.wcs.get_step(unit=u.arcsec)
-        py,px = np.array([dy.value, dx.value]) / steps
-        sy,sx = np.array([dy.stdev, dx.stdev]) / steps
+        p = np.array([dy.value, dx.value]) / steps
+        s = np.array([dy.stdev, dx.stdev]) / steps
 
-        # Get the FITS coordinate conversion matrix, so that we have a
-        # way to convert pixel offsets to cross-declination and
-        # declination offsets.
+        # We need to Right Ascension and declination offsets that
+        # correspond, approximately, to the dx,dy pointing errors.
+        # Calculate these by adding the offsets to the pixel at the
+        # center of the image.
 
-        cd = muse.wcs.get_cd()
+        center_pix = np.array(np.asarray(muse.shape)/2.0)
+        center_dec_ra = muse.wcs.pix2sky(center_pix, unit=u.arcsec)[0]
+        ddec,dra = muse.wcs.pix2sky(center_pix + p, unit=u.arcsec)[0] -\
+                   center_dec_ra
+        sdec,sra = muse.wcs.pix2sky(center_pix + s, unit=u.arcsec)[0] -\
+                   center_dec_ra
 
-        # Convert the X and Y axis corrections to equivalent
-        # cross-declination and declination corrections, and
-        # compute their propagated uncertainties.
+        # Record the right ascension and declination corrections in
+        # arcseconds.
 
-        xdec, dec = np.dot(cd, np.array([[px], [py]]))
-        sxdec, sdec = np.sqrt(np.dot(cd**2, np.array([[sx**2], [sy**2]])))
-
-        # Get the factor needed to convert from the units produced by
-        # the CD matrix, and arcseconds.
-
-        arcsec = muse.wcs.unit.to(u.arcsec)
-
-        # Record the cross-declination and declination pointing corrections
-        # in arcseconds.
-
-        self.dxdec = FittedValue(value = xdec*arcsec, stdev = sxdec*arcsec,
-                                 fixed = dx.fixed and dy.fixed)
-        self.ddec = FittedValue(value = dec*arcsec, stdev = sdec*arcsec,
+        self.dra = FittedValue(value = dra, stdev = sra,
+                               fixed = dx.fixed and dy.fixed)
+        self.ddec = FittedValue(value = ddec, stdev = sdec,
                                 fixed = dx.fixed and dy.fixed)
 
     def __str__(self):
@@ -590,8 +630,8 @@ class FittedPhotometry(object):
 
         if header:
             name_width = len(self.name)
-            s = "#%-*s Method  Flux    FWHM    beta     Flux    x-offset  y-offset  xdec-off   dec-off    RMS\n" % (name_width-1, " MUSE observation ID")
-            s += "#%*s         scale  (\")            offset     (\")       (\")     (\")      (\")     error\n" % (name_width-1, "")
+            s = "#%-*s Method  Flux    FWHM    beta     Flux    x-offset  y-offset  ra-offset dec-offset  RMS\n" % (name_width-1, " MUSE observation ID")
+            s += "#%*s         scale  arcsec           offset    arcsec    arcsec    arcsec    arcsec    error\n" % (name_width-1, "")
             s +=  "#%s ------ ------- ------- ------- --------- --------- --------- --------- --------- -------\n" % ('-' * (name_width - 1))
 
         # Format the fitted values.
@@ -599,7 +639,7 @@ class FittedPhotometry(object):
         s += "%s %6s % 7.4f % 7.4f % 7.4f % 9.5f % 9.5f % 9.5f % 9.5f % 9.5f %7.4f" % (
             self.name, self.method, self.scale.value, self.fwhm.value,
             self.beta.value, self.bg.value,
-            self.dx.value, self.dy.value, self.dxdec.value, self.ddec.value,
+            self.dx.value, self.dy.value, self.dra.value, self.ddec.value,
             self.rms_error)
         return s
 
@@ -618,25 +658,25 @@ class HstFilterInfo(object):
     filter_name : str
        The name of the filter.
     abmag_zero : float
-       The AB magnitude that corresponds to the zero electrons/s
-       from the camera. This comes from (from ``https://archive.stsci.edu/prepds/xdf``)
+       The AB magnitude that corresponds to the zero electrons/s\n
+       from the camera (see ``https://archive.stsci.edu/prepds/xdf``).
     photflam : float
-       The calibration factor to convert pixel values in
-       electrons/s to erg cm-2 s-1 Angstrom-1.
+       The calibration factor to convert pixel values in\n
+       electrons/s to erg cm-2 s-1 Angstrom-1.\n
        Calculated using::
 
          photflam = 10**(-abmag_zero/2.5 - 2*log10(photplam) - 0.9632)
 
-       which is a rearranged form of the following equation from
+       which is a rearranged form of the following equation from\n
        ``http://www.stsci.edu/hst/acs/analysis/zeropoints``::
 
          abmag_zero = -2.5 log10(photflam)-5 log10(photplam)-2.408
 
     photplam : float
-       The pivot wavelength of the filter (Angstrom)
+       The pivot wavelength of the filter (Angstrom)\n
        (from ``http://www.stsci.edu/hst/acs/analysis/bandwidths``)
     photbw : float
-       The effective bandwidth of the filter (Angstrom)
+       The effective bandwidth of the filter (Angstrom)\n
        (from ``http://www.stsci.edu/hst/acs/analysis/bandwidths``)
 
     """

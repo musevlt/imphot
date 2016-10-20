@@ -107,7 +107,7 @@ Cohen et. al reported that between 2 of the four HST UDF observing
 runs, the flux of this source (UDF 9397) changed by 6%. This is much
 less than the 20% discrepancy seen above, between the flux
 scale-factor determined on the stars, and the scale factor fitted to
-other sources. In practice, as described in the `pitfalls<pitfalls`
+other sources. In practice, as described in the `pitfalls<pitfalls>`
 section, the majority of the flux discrepancy is due to point sources
 appearing dimmer than they should in HST observations, due to CCD
 charge transfer losses.

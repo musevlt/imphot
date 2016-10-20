@@ -267,30 +267,60 @@ class FittedStarPhotometry(FittedPhotometry):
     name : str
        The basename of the MUSE FITS without the .fits extension.
     fit_report : str
-       A multi-line string listing verbose reports on both the MUSE
-       and the HST star fits.
+       A multi-line string listing verbose reports on both the\n
+       MUSE and the HST star fits.
     scale  : `FittedValue`
-       The best-fit value and error of the calibration scale
+       The best-fit value and error of the calibration scale\n
        factor, MUSE/HST. This is derived from muse_flux/hst_flux.
     bg  : `FittedValue`
-       The best-fit value and error of the calibration offset,
+       The best-fit value and error of the calibration offset,\n
        MUSE-HST. This is derived from muse_bg - hst_bg.
     dx : `FittedValue`
-       The best-fit value and error of the x-axis pointing offset,
-       MUSE.x-HST.x (arcsec). This is derived from muse_dx - self.hst_dx.
+       The best-fit value and error of the x-axis pointing offset,\n
+       muse_dx-hst_dx (arcsec). This is the distance that features\n
+       in the HST image had to be moved to the right, in the\n
+       direction of increasing x-axis pixel index, to line them up\n
+       with the same features in the MUSE image. One way to\n
+       correct the pointing error of the MUSE observation, is to\n
+       divide 'dx' by the pixel size along the x-axis (usually\n
+       0.2 arcsec), then add the resulting pixel offset to the\n
+       CRPIX1 header parameter.
     dy : `FittedValue`
-       The best-fit value and error of the y-axis pointing offset,
-       MUSE.y-HST.y (arcsec). This is derived from muse_dy - self.hst_dy.
+       The best-fit value and error of the y-axis pointing offset,\n
+       muse_y-hst_y (arcsec). This is the distance that features\n
+       in the HST image had to be moved upwards, in the direction\n
+       of increasing y-axis pixel index, to line them up with the\n
+       same features in the MUSE image. One way to correct the\n
+       pointing error of the MUSE observation, is to divide 'dy'\n
+       by the pixel size along the y-axis (usually 0.2 arcsec),\n
+       then add the resulting pixel offset to the CRPIX2 header\n
+       parameter.
+    dra : `FittedValue`
+       The right-ascension error (arcsec) that corresponds to the\n
+       pointing error dx,dy. This is the angular distance that\n
+       features in the HST image had to be moved towards increased\n
+       right-ascension, to line them up with the same feaures in\n
+       the MUSE image. One way to correct the pointing error of\n
+       the MUSE observation is to subtract 'dra' from the CRVAL1\n
+       header value of the MUSE observation.
+    ddec : `FittedValue`
+       The declination error (arcsec) that corresponds to the\n
+       pointing error dx,dy. This is the angular distance that\n
+       features in the HST image had to be moved towards increased\n
+       declination, to line them up with the same feaures in\n
+       the MUSE image. One way to correct the pointing error of\n
+       the MUSE observation is to subtract 'ddec' from the CRVAL2\n
+       header value of the MUSE observation.
     fwhm : `FittedValue`
-       The best-fit value and error of the FWHM of the Moffat PSF
-       (arcsec). This is the same as muse_fwhm.
+       The best-fit value and error of the FWHM of the Moffat\n
+       PSF (arcsec). This is the same as muse_fwhm.
     beta : `FittedValue`
-       The best-fit value and error of the beta parameter of the
+       The best-fit value and error of the beta parameter of the\n
        Moffat PSF. This is the same as muse_beta.
     rms_error : float
-       The root-mean square of the pixel residuals of the fit to the
-       star in the MUSE image, in the same units as the pixels of the
-       original MUSE image.
+       The root-mean square of the pixel residuals of the fit to\n
+       the star in the MUSE image, in the same units as the pixels\n
+       of the original MUSE image.
 
     ra  : float
        The right-ascension used for the origin of the fit (degrees)
@@ -298,47 +328,52 @@ class FittedStarPhotometry(FittedPhotometry):
        The declination used for the origin of the fit (degrees)
 
     muse_fwhm : `FittedValue`
-       The best-fit value and error of the FWHM of the Moffat PSF
-       fitted to the star in the MUSE image (arcsec)
+       The best-fit value and error of the FWHM of the Moffat\n
+       PSF fitted to the star in the MUSE image (arcsec)
     muse_beta : `FittedValue`
-       The best-fit value and error of the beta parameter of the
+       The best-fit value and error of the beta parameter of the\n
        Moffat PSF fitted to the star in the MUSE image.
     muse_dx : `FittedValue`
-       The x-axis image offset of the center of the star fitted
-       in the MUSE image to the coordinate self.ra,self.dec (arcsec).
+       The x-axis image offset of the center of the star fitted\n
+       in the MUSE image to the coordinate self.ra,self.dec\n
+       (arcsec).
     muse_dy : `FittedValue`
-       The y-axis image offset of the center of the star fitted
-       in the MUSE image to the coordinate self.ra,self.dec (arcsec).
+       The y-axis image offset of the center of the star fitted\n
+       in the MUSE image to the coordinate self.ra,self.dec\n
+       (arcsec).
     muse_bg : `FittedValue`
-       The fitted flux zero-offset under the fitted Moffat PSF in
+       The fitted flux zero-offset under the fitted Moffat PSF in\n
        the MUSE image of the star.
     muse_flux : `FittedValue`
-       The fitted total flux of the Moffat PSF that was fitted to the star
-       in the MUSE image, using the flux units of the MUSE image.
+       The fitted total flux of the Moffat PSF that was fitted to\n
+       the star in the MUSE image, using the flux units of the\n
+       MUSE image.
     muse.rchi : float
-       The reduced chi-squared of the fit of the Moffat PSF to the
+       The reduced chi-squared of the fit of the Moffat PSF to the\n
        star in the MUSE image.
 
     hst_fwhm : `FittedValue`
-       The best-fit value and error of the FWHM of the Moffat PSF
-       fitted to the star in the HST image (arcsec)
+       The best-fit value and error of the FWHM of the Moffat\n
+       PSF fitted to the star in the HST image (arcsec)
     hst_beta : `FittedValue`
-       The best-fit value and error of the beta parameter of the
+       The best-fit value and error of the beta parameter of the\n
        Moffat PSF fitted to the star in the HST image.
     hst_dx : `FittedValue`
-       The x-axis image offset of the center of the star fitted
-       in the HST image to the coordinate self.ra,self.dec (arcsec).
+       The x-axis image offset of the center of the star fitted\n
+       in the HST image to the coordinate self.ra,self.dec\n
+       (arcsec).
     hst_dy : `FittedValue`
-       The y-axis image offset of the center of the star fitted
-       in the HST image to the coordinate self.ra,self.dec (arcsec).
+       The y-axis image offset of the center of the star fitted\n
+       in the HST image to the coordinate self.ra,self.dec\n
+       (arcsec).
     hst_bg : `FittedValue`
-       The fitted flux zero-offset under the fitted Moffat PSF in
+       The fitted flux zero-offset under the fitted Moffat PSF in\n
        the HST image of the star.
     hst_flux : `FittedValue`
-       The fitted total flux of the Moffat PSF fitted to the star
+       The fitted total flux of the Moffat PSF fitted to the star\n
        in the HST image, using the flux units of the MUSE image.
     hst_rchi : float
-       The reduced chi-squared of the fit of the Moffat PSF to the
+       The reduced chi-squared of the fit of the Moffat PSF to the\n
        star in the HST image.
 
     """
