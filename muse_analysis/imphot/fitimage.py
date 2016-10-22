@@ -14,7 +14,8 @@ from mpdaf.obj import Image
 
 from . import ds9regions
 from .core import (UserError, FittedValue, FittedPhotometry, HstFilterInfo,
-                   image_grids_aligned, _default_hst_fwhm, _default_hst_beta)
+                   image_grids_aligned, _default_hst_fwhm, _default_hst_beta,
+                   apply_corrections)
 from .mp import _FitPhotometryMP
 
 __all__ = ['fit_image_photometry', 'FittedImagePhotometry',
@@ -27,7 +28,8 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
                          hst_beta=_default_hst_beta,
                          margin=2.0, segment=False, display=False,
                          nowait=False, hardcopy=None, title=None,
-                         star=None, save=False, fig=None, taper=9):
+                         star=None, save=False, fig=None, taper=9,
+                         apply=False, resample=False):
 
     """Given a MUSE image and an HST image that has been regridded and aligned
     onto the same coordinate grid as the MUSE image, use the HST image as a
@@ -43,6 +45,12 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
     the two images. The PSF parameters, calibration factors and
     pointing offsets that best reproduce the MUSE image, are the
     outputs of this algorithm.
+
+    Optionally, if apply=True is passed to this function, pointing
+    corrections and calibration corrections are derived from the
+    fitted parameters, and a corrected version of the MUSE image is
+    written to a new FITS file. See also the resample option, which
+    controls how pointing errors are corrected.
 
     Parameters
     ----------
@@ -165,6 +173,21 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
        specified, this is quietly rounded up to the next highest odd
        number. Alternatively, the softening algorithm can be disabled
        by passing 0 (or any value below 2).
+    apply : False
+       If True, derive corrections from the fitted position errors and
+       calibration errors, apply these to the MUSE image, and write
+       the resulting image to a FITS file. The name of the output file
+       is based on the name of the input file, by replacing its
+       ".fits" extension with "_aligned.fits".  If the input muse
+       image was not read from a file, then a file called
+       "muse_aligned.fits" is written in the current directory.
+    resample : False
+       When apply==True, this argument determines how position errors
+       are corrected. If resample=False, then the coordinate reference
+       pixel (CRPIX1, CRPIX2) is adjusted to change the coordinates of
+       the pixels without changing any pixel values. If resample=True,
+       then the pixel values are resampled to shift the image without
+       changing the coordinates of the pixels.
 
     Returns
     -------
@@ -538,6 +561,11 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
         if save:
             _save_fitted_images(muse, muse_im, muse_ft,
                                 hst, hst_im, hst_ft, crop_indexes)
+
+    # Write a corrected version of the MUSE image?
+
+    if apply:
+        _write_corrected_image(muse, imfit, resample)
 
     # Return the results in an object.
 
@@ -1232,7 +1260,10 @@ def _save_fitted_images(muse, muse_im, muse_ft, hst, hst_im, hst_ft,
     # Get the basename of the file without the FITS suffix.
 
     if prefix is None:
-        prefix = basename(muse.filename).replace(".fits","")
+        if muse.filename is None:
+            prefix = "muse"
+        else:
+            prefix = basename(muse.filename).replace(".fits","")
 
     # Write the images to FITS files.
 
@@ -1393,7 +1424,44 @@ def _generate_fft_images(mfft, hfft):
 
     return (muse_ft, hst_ft)
 
+def _write_corrected_image(muse, imfit, resample):
+    """Derive corrections from the fitted position errors and
+    calibration errors, apply these to the MUSE image, and write
+    the resulting image to a FITS file. The name of the output file
+    is based on the name of the input file, by replacing its
+    ".fits" extension with "_aligned.fits".  If the input muse
+    image was not read from a file, then a file called
+    "image_aligned.fits" is written in the current directory.
+
+    muse : `mpdaf.obj.Image`
+       The image to be corrected.
+    imfit : `imphot.FittedPhotometry`
+       Fitted image properties.
+    resample : False
+       If resample=False, then the coordinate reference pixel (CRPIX1,
+       CRPIX2) is adjusted to correct the coordinates of the pixels
+       without changing any pixel values. If resample=True, then the
+       pixel values are resampled to shift the image without changing
+       the coordinates of the pixels.
+    """
+
+    # Get a corrected version of the MUSE image.
+
+    im = apply_corrections(muse, imfit, resample=resample)
+
+    # Get a prefix for the output filename.
+
+    if muse.filename is None:
+        prefix = "muse"
+    else:
+        prefix = basename(muse.filename).replace(".fits","")
+
+    # Write the corrected image to disk.
+
+    im.write(prefix + "_aligned.fits")
+
 class FitImagePhotometryMP(_FitPhotometryMP):
+
     """A multiprocessing iterator that creates a pool or worker
     processes to repeatedly call `fit_image_photometry()` for each
     of a list of MUSE files, returning the results via the
