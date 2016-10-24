@@ -4,13 +4,15 @@ import astropy.units as u
 import string
 import argparse
 import numpy as np
+from scipy.ndimage.interpolation import affine_transform
 from textwrap import dedent
 
 __all__ = ['FittedValue', 'UserError', 'WorkerError',
            'FIT_IMAGE', 'FIT_STAR', 'FIT_BOTH',
            'ImphotArgumentParser', 'extract_function_args',
            'FittedPhotometry', 'HstFilterInfo', 'rescale_hst_like_muse',
-           'regrid_hst_like_muse', 'image_grids_aligned']
+           'regrid_hst_like_muse', 'image_grids_aligned',
+           'apply_corrections']
 
 # Set default parameters for the HST Moffat PSF.
 
@@ -433,6 +435,27 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           Either a plot title, "none" to request the default
                           title, or "" to request that no title be displayed
                           above the plots.'''))
+
+            self.add_argument('--apply', action='store_true',
+                          help=dedent('''\
+                          Derive corrections from the fitted position errors
+                          and calibration errors, apply these to the MUSE
+                          image, and write the resulting image to a FITS
+                          file. The name of the output file is based on the
+                          name of the input file, by replacing its ".fits"
+                          extension with "_aligned.fits".  If the input muse
+                          image was not read from a file, then a file called
+                          "muse_aligned.fits" is written in the current
+                          directory. Also see the --resample option.'''))
+
+            self.add_argument('--resample', action='store_true',
+                          help=dedent('''\
+                          By default the --apply option corrects position
+                          errors by changing the coordinate reference pixel
+                          (CRPIX1,CRPIX2) without changing any pixel values.
+                          Alternatively, this option can be used to shift
+                          the image by resampling its pixels, without
+                          changing the coordinates of the pixels.'''))
 
 
 def extract_function_args(options, function):
@@ -874,3 +897,128 @@ def image_grids_aligned(im1, im2, tolerance=0.01):
     # The images have matching coordinate grids.
 
     return True
+
+def apply_corrections(im, imfit, corrections="xy,scale,zero", resample=False,
+                      inplace=False):
+
+    """Correct an image for pointing-errors, calibration errors and/or
+    zero offsets, using the fitted errors returned by a preceding call
+    to `imphot.fit_image_photometry()` or `imphot.fit_star_photometry()`.
+
+    Note that this function is called on the user's behalf by
+    `imphot.fit_image_photometry()` and `imphot.fit_star_photometry()` if
+    those functions are given the argument, apply=True.
+
+    Parameters
+    ----------
+    im : `mpdaf.obj.Image`
+       The image to be corrected.
+    imfit : `imphot.FittedPhotometry`
+       Fitted image properties returned by
+       `imphot.fit_image_photometry()` or
+       `imphot.fit_star_photometry()`.
+    corrections : str
+       A comma-separated list of the corrections that are to be
+       applied, indicated by the following words.
+
+         xy     - The x-axis and y-axis pointing error.
+         scale - The flux scale-factor.
+         zero  - The flux zero-offset.
+
+       The default string is "x,y,scale,zero", which applies
+       all of the corrections.
+    resample : bool
+       This parameter controls how pointing errors are corrected.
+       They can be corrected either by changing the coordinates of the
+       pixels (resample=False), or by resampling the pixels to shift
+       the image within the original coordinate grid (resample=True).
+    inplace : bool
+       By default a new image is returned, and the input image is
+       not changed. However by setting inplace=True, the image is
+       corrected within the input container.
+
+    Returns
+    -------
+    out : `mpdaf.obj.Image`
+       The corrected image.
+
+    """
+
+    # Get a container for the output image.
+
+    out = im if inplace else im.copy()
+
+    # Split the list of corrections to be applied.
+
+    if corrections is None:
+        pars = []
+    else:
+        pars = corrections.split(",")
+
+    # Correct the pointing errors?
+
+    if "xy" in pars:
+
+        # Get the size of the image pixels in arcseconds.
+
+        pixh, pixw = im.get_step(unit=u.arcsec)
+
+        # Convert the corrections from arcseconds to pixels.
+
+        dx = imfit.dx.value / pixw
+        dy = imfit.dy.value / pixh
+
+        # Resample the image to correct its pointing errors?
+
+        if resample:
+
+            # Since we only need to shift the image, the affine transform
+            # matrix is the identity matrix, and only the pixel offsets need
+            # to be changed.
+
+            affine_matrix = np.identity(2)
+            affine_offset = np.array([dy, dx])
+
+            # Resample the MUSE image to correct its pointing error.
+
+            data = affine_transform(out.data.filled(0.0), affine_matrix,
+                                    affine_offset, prefilter=False, order=2)
+            if out.var is None:
+                var = None
+            else:
+                var = affine_transform(out.var.filled(0.0), affine_matrix,
+                                       affine_offset, prefilter=False, order=2)
+            if out.mask is np.ma.nomask:
+                mask = np.ma.nomask
+            else:
+                mask = affine_transform(out.mask.astype(float), affine_matrix,
+                                  affine_offset, prefilter=False, order=2) > 0.1
+
+            # Install the modified arrays.
+
+            out._data = data
+            out._var = var
+            out._mask = mask
+
+        # Change the coordinates of the image to correct for position errors?
+
+        else:
+
+            out.wcs.set_crpix1(out.wcs.get_crpix1() + dx)
+            out.wcs.set_crpix2(out.wcs.get_crpix2() + dy)
+
+
+    # Correct the zero offset of the fluxes?
+
+    if "zero" in pars:
+        out._data -= imfit.bg.value
+
+    # Correct the image for flux scaling errors?
+
+    if "scale" in pars:
+        out._data /= imfit.scale.value
+        out._var /= imfit.scale.value**2
+
+    # Return the corrected image.
+
+    return out

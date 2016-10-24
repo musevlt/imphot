@@ -9,14 +9,14 @@ from lmfit import Model
 from mpdaf.obj import Image
 
 from .core import (UserError, FittedValue, FittedPhotometry,
-                   image_grids_aligned)
+                   image_grids_aligned, apply_corrections)
 from .mp import _FitPhotometryMP
 
 __all__ = ['fit_star_photometry', 'FittedStarPhotometry', 'FitStarPhotometryMP']
 
 def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
                         display=False, nowait=False, hardcopy=None,
-                        title=None, fig=None):
+                        title=None, fig=None, apply=False, resample=False):
 
     """Given a MUSE image and an HST image that have been regridded
     and aligned onto the same coordinate grid as the MUSE image, fit
@@ -25,6 +25,12 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
     zero-offset and pixel scaling error of the MUSE image. Also use
     the fitted FWHM and beta parameters to indicate the characteristics
     of the MUSE PSF.
+
+    Optionally, if apply=True is passed to this function, pointing
+    corrections and calibration corrections are derived from the
+    fitted parameters, and a corrected version of the MUSE image is
+    written to a new FITS file. See also the resample option, which
+    controls how pointing errors are corrected.
 
     Parameters
     ----------
@@ -65,6 +71,21 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
     title : str or None
        A specific plot title, or None to request the default title.
        Specify "" if no title is wanted.
+    apply : False
+       If True, derive corrections from the fitted position errors and
+       calibration errors, apply these to the MUSE image, and write
+       the resulting image to a FITS file. The name of the output file
+       is based on the name of the input file, by replacing its
+       ".fits" extension with "_aligned.fits".  If the input muse
+       image was not read from a file, then a file called
+       "muse_aligned.fits" is written in the current directory.
+    resample : False
+       When apply==True, this argument determines how position errors
+       are corrected. If resample=False, then the coordinate reference
+       pixel (CRPIX1, CRPIX2) is adjusted to change the coordinates of
+       the pixels without changing any pixel values. If resample=True,
+       then the pixel values are resampled to shift the image without
+       changing the coordinates of the pixels.
 
     Returns
     -------
@@ -229,10 +250,55 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
                                   x, y, muse_values, hst_values,
                                   fig, display, plotfile, nowait, title)
 
-    # Return an object that contains the results.
+    # Encapsulate the results for return.
 
-    return FittedStarPhotometry(muse, muse_results, hst_results,
-                                muse_rms_error, ra, dec)
+    imfit = FittedStarPhotometry(muse, muse_results, hst_results,
+                                 muse_rms_error, ra, dec)
+
+    # Write a corrected version of the MUSE image?
+
+    if apply:
+        _write_corrected_image(muse, imfit, resample)
+
+    # Return the fitted parameters.
+
+    return imfit
+
+def _write_corrected_image(muse, imfit, resample):
+    """Derive corrections from the fitted position errors and
+    calibration errors, apply these to the MUSE image, and write
+    the resulting image to a FITS file. The name of the output file
+    is based on the name of the input file, by replacing its
+    ".fits" extension with "_aligned.fits".  If the input muse
+    image was not read from a file, then a file called
+    "image_aligned.fits" is written in the current directory.
+
+    muse : `mpdaf.obj.Image`
+       The image to be corrected.
+    imfit : `imphot.FittedPhotometry`
+       Fitted image properties.
+    resample : False
+       If resample=False, then the coordinate reference pixel (CRPIX1,
+       CRPIX2) is adjusted to correct the coordinates of the pixels
+       without changing any pixel values. If resample=True, then the
+       pixel values are resampled to shift the image without changing
+       the coordinates of the pixels.
+    """
+
+    # Get a corrected version of the MUSE image.
+
+    im = apply_corrections(muse, imfit, resample=resample)
+
+    # Get a prefix for the output filename.
+
+    if muse.filename is None:
+        prefix = "muse"
+    else:
+        prefix = basename(muse.filename).replace(".fits","")
+
+    # Write the corrected image to disk.
+
+    im.write(prefix + "_aligned.fits")
 
 # Define the class that holds information returned by
 # fit_star_photometry().
