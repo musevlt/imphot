@@ -1,5 +1,4 @@
 from __future__ import division
-from os.path import basename
 import numpy as np
 from numpy import ma
 import astropy.units as u
@@ -660,7 +659,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
     if hardcopy is None or hardcopy == "":
         plotfile = None
     else:
-        prefix = basename(muse.filename).replace(".fits","")
+        prefix = muse.filename.replace(".fits","")
         plotfile = prefix + "_image_fit." + hardcopy
 
     # If needed, generate the images needed for plotting and saving.
@@ -1382,13 +1381,13 @@ def _save_fitted_images(muse, muse_im, muse_ft, hst, hst_im, hst_ft,
        filename of the MUSE image is used, after removing the .fits.
     """
 
-    # Get the basename of the file without the FITS suffix.
+    # Get the pathname of the file with the FITS suffix removed.
 
     if prefix is None:
         if muse.filename is None:
             prefix = "muse"
         else:
-            prefix = basename(muse.filename).replace(".fits","")
+            prefix = muse.filename.replace(".fits","")
 
     # Write the images to FITS files.
 
@@ -1579,7 +1578,7 @@ def _write_corrected_image(muse, imfit, resample):
     if muse.filename is None:
         prefix = "muse"
     else:
-        prefix = basename(muse.filename).replace(".fits","")
+        prefix = muse.filename.replace(".fits","")
 
     # Write the corrected image to disk.
 

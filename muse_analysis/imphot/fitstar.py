@@ -240,7 +240,7 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
     if hardcopy is None or hardcopy == "":
         plotfile = None
     else:
-        prefix = basename(muse.filename).replace(".fits","")
+        prefix = muse.filename.replace(".fits","")
         plotfile = prefix + "_star_fit." + hardcopy
 
     # If requested plot the results.
@@ -294,7 +294,7 @@ def _write_corrected_image(muse, imfit, resample):
     if muse.filename is None:
         prefix = "muse"
     else:
-        prefix = basename(muse.filename).replace(".fits","")
+        prefix = muse.filename.replace(".fits","")
 
     # Write the corrected image to disk.
 
