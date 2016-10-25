@@ -29,7 +29,8 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
                          margin=2.0, segment=False, display=False,
                          nowait=False, hardcopy=None, title=None,
                          star=None, save=False, fig=None, taper=9,
-                         apply=False, resample=False):
+                         apply=False, resample=False, init_dx=None,
+                         init_dy=None):
 
     """Given a MUSE image and an HST image that has been regridded and aligned
     onto the same coordinate grid as the MUSE image, use the HST image as a
@@ -188,7 +189,16 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
        the pixels without changing any pixel values. If resample=True,
        then the pixel values are resampled to shift the image without
        changing the coordinates of the pixels.
-
+    init_dx : float or None
+       An initial guess for the x-axis pointing offset, (MUSE_x -
+       HST_x), or None to request the default (currently 0.0). This
+       argument is ignored if the fix_dx argument has been given a
+       value.
+    init_dy : float or None
+       An initial guess for the y-axis pointing offset, (MUSE_y -
+       HST_y), or None to request the default (currently 0.0). This
+       argument is ignored if the fix_dy argument has been given a
+       value.
     Returns
     -------
     out : `FittedImagePhotometry`
@@ -221,40 +231,17 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
 
     dy, dx = muse.get_step(unit=u.arcsec)
 
-    # Get the masks of the MUSE and HST images.
+    # Get the initial guesses for the x-axis and y-axis offsets.
 
-    if muse.data.mask is not ma.nomask:
-        muse_mask = muse.data.mask
-    else:
-        muse_mask = ~np.isfinite(muse.data.data)
+    if fix_dx is not None:
+        init_dx = fix_dx
+    elif init_dx is None:
+        init_dx = 0.0
 
-    if hst.data.mask is not ma.nomask:
-        hst_mask = hst.data.mask
-    else:
-        hst_mask = ~np.isfinite(hst.data.data)
-
-    # Before comparing the images we need to make sure that any areas
-    # that are masked in one image are also masked in the other, so
-    # obtain the union of the MUSE and HST masks.
-
-    mask = np.logical_or(muse_mask, hst_mask)
-    del muse_mask
-    del hst_mask
-
-    # If requested, mask areas that don't contain significant objects
-    # by masking pixels that are below the median value in a
-    # morphologically opened version of the HST image.
-
-    if segment:
-        tmp = hst.data.filled(0.0)
-        kernel = np.array([[0,1,0],
-                           [1,1,1],
-                           [0,1,0]])
-        tmp = grey_opening(tmp, structure=kernel)
-        tmp = grey_dilation(tmp, structure=kernel)
-        tmpmask = tmp < np.median(tmp)
-        tmpmask = binary_erosion(tmpmask, structure=kernel)
-        mask = np.logical_or(mask, tmpmask)
+    if fix_dy is not None:
+        init_dy = fix_dy
+    elif init_dy is None:
+        init_dy = 0.0
 
     # If we have been passed a circular region around a star,
     # extract its center coordinate and radius.
@@ -285,236 +272,368 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
         else:
             regions = None
 
-    # If the user wants any regions masked, mask them. The masking
-    # code needs the mask to be part of an MPDAF Image, so temporarily
-    # replace the HST mask with the above mask.
+    # Fit for the parameters at least once. Subsequently repeat the
+    # fit if the change in the fitted position offsets indicates that
+    # the pixel mask that was applied to the MUSE and HST images
+    # actually masked different parts of the sky.
 
-    if regions is not None:
-        try:
-            original_mask = hst.mask
-            hst.mask = mask
-            _mask_ds9regions(hst, regions)
-            mask = hst.mask
-        finally:    # Always reinstall the original HST mask.
-            hst.mask = original_mask
+    refine = True
+    refit_count = 0  # The number of refined fits performed so far.
+    max_refits = 2   # The maximum number of refined fits to perform.
+    while refine:
 
-    # Copy both image arrays into masked array containers that use the
-    # above mask.
+        # Get copies of the current HST data and mask arrays.
 
-    mdata = ma.array(data=muse.data.data, mask=mask, copy=False)
-    hdata = ma.array(data=hst.data.data, mask=mask, copy=False)
+        hst_data = hst._data.copy()
+        if hst.mask is not ma.nomask:
+            hst_mask = hst.mask.copy()
+        else:
+            hst_mask = ~np.isfinite(hst_data)
 
-    # Create boolean arrays that indicate which rows and columns
-    # contain no unmasked values.
+        # Get copies of the MUSE data and mask arrays.
 
-    masked_rows = np.apply_over_axes(np.logical_and.reduce, mask, 1).ravel()
-    masked_cols = np.apply_over_axes(np.logical_and.reduce, mask, 0).ravel()
+        muse_data = muse._data.copy()
+        if muse.mask is not ma.nomask:
+            muse_mask = muse.mask.copy()
+        else:
+            muse_mask = ~np.isfinite(muse_data)
 
-    # Get the indexes of all rows and columns that contain at least one
-    # unmasked element.
+        # If the user wants any regions masked, mask them in the HST
+        # image (since we trust its sky coordinates). The masking code
+        # needs the mask to be part of an MPDAF Image, so temporarily
+        # replace the HST mask with the above mask.
 
-    used_rows = np.where(~masked_rows)[0]
-    used_cols = np.where(~masked_cols)[0]
+        if regions is not None:
+            try:
+                original_mask = hst.mask
+                hst.mask = hst_mask
+                _mask_ds9regions(hst, regions)
+                hst_mask = hst.mask
+            finally:    # Always reinstall the original HST mask.
+                hst.mask = original_mask
 
-    # Create a list of slices to select the above area that contains
-    # unmasked pixels.
+        # If requested, mask areas that don't contain significant objects,
+        # by masking pixels that are below the median value in a
+        # morphologically opened version of the HST image.
 
-    crop_indexes = [slice(used_rows.min(), used_rows.max()-1),
-                    slice(used_cols.min(), used_cols.max()-1)]
+        if segment:
+            tmp = ma.array(hst_data, mask=hst_mask).filled(0.0)
+            kernel = np.array([[0,1,0],
+                               [1,1,1],
+                               [0,1,0]])
+            tmp = grey_opening(tmp, structure=kernel)
+            tmp = grey_dilation(tmp, structure=kernel)
+            tmpmask = tmp < np.median(tmp)
+            tmpmask = binary_erosion(tmpmask, structure=kernel)
+            hst_mask |= tmpmask
 
-    # Crop the HST and MUSE images and the mask.
+        # Convert the initial offsets to pixels, and round them to the nearest
+        # integer number of pixels.
 
-    mdata = mdata[crop_indexes]
-    hdata = hdata[crop_indexes]
-    mask = mask[crop_indexes]
+        pxoff = int(np.floor(init_dx / dx + 0.5))
+        pyoff = int(np.floor(init_dy / dy + 0.5))
 
-    # Get the median of the unmasked parts of the MUSE image, to use
-    # as an initial estimate of the constant part of the background.
+        # Compute the angular size of the above pixel offsets.
 
-    subtracted = np.ma.median(mdata)
+        xshift = pxoff * dx
+        yshift = pyoff * dy
 
-    # Get ndarray versions of the above arrays with masked pixels
-    # filled with zeros. Note that the choice of zeros (as opposed
-    # to median values) prevents these pixels from biasing the
-    # fitted values of the image offset and scale factors.
-    #
-    # Before doing this, subtract the estimated MUSE background from
-    # the MUSE image, such that when the masked areas are replaced
-    # with zeros, they aren't significantly different from the normal
-    # background of the image.
+        # Require some overlap between the MUSE and shifted HST images.
 
-    mdata = ma.filled(mdata - subtracted, 0.0)
-    hdata = ma.filled(hdata, 0.0)
+        if abs(pxoff) > hst.shape[1] or abs(pyoff) > hst.shape[0]:
+            raise UserError("The initial pointing offsets are larger than the image")
 
-    # When a position offset in the image plane is performed by
-    # applying a linearly increasing phase offset in the Fourier
-    # domain of an FFT, the result is that features in the image
-    # that get shifted off the right edge of the image reappear at the
-    # left edge of the image, and vice versa. By appending a margin of
-    # zeros to the right edge, and later discarding this margin, we
-    # ensure that features that are shifted off the left or right
-    # edges of the image end up in this discarded area, rather than
-    # appearing at the opposite edge of the visible image. Appending a
-    # similar margin to the Y axis has the same effect for vertical
-    # shifts.
+        # Get a version of the HST image that is shifted by the above number
+        # of pixels. Ensure that regions that are shifted into the image from
+        # outside the image area are masked and zeroed.
 
-    shape = np.asarray(mdata.shape) + np.ceil(np.abs(
-        margin / muse.get_step(unit=u.arcsec) ) ).astype(int)
+        if pxoff != 0 or pyoff != 0:
+            shifted_data = np.zeros(hst.shape, dtype=np.float64)
+            shifted_mask = np.ones(hst.shape, dtype=bool)
+            ny, nx = hst.shape
 
-    # Round the image dimensions up to integer powers of two, to
-    # ensure that an efficient FFT implementation is used.
+            # Determine the x-axis slice to be copied, and where it
+            # should be copied to in the new array.
 
-    shape = (2**np.ceil(np.log(shape)/np.log(2.0))).astype(int)
+            if pxoff >= 0:
+                xold = slice(0, nx - pxoff)
+                xnew = slice(pxoff, nx)
+            else: # pxoff < 0
+                xold = slice(-pxoff, nx)
+                xnew = slice(0, nx + pxoff)
 
-    # Extract the dimensions of the expanded Y and X axes.
+            # Determine the y-axis slice to be copied, and where it
+            # should be copied to in the new array.
 
-    ny,nx = shape
+            if pyoff >= 0:
+                yold = slice(0, ny - pyoff)
+                ynew = slice(pyoff, ny)
+            else: # pyoff < 0
+                yold = slice(-pyoff, ny)
+                ynew = slice(0, ny + pyoff)
 
-    # Compute the slice needed to extract the original area from
-    # expanded arrays of the above shape.
+            shifted_data[ynew, xnew] = hst_data[yold, xold]
+            shifted_mask[ynew, xnew] = hst_mask[yold, xold]
+            hst_data = shifted_data
+            hst_mask = shifted_mask
 
-    sky_slice = [slice(0,mdata.shape[0]), slice(0,mdata.shape[1])]
+        # Before comparing the images we need to make sure that any areas
+        # that are masked in one image are also masked in the other, so
+        # obtain the union of the MUSE and HST masks.
 
-    # Zero-pad the MUSE image array to have the new shape.
+        mask = np.logical_or(muse_mask, hst_mask)
+        del muse_mask
+        del hst_mask
 
-    tmp = np.zeros(shape)
-    tmp[sky_slice] = mdata
-    mdata = tmp
+        # Copy both image arrays into masked array containers that use the
+        # above mask.
 
-    # Zero-pad the HST image array to have the new shape.
+        mdata = ma.array(data=muse_data, mask=mask, copy=False)
+        hdata = ma.array(data=hst_data, mask=mask, copy=False)
 
-    tmp = np.zeros(shape)
-    tmp[sky_slice] = hdata
-    hdata = tmp
+        # Create boolean arrays that indicate which rows and columns
+        # contain no unmasked values.
 
-    # Pad the mask array to have the same dimensions, with padded
-    # elements being masked.
+        masked_rows = np.apply_over_axes(np.logical_and.reduce, mask, 1).ravel()
+        masked_cols = np.apply_over_axes(np.logical_and.reduce, mask, 0).ravel()
 
-    tmp = np.ones(shape, dtype=bool)
-    tmp[sky_slice] = mask
-    mask = tmp
+        # Get the indexes of all rows and columns that contain at least one
+        # unmasked element.
 
-    # Compute a multiplicative pixel scaling image that inverts the
-    # mask to be 1 for pixels that are to be kept, and 0 for pixels
-    # that are to be removed, then smoothly bevel the edges of the
-    # areas of ones to reduce the effects of sharp edges on the fitted
-    # position offsets.
+        used_rows = np.where(~masked_rows)[0]
+        used_cols = np.where(~masked_cols)[0]
 
-    if taper >= 2:
-        weight_img = _bevel_mask(~mask, 2*(taper//2)+1)
-    else:
-        weight_img = (~mask).astype(float)
+        # Create a list of slices to select the above area that contains
+        # unmasked pixels.
 
-    # Also obtain the FFT of the mask for fitting the background flux
-    # offset in the Fourier plane.
+        crop_indexes = [slice(used_rows.min(), used_rows.max()-1),
+                        slice(used_cols.min(), used_cols.max()-1)]
 
-    weight_fft = np.fft.rfft2(weight_img)
+        # Crop the HST and MUSE images and the mask.
 
-    # Scale the MUSE and HST images by the weighting image.
+        mdata = mdata[crop_indexes]
+        hdata = hdata[crop_indexes]
+        mask = mask[crop_indexes]
 
-    mdata *= weight_img
-    hdata *= weight_img
+        # Get the median of the unmasked parts of the MUSE image, to use
+        # as an initial estimate of the constant part of the background.
 
-    # Obtain the Fourier transforms of the MUSE and HST images. The
-    # Fourier transform is hermitian, because the images have no
-    # imaginary parts, so we only calculate half of the Fourier
-    # transform plane by using rfft2 instead of fft2().
+        subtracted = np.ma.median(mdata)
 
-    hfft = np.fft.rfft2(hdata)
-    mfft = np.fft.rfft2(mdata)
+        # Get ndarray versions of the above arrays with masked pixels
+        # filled with zeros. Note that the choice of zeros (as opposed
+        # to median values) prevents these pixels from biasing the
+        # fitted values of the image offset and scale factors.
+        #
+        # Before doing this, subtract the estimated MUSE background from
+        # the MUSE image, such that when the masked areas are replaced
+        # with zeros, they aren't significantly different from the normal
+        # background of the image.
 
-    # Scale the FFT of the MUSE image by the blackman
-    # anti-aliasing window function which is assumed to have been
-    # applied by Image.resample() to decimate the HST image to the
-    # MUSE image resolution.
+        mdata = ma.filled(mdata - subtracted, 0.0)
+        hdata = ma.filled(hdata, 0.0)
 
-    _apply_resampling_window(mfft, shape)
+        # When a position offset in the image plane is performed by
+        # applying a linearly increasing phase offset in the Fourier
+        # domain of an FFT, the result is that features in the image
+        # that get shifted off the right edge of the image reappear at the
+        # left edge of the image, and vice versa. By appending a margin of
+        # zeros to the right edge, and later discarding this margin, we
+        # ensure that features that are shifted off the left or right
+        # edges of the image end up in this discarded area, rather than
+        # appearing at the opposite edge of the visible image. Appending a
+        # similar margin to the Y axis has the same effect for vertical
+        # shifts.
 
-    # Convolve the muse function with the PSF of the original HST
-    # image.
+        shape = np.asarray(mdata.shape) + np.ceil(np.abs(
+            margin / muse.get_step(unit=u.arcsec) ) ).astype(int)
 
-    _convolve_hst_psf(mfft, shape, dy, dx, hst_fwhm, hst_beta)
+        # Round the image dimensions up to integer powers of two, to
+        # ensure that an efficient FFT implementation is used.
 
-    # Compute the spatial frequencies along the X and Y axes
-    # of the above power spectra.
+        shape = (2**np.ceil(np.log(shape)/np.log(2.0))).astype(int)
 
-    fx = np.fft.rfftfreq(nx, dx)
-    fy = np.fft.fftfreq(ny, dy)
+        # Extract the dimensions of the expanded Y and X axes.
 
-    # Get 2D grids of the x,y spatial-frequency coordinates of each pixel
-    # in the power spectra.
+        ny,nx = shape
 
-    fx2d,fy2d = np.meshgrid(fx,fy)
+        # Compute the slice needed to extract the original area from
+        # expanded arrays of the above shape.
 
-    # The initial guess for the factor to multiply the HST fluxes
-    # by, is the ratio of the values at the origins of the MUSE
-    # and HST power spectra. The values at the origin represent
-    # the sums of the flux in the MUSE and HST images.
+        sky_slice = [slice(0,mdata.shape[0]), slice(0,mdata.shape[1])]
 
-    scale_guess = np.abs(mfft[0,0]) / np.abs(hfft[0,0])
+        # Zero-pad the MUSE image array to have the new shape.
 
-    # Calculate the frequency interval of the FFTs along the
-    # X and Y axes.
+        tmp = np.zeros(shape)
+        tmp[sky_slice] = mdata
+        mdata = tmp
 
-    dfx = 1.0 / (nx * dx)
-    dfy = 1.0 / (ny * dy)
+        # Zero-pad the HST image array to have the new shape.
 
-    # Get a 2D array of the radius of each image pixel center relative
-    # to pixel [0,0] (the spatial origin of the FFT algorithm).
+        tmp = np.zeros(shape)
+        tmp[sky_slice] = hdata
+        hdata = tmp
 
-    rsq = np.fft.fftfreq(nx, dfx)**2 + \
-          np.fft.fftfreq(ny, dfy)[np.newaxis,:].T**2
+        # Pad the mask array to have the same dimensions, with padded
+        # elements being masked.
 
-    # Wrap the modeling function in an object for the least-squares fitting
-    # algorithm.
+        tmp = np.ones(shape, dtype=bool)
+        tmp[sky_slice] = mask
+        mask = tmp
 
-    fitmod = Model(_xy_moffat_model_fn,
-                   independent_vars=["fx", "fy", "rsq", "hstfft", "wfft",
-                                     "subtracted"])
+        # Compute a multiplicative pixel scaling image that inverts the
+        # mask to be 1 for pixels that are to be kept, and 0 for pixels
+        # that are to be removed, then smoothly bevel the edges of the
+        # areas of ones to reduce the effects of sharp edges on the fitted
+        # position offsets.
 
-    # Describe each of the parameters of the model to the least-squares fitter.
+        if taper >= 2:
+            weight_img = _bevel_mask(~mask, 2*(taper//2)+1)
+        else:
+            weight_img = (~mask).astype(float)
 
-    if fix_bg is None:
-        fitmod.set_param_hint('bg', value=subtracted)
-    else:
-        fitmod.set_param_hint('bg', value=fix_bg,
-                                vary=False)
-    if fix_scale is None:
-        fitmod.set_param_hint('scale', value=scale_guess, min=0.0)
-    else:
-        fitmod.set_param_hint('scale', value=fix_scale,
-                                min=0.0, vary=False)
-    if fix_fwhm is None:
-        fitmod.set_param_hint('fwhm', value=0.5, min=0.0)
-    else:
-        fitmod.set_param_hint('fwhm', value=fix_fwhm,
-                                min=0.0, vary=False)
-    if fix_dx is None:
-        fitmod.set_param_hint('dx', value=0.0)
-    else:
-        fitmod.set_param_hint('dx', value=fix_dx, vary=False)
+        # Also obtain the FFT of the mask for fitting the background flux
+        # offset in the Fourier plane.
 
-    if fix_dy is None:
-        fitmod.set_param_hint('dy', value=0.0)
-    else:
-        fitmod.set_param_hint('dy', value=fix_dy, vary=False)
+        weight_fft = np.fft.rfft2(weight_img)
 
-    if fix_beta is None:
-        fitmod.set_param_hint('beta', value=5.0)
-    else:
-        fitmod.set_param_hint('beta', value=fix_beta, vary=False)
-    fitmod.make_params()
+        # Scale the MUSE and HST images by the weighting image.
 
-    # Fit for any parameters that have been allowed to vary.
+        mdata *= weight_img
+        hdata *= weight_img
 
-    results = fitmod.fit(mfft.ravel().view(dtype=float),
-                         fx=fx2d.ravel(), fy=fy2d.ravel(),
-                         rsq=rsq, hstfft=hfft.ravel(),
-                         wfft=weight_fft.ravel(), subtracted=subtracted)
+        # Obtain the Fourier transforms of the MUSE and HST images. The
+        # Fourier transform is hermitian, because the images have no
+        # imaginary parts, so we only calculate half of the Fourier
+        # transform plane by using rfft2 instead of fft2().
+
+        hfft = np.fft.rfft2(hdata)
+        mfft = np.fft.rfft2(mdata)
+
+        # Scale the FFT of the MUSE image by the blackman
+        # anti-aliasing window function which is assumed to have been
+        # applied by Image.resample() to decimate the HST image to the
+        # MUSE image resolution.
+
+        _apply_resampling_window(mfft, shape)
+
+        # Convolve the muse function with the PSF of the original HST
+        # image.
+
+        _convolve_hst_psf(mfft, shape, dy, dx, hst_fwhm, hst_beta)
+
+        # Compute the spatial frequencies along the X and Y axes
+        # of the above power spectra.
+
+        fx = np.fft.rfftfreq(nx, dx)
+        fy = np.fft.fftfreq(ny, dy)
+
+        # Get 2D grids of the x,y spatial-frequency coordinates of each pixel
+        # in the power spectra.
+
+        fx2d,fy2d = np.meshgrid(fx,fy)
+
+        # The initial guess for the factor to multiply the HST fluxes
+        # by, is the ratio of the values at the origins of the MUSE
+        # and HST power spectra. The values at the origin represent
+        # the sums of the flux in the MUSE and HST images.
+
+        scale_guess = np.abs(mfft[0,0]) / np.abs(hfft[0,0])
+
+        # Calculate the frequency interval of the FFTs along the
+        # X and Y axes.
+
+        dfx = 1.0 / (nx * dx)
+        dfy = 1.0 / (ny * dy)
+
+        # Get a 2D array of the radius of each image pixel center relative
+        # to pixel [0,0] (the spatial origin of the FFT algorithm).
+
+        rsq = np.fft.fftfreq(nx, dfx)**2 + \
+              np.fft.fftfreq(ny, dfy)[np.newaxis,:].T**2
+
+        # Wrap the modeling function in an object for the least-squares fitting
+        # algorithm.
+
+        fitmod = Model(_xy_moffat_model_fn,
+                       independent_vars=["fx", "fy", "rsq", "hstfft", "wfft",
+                                         "subtracted", "xshift", "yshift"])
+
+        # Describe each of the parameters of the model to the least-squares fitter.
+
+        if fix_bg is None:
+            fitmod.set_param_hint('bg', value=subtracted)
+        else:
+            fitmod.set_param_hint('bg', value=fix_bg,
+                                    vary=False)
+        if fix_scale is None:
+            fitmod.set_param_hint('scale', value=scale_guess, min=0.0)
+        else:
+            fitmod.set_param_hint('scale', value=fix_scale,
+                                    min=0.0, vary=False)
+        if fix_fwhm is None:
+            fitmod.set_param_hint('fwhm', value=0.5, min=0.0)
+        else:
+            fitmod.set_param_hint('fwhm', value=fix_fwhm,
+                                    min=0.0, vary=False)
+        if fix_dx is None:
+            fitmod.set_param_hint('dx', value=init_dx)
+        else:
+            fitmod.set_param_hint('dx', value=fix_dx, vary=False)
+
+        if fix_dy is None:
+            fitmod.set_param_hint('dy', value=init_dy)
+        else:
+            fitmod.set_param_hint('dy', value=fix_dy, vary=False)
+
+        if fix_beta is None:
+            fitmod.set_param_hint('beta', value=5.0)
+        else:
+            fitmod.set_param_hint('beta', value=fix_beta, vary=False)
+        fitmod.make_params()
+
+        # Fit for any parameters that have been allowed to vary.
+
+        results = fitmod.fit(mfft.ravel().view(dtype=float),
+                             fx=fx2d.ravel(), fy=fy2d.ravel(),
+                             rsq=rsq, hstfft=hfft.ravel(),
+                             wfft=weight_fft.ravel(),
+                             subtracted=subtracted, xshift=xshift,
+                             yshift=yshift)
+
+        # How much change has there been from the initial guesses at the
+        # x and y offsets?
+
+        xchange = results.best_values['dx'] - init_dx
+        ychange = results.best_values['dy'] - init_dy
+
+        # If the improvements of the fitted x and y pointing offsets
+        # were each less than a pixel, then we can be confident that
+        # the same areas of the sky were occluded by the shared pixel
+        # mask, and that no further improvement can be obtained by
+        # improving the alignment of the HST and MUSE masks on the
+        # sky.
+
+        if ((abs(xchange / dx) < 1.0 and abs(ychange / dy) < 1.0) or
+            refit_count >= max_refits):
+            refine = False
+
+        # Arrange to refine the fit using the latest fitted position
+        # offsets as initial guesses for the position offsets. These
+        # initial guesses are used to better position the mask in the
+        # HST and MUSE images, so that it masks the same regions of
+        # the sky in the two images.
+
+        else:
+            refine = True
+            refit_count += 1
+            init_dx = results.best_values['dx']
+            init_dy = results.best_values['dy']
 
     # Compute the FFT of the modified HST image.
 
     hfft = _xy_moffat_model_fn(fx2d, fy2d, rsq, hfft, weight_fft, subtracted,
+                               xshift, yshift,
                                results.best_values['dx'],
                                results.best_values['dy'],
                                results.best_values['bg'],
@@ -670,8 +789,8 @@ class FittedImagePhotometry(FittedPhotometry):
                                   rms_error=rms_error)
         self.rchi = results.redchi
 
-def _xy_moffat_model_fn(fx, fy, rsq, hstfft, wfft, subtracted, dx, dy,
-                       bg, scale, fwhm, beta):
+def _xy_moffat_model_fn(fx, fy, rsq, hstfft, wfft, subtracted, xshift, yshift,
+                        dx, dy, bg, scale, fwhm, beta):
 
     """This function is designed to be passed to lmfit to fit the FFT of
     an HST image to the FFT of a MUSE image on the same coordinate
@@ -716,6 +835,12 @@ def _xy_moffat_model_fn(fx, fy, rsq, hstfft, wfft, subtracted, dx, dy,
     subtracted : float
        A constant background value that has was already subtracted from
        the MUSE image before it was FFT'd.
+    xshift : int
+       The distance that the HST image was shifted along the x-axis, before
+       the fit (arcsec).
+    yshift : int
+       The distance that the HST image was shifted along the y-axis, before
+       the fit (arcsec).
     dx: float
        The position offset along the X axis of the image.
     dy: float
@@ -775,8 +900,8 @@ def _xy_moffat_model_fn(fx, fy, rsq, hstfft, wfft, subtracted, dx, dy,
 
     # Precompute the image shifting coefficients.
 
-    argx = -2.0j * np.pi * dx
-    argy = -2.0j * np.pi * dy
+    argx = -2.0j * np.pi * (dx - xshift)
+    argy = -2.0j * np.pi * (dy - yshift)
 
     # Create the model to compare with the MUSE FFT. This is the HST FFT
     # scaled by the fitted scaling factor, smoothed to a lower resolution
