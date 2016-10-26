@@ -545,14 +545,14 @@ beta can be removed, as described below, by adding the option
 Writing a corrected MUSE image
 ------------------------------
 
-If the optional `--apply` included in the argument list to
+If the optional `--apply` argument is included in the argument list to
 :ref:`fit_photometry<fit_photometry>`, then the MUSE image is
 corrected for the fitted pointing and calibration errors, and the
 resulting image is written to a new FITS file, which has the name of
 the MUSE input file, but with the ".fits" extension replaced by
 "_aligned.fits". By default, the fitted pointing errors are corrected
 by changing the coordinate reference pixel (CRPIX1, and CRPIX2) in the
-FITS header. Alternatively, it can correct the error by resampling the
-image to shift it without changing the coordinates of the pixels. This
-option is requested by including `--resample` in the argument list, in
-addition to `--apply`.
+FITS header. Alternatively, the pointing can be corrected by
+resampling the image, to shift it without changing the coordinates of
+the pixels. This option is requested by including `--resample` in the
+argument list, in addition to `--apply`.
