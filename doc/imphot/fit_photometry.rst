@@ -14,8 +14,9 @@ more provided python functions. The command-line options of the
                         [--fix_bg offset] [--fix_dx arcsec] [--fix_dy arcsec]
                         [--fix_fwhm arcsec] [--fix_beta value]
                         [--hst_fwhm arcsec] [--hst_beta value] [--margin arcsec]
-                        [--save] [--display] [--nowait]
-                        [--hardcopy format-or-none] [--title text] [--verbose]
+                        [--save] [--taper pixels] [--extramask text] [--display]
+                        [--nowait] [--hardcopy format-or-none] [--title text]
+                        [--apply] [--resample] [--verbose]
                         hst_image muse_images [muse_images ...]
 
   positional arguments:
@@ -140,7 +141,13 @@ more provided python functions. The command-line options of the
                           PSF of the HST.  The default value that is used if
                           this parameter is not specified, came from Moffat
                           fits to stars within HST UDF images, as described
-                          above for the hst_fwhm parameter.
+                          above for the hst_fwhm parameter. This term is
+                          covariant with other terms in the star fits, so there
+                          was significant scatter in the fitted values. From
+                          this range, a value was selected that yielded the
+                          least scatter in the fitted MUSE PSFs in many MUSE
+                          images from different MUSE fields and at different
+                          wavelengths.
     --margin arcsec       DEFAULT=2.0 (arcseconds)
                           The width of a margin of zeros to add around the
                           image before processing. A margin is needed because
@@ -155,6 +162,38 @@ more provided python functions. The command-line options of the
                           input images, and the largest expected PSF width.
     --save                Save the result images of each input image to FITS
                           files.
+    --taper pixels        DEFAULT=9 (pixels)
+                          This argument controls how transitions
+                          between unmasked and masked regions are
+                          softened. Because the fitting algorithm
+                          replaces masked pixels with zeros, bright
+                          sources that are truncted by masked regions
+                          cause sharp changes in brightness that look
+                          like real features and bias the fitted
+                          position error. To reduce this effect,
+                          pixels close to the boundary of a masked
+                          region are tapered towards zero over a
+                          distance specified by the --taper argument.
+                          The method used to smooth the transition
+                          requires that the --taper argument be an odd
+                          number of pixels, so if an even-valued
+                          integer is specified, this is quietly
+                          rounded up to the next highest odd
+                          number. Alternatively, the softening
+                          algorithm can be disabled by specifying 0
+                          (or any value below 2).
+    --extramask text      DEFAULT=None
+                          If the value of this argument is not the
+                          word "none", then it should name a FITS file
+                          that contains a mask image to be combined
+                          with the mask of the MUSE image.
+                          Specifically, this FITS file should have an
+                          IMAGE extension called 'DATA' and the image
+                          in that extension should have the same
+                          dimensions and WCS coordinates as the MUSE
+                          images. The pixels of the image should be
+                          integers, with 0 used to denote unmasked
+                          pixels, and 1 used to denote masked pixels.
     --display             Display the images, FFTs and star fits, if any.
     --nowait              Don't wait for the user to interact with each
                           displayed plot before continuing.
@@ -171,6 +210,21 @@ more provided python functions. The command-line options of the
                           Either a plot title, "none" to request the default
                           title, or "" to request that no title be displayed
                           above the plots.
+    --apply               Derive corrections from the fitted position errors
+                          and calibration errors, apply these to the MUSE
+                          image, and write the resulting image to a FITS
+                          file. The name of the output file is based on the
+                          name of the input file, by replacing its ".fits"
+                          extension with "_aligned.fits".  If the input muse
+                          image was not read from a file, then a file called
+                          "muse_aligned.fits" is written in the current
+                          directory. Also see the --resample option.
+    --resample            By default the --apply option corrects position
+                          errors by changing the coordinate reference pixel
+                          (CRPIX1,CRPIX2) without changing any pixel values.
+                          Alternatively, this option can be used to shift
+                          the image by resampling its pixels, without
+                          changing the coordinates of the pixels.
     --verbose             Report details of each fit, including chi-squared,
                           correlations, etc. Normally only summaries of the
                           fitted parameters are displayed.
@@ -487,3 +541,18 @@ indicate that common values of beta in MUSE images are between about
 2.2 and 3.0, depending on the seeing conditions. The restriction on
 beta can be removed, as described below, by adding the option
 `--fix_beta=none`. Alternatively, it can be fixed to another value.
+
+Writing a corrected MUSE image
+------------------------------
+
+If the optional `--apply` included in the argument list to
+:ref:`fit_photometry<fit_photometry>`, then the MUSE image is
+corrected for the fitted pointing and calibration errors, and the
+resulting image is written to a new FITS file, which has the name of
+the MUSE input file, but with the ".fits" extension replaced by
+"_aligned.fits". By default, the fitted pointing errors are corrected
+by changing the coordinate reference pixel (CRPIX1, and CRPIX2) in the
+FITS header. Alternatively, it can correct the error by resampling the
+image to shift it without changing the coordinates of the pixels. This
+option is requested by including `--resample` in the argument list, in
+addition to `--apply`.
