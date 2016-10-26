@@ -71,7 +71,7 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
     title : str or None
        A specific plot title, or None to request the default title.
        Specify "" if no title is wanted.
-    apply : False
+    apply : bool
        If True, derive corrections from the fitted position errors and
        calibration errors, apply these to the MUSE image, and write
        the resulting image to a FITS file. The name of the output file
@@ -79,7 +79,7 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
        ".fits" extension with "_aligned.fits".  If the input muse
        image was not read from a file, then a file called
        "muse_aligned.fits" is written in the current directory.
-    resample : False
+    resample : bool
        When apply==True, this argument determines how position errors
        are corrected. If resample=False, then the coordinate reference
        pixel (CRPIX1, CRPIX2) is adjusted to change the coordinates of

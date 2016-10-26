@@ -28,8 +28,8 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
                          margin=2.0, segment=False, display=False,
                          nowait=False, hardcopy=None, title=None,
                          star=None, save=False, fig=None, taper=9,
-                         apply=False, resample=False, init_dx=None,
-                         init_dy=None):
+                         apply=False, resample=False, extramask=None,
+                         init_dx=None, init_dy=None):
 
     """Given a MUSE image and an HST image that has been regridded and aligned
     onto the same coordinate grid as the MUSE image, use the HST image as a
@@ -173,7 +173,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
        specified, this is quietly rounded up to the next highest odd
        number. Alternatively, the softening algorithm can be disabled
        by passing 0 (or any value below 2).
-    apply : False
+    apply : bool
        If True, derive corrections from the fitted position errors and
        calibration errors, apply these to the MUSE image, and write
        the resulting image to a FITS file. The name of the output file
@@ -181,13 +181,27 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
        ".fits" extension with "_aligned.fits".  If the input muse
        image was not read from a file, then a file called
        "muse_aligned.fits" is written in the current directory.
-    resample : False
+    resample : bool
        When apply==True, this argument determines how position errors
        are corrected. If resample=False, then the coordinate reference
        pixel (CRPIX1, CRPIX2) is adjusted to change the coordinates of
        the pixels without changing any pixel values. If resample=True,
        then the pixel values are resampled to shift the image without
        changing the coordinates of the pixels.
+    extramask : str or `mpdaf.obj.Image` or `numpy.ndarray`
+       An optional masking image to apply to the MUSE image (and the
+       shifted HST image). This can be a numpy bool array of the same shape
+       as the MUSE image, with False elements denoting unmasked pixels
+       and True elements denoting masked pixels. Alternatively it can
+       be an MPDAF Image object of the same shape as the MUSE image,
+       which contains an image of integer valued pixels, where 0
+       denotes unmasked pixels, and 1 denotes masked pixels. Finally,
+       it can be a FITS file that contains an IMAGE extension called
+       'DATA', which must contain an image that has the same shape as
+       the MUSE image, and should contain integers that are 0 for
+       unmasked pixels, and 1 for masked pixels. Beware that if the
+       mask is specified as an MPDAF Image or a FITS image, then the
+       WCS information must match the MUSE image.
     init_dx : float or None
        An initial guess for the x-axis pointing offset, (MUSE_x -
        HST_x), or None to request the default (currently 0.0). This
@@ -225,6 +239,37 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
 
     if not image_grids_aligned(hst, muse):
         raise UserError("The pixels of the HST and MUSE images are not aligned.")
+
+    # Has an extra mask been specified?
+
+    if extramask is not None:
+
+        # Read the mask from a FITS file?
+
+        if isinstance(extramask, str):
+            try:
+                if isinstance(extramask, str):
+                    extramask = Image(extramask)
+            except Exception as e:
+                raise UserError("Error reading mask file (%s)" % e.message)
+
+        # If a FITS file or MPDAF Image was specified, verify that the
+        # it is for the correct field, and that it has the correct
+        # sampling and orientation. Then extract the mask as a boolean
+        # array.
+
+        if isinstance(extramask, Image):
+            if not image_grids_aligned(extramask, muse):
+                raise UserError("The pixels of the MUSE and extramask images are not aligned.")
+            extramask = extramask._data.astype(bool)
+
+        # If an extra mask was specified as a simple numpy array, check
+        # that it has the expected dimensions.
+
+        elif isinstance(extramask, np.ndarray):
+            if not np.array_equal(extramask.shape, muse.shape):
+                raise UserError("The extra-mask has the wrong dimensions")
+            extramask = extramask.astype(bool)
 
     # Get the Y-axis and X-axis dimensions of the MUSE pixels in arcseconds.
 
@@ -296,6 +341,11 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
             muse_mask = muse.mask.copy()
         else:
             muse_mask = ~np.isfinite(muse_data)
+
+        # If an extra mask has been specified, merge it into the MUSE mask.
+
+        if extramask is not None:
+            muse_mask |= extramask
 
         # If the user wants any regions masked, mask them in the HST
         # image (since we trust its sky coordinates). The masking code

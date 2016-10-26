@@ -401,6 +401,21 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           algorithm can be disabled by specifying 0
                           (or any value below 2).'''))
 
+            self.add_argument('--extramask',  default=None, type=_str_or_none,
+                          metavar="text",
+                          help=dedent('''\
+                          DEFAULT=%(default)s
+                          If this is not the word, "none", then it
+                          should name a FITS file that has an IMAGE
+                          extension called 'DATA'. The image should
+                          have the same dimensions and WCS coordinates
+                          as the MUSE images. Its pixels should be
+                          integers, with 0 used to denote unmasked
+                          pixels, and 1 used to denote masked
+                          pixels. This mask is merged with the mask
+                          of the MUSE image.'''))
+
+
         # Describe command-line arguments that are common to
         # both fit_image_photometry() and fit_star_photometry().
 
@@ -456,7 +471,6 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           Alternatively, this option can be used to shift
                           the image by resampling its pixels, without
                           changing the coordinates of the pixels.'''))
-
 
 def extract_function_args(options, function):
     """Given a dictionary of key/value pairs or a Namespace object
