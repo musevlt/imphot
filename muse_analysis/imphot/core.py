@@ -405,15 +405,17 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           metavar="text",
                           help=dedent('''\
                           DEFAULT=%(default)s
-                          If this is not the word, "none", then it
-                          should name a FITS file that has an IMAGE
-                          extension called 'DATA'. The image should
-                          have the same dimensions and WCS coordinates
-                          as the MUSE images. Its pixels should be
+                          If the value of this argument is not the
+                          word "none", then it should name a FITS file
+                          that contains a mask image to be combined
+                          with the mask of the MUSE image.
+                          Specifically, this FITS file should have an
+                          IMAGE extension called 'DATA' and the image
+                          in that extension should have the same
+                          dimensions and WCS coordinates as the MUSE
+                          images. The pixels of the image should be
                           integers, with 0 used to denote unmasked
-                          pixels, and 1 used to denote masked
-                          pixels. This mask is merged with the mask
-                          of the MUSE image.'''))
+                          pixels, and 1 used to denote masked pixels.'''))
 
 
         # Describe command-line arguments that are common to
