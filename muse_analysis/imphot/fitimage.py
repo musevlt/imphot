@@ -639,7 +639,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
             fitmod.set_param_hint('dy', value=fix_dy, vary=False)
 
         if fix_beta is None:
-            fitmod.set_param_hint('beta', value=5.0)
+            fitmod.set_param_hint('beta', value=5.0, min=0.1, max=1.0e6)
         else:
             fitmod.set_param_hint('beta', value=fix_beta, vary=False)
         fitmod.make_params()
