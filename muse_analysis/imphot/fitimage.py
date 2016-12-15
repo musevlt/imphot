@@ -464,10 +464,13 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
         hdata = hdata[crop_indexes]
         mask = mask[crop_indexes]
 
-        # Get the median of the unmasked parts of the MUSE image, to use
-        # as an initial estimate of the constant part of the background.
+        # Get the median of the unmasked parts of the MUSE image, to
+        # use as an initial estimate of the constant part of the
+        # background.  Note that the call to np.asscalar works around
+        # a bug in an old version of np.ma.median() which returned a 1
+        # element array.
 
-        subtracted = np.ma.median(mdata)
+        subtracted = np.asscalar(np.ma.median(mdata))
 
         # Get ndarray versions of the above arrays with masked pixels
         # filled with zeros. Note that the choice of zeros (as opposed
