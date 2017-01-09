@@ -57,11 +57,12 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
     display : bool
        If True (the default), display the image.
     hardcopy : str or None
-       If this is a non-empty string, then it should contain a
-       graphics file suffix supported by matplotlib, such as "pdf",
-       "jpg", "png" or "eps". Plots of the star fits will be written to
-       a filename that starts with the name of the MUSE input file,
-       after removing any .fits suffix, followed by "_star_fit.<suffix>".
+       Unless this is an empty string or the word, "none", then it
+       should contain a graphics file suffix supported by matplotlib,
+       such as "pdf", "jpg", "png" or "eps". Plots of the star fits
+       will be written to a filename that starts with the name of the
+       MUSE input file, after removing any .fits suffix, followed by
+       "_star_fit.<suffix>".
     nowait : bool
        When this argument is False, wait for the user to dismiss
        the plot before returning. This allows the user to interact
@@ -69,8 +70,8 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
        dissapear as soon as another plot is drawn and the user will
        not be able to interact with it.
     title : str or None
-       A specific plot title, or None to request the default title.
-       Specify "" if no title is wanted.
+       A specific plot title, None or "none" to request the default title,
+       or "" if no title is wanted.
     apply : bool
        If True, derive corrections from the fitted position errors and
        calibration errors, apply these to the MUSE image, and write
@@ -237,7 +238,7 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
     # If a hardcopy format has been specified, construct the filename
     # for the saved plot.
 
-    if hardcopy is None or hardcopy == "":
+    if hardcopy is None or hardcopy == "" or hardcopy == "none":
         plotfile = None
     else:
         prefix = muse.filename.replace(".fits","")
@@ -565,8 +566,8 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
        dissapear as soon as another plot is drawn and the user will
        not be able to interact with it.
     title : str or None
-       A specific plot title, or None to request the default title.
-       Specify "" if no title is wanted.
+       A specific plot title, None or "none" to request the default title,
+       or "" if no title is wanted.
 
     """
 
@@ -585,7 +586,7 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
 
     # Substitute a default title?
 
-    if title is None:
+    if title is None or title == "none":
         title = "MUSE image: %s " % basename(muse.filename).replace(".fits", "")
 
     # Display a plot title?

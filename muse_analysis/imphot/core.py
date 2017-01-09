@@ -109,24 +109,6 @@ def _string_to_float_or_none(s):
     except ValueError as e:
         raise UserError(e.message)
 
-def _str_or_none(s):
-    """Parse a command-line argument string that can contain either
-    a string or the word "none".
-
-    If the string contains the word none, return None.
-
-    Parameters
-    ----------
-    s  : str
-       The string to be parsed.
-    Returns
-    -------
-    out : str or None
-       The parsed string.
-
-    """
-    return None if s.lower() == "none" else s
-
 # Enumerate the two photometry fitting functions, and their combination,
 # using separate bits for FIT_IMAGE and FIT_STAR.
 
@@ -192,7 +174,7 @@ class ImphotArgumentParser(argparse.ArgumentParser):
         # that is being configured.
 
         if FIT_IMAGE & functions:
-            self.add_argument('--regions',  default="star", type=_str_or_none,
+            self.add_argument('--regions',  default="star", type=str,
                           metavar="file-star-notstar-or-none",
                           help=dedent('''\
                           DEFAULT=%(default)s
@@ -401,21 +383,22 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           algorithm can be disabled by specifying 0
                           (or any value below 2).'''))
 
-            self.add_argument('--extramask',  default=None, type=_str_or_none,
+            self.add_argument('--extramask',  default=None, type=str,
                           metavar="text",
                           help=dedent('''\
                           DEFAULT=%(default)s
                           If the value of this argument is not the
-                          word "none", then it should name a FITS file
-                          that contains a mask image to be combined
-                          with the mask of the MUSE image.
-                          Specifically, this FITS file should have an
-                          IMAGE extension called 'DATA' and the image
-                          in that extension should have the same
-                          dimensions and WCS coordinates as the MUSE
-                          images. The pixels of the image should be
-                          integers, with 0 used to denote unmasked
-                          pixels, and 1 used to denote masked pixels.'''))
+                          word "none", or an empty string, then it
+                          should name a FITS file that contains a mask
+                          image to be combined with the mask of the
+                          MUSE image.  Specifically, this FITS file
+                          should have an IMAGE extension called 'DATA'
+                          and the image in that extension should have
+                          the same dimensions and WCS coordinates as
+                          the MUSE images. The pixels of the image
+                          should be integers, with 0 used to denote
+                          unmasked pixels, and 1 used to denote masked
+                          pixels.'''))
 
 
         # Describe command-line arguments that are common to
@@ -434,7 +417,7 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           displayed plot before continuing.'''))
 
             self.add_argument('--hardcopy', default="none",
-                          type=_str_or_none, metavar="format-or-none",
+                          type=str, metavar="format-or-none",
                           help=dedent('''\
                           Write hardcopy plots of the fitting results to files
                           that have the specified graphics format (eg. "pdf",
@@ -445,7 +428,7 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           of the image fit, or "_star_fit.<suffix>" for plots
                           of any star fits.'''))
 
-            self.add_argument('--title',  default=None, type=_str_or_none,
+            self.add_argument('--title',  default=None, type=str,
                           metavar="text",
                           help=dedent('''\
                           DEFAULT=%(default)s

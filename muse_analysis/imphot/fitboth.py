@@ -50,13 +50,14 @@ def fit_image_and_star_photometry(hst, muse, star, regions="star",
        the radius of the area over which to perform the fit, in
        arcseconds.
     regions : str or iterable or None
-       This can be None, to indicate that no regions are needed in the
-       global image fit, "star" to restrict the image fit to pixels
-       within any region defined by the star=(ra,dec,radius) argument,
-       "notstar" to restrict the image fit to pixels outside any region
-       defined the by star=(ra,dec,radius) argument, the name of a
-       filename of the ds9 region file, or an iterable that returns
-       successive lines of a ds9 region file.
+       This can be None, "none", or "", to indicate that no regions
+       are needed in the global image fit, "star" to restrict the
+       image fit to pixels within any region defined by the
+       star=(ra,dec,radius) argument, "notstar" to restrict the image
+       fit to pixels outside any region defined the by
+       star=(ra,dec,radius) argument, the name of a filename of the
+       ds9 region file, or an iterable that returns successive lines
+       of a ds9 region file.
 
        These regions are passed to `fit_image_photometry()`. They can
        be used to exclude problematic areas of an image, or to exclude

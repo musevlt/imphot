@@ -62,10 +62,10 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
        The MUSE image to be characterized. This can be
        given as an MPDAF Image object, or by the filename of the FITS file.
     regions : None, str, or iterable
-       This can be None, to indicate that no regions are needed,
-       "star" to restrict the fit to pixels within any region defined
-       by the star=(ra,dec,radius) argument, "notstar" to restrict the
-       fit to pixels outside any region defined the by
+       This can be None, "none", or "", to indicate that no regions
+       are needed, "star" to restrict the fit to pixels within any
+       region defined by the star=(ra,dec,radius) argument, "notstar"
+       to restrict the fit to pixels outside any region defined the by
        star=(ra,dec,radius) argument, the name of a filename of the
        ds9 region file, or an iterable that returns successive lines
        of a ds9 region file.
@@ -131,11 +131,13 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
     display : bool
        If True (the default), display the plot.
     hardcopy : str or None
-       If this is a non-empty string, then it should contain a
-       graphics file suffix supported by matplotlib, such as "pdf",
-       "jpg", "png" or "eps". Plots of the image fit will be written to
-       a filename that starts with the name of the MUSE input file,
-       after removing any .fits suffix, followed by "_image_fit.<suffix>".
+       Unless this is an empty string or the word, "none", then it
+       should contain a graphics file suffix supported by matplotlib,
+       such as "pdf", "jpg", "png" or "eps". Plots of the image fit
+       will be written to a filename that starts with the name of the
+       MUSE input file, after removing any .fits suffix, followed by
+       "_image_fit.<suffix>".
+
     nowait : bool
        When this argument is False, wait for the user to dismiss
        the plot before returning. This allows the user to interact
@@ -143,8 +145,8 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
        dissapear as soon as another plot is drawn and the user will
        not be able to interact with it.
     title : str or None
-       A specific plot title, or None to request the default title.
-       Specify "" if no title is wanted.
+       A specific plot title, None or "none" to request the default title,
+       or "" to indicate that no title is wanted.
     star : (float, float, float)
        This option can be used to restrict the fitting procedure to
        a single star within the MUSE image. Its arguments are the
@@ -240,9 +242,12 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
     if not image_grids_aligned(hst, muse):
         raise UserError("The pixels of the HST and MUSE images are not aligned.")
 
-    # Has an extra mask been specified?
+    # Check if an extra mask has been specified.
 
-    if extramask is not None:
+    if extramask == "none" or extramask == "":
+        extramask = None
+
+    elif extramask is not None:
 
         # Read the mask from a FITS file?
 
@@ -315,6 +320,9 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
             regions = ["fk5; -circle(%g, %g, %g\")" % (ra, dec, radius)]
         else:
             regions = None
+
+    elif regions == "none" or regions == "":
+        regions = None
 
     # Fit for the parameters at least once. Subsequently repeat the
     # fit if the change in the fitted position offsets indicates that
@@ -709,7 +717,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
     # If a hardcopy format has been specified, construct the filename
     # for the saved plot.
 
-    if hardcopy is None or hardcopy == "":
+    if hardcopy is None or hardcopy == "" or hardcopy == "none":
         plotfile = None
     else:
         prefix = muse.filename.replace(".fits","")
@@ -1012,7 +1020,7 @@ def _plot_2d_array(data, axes, vmin=None, vmax=None, pixw=None, pixh=None,
         axes.set_xlabel(xlabel)
     if ylabel is not None:
         axes.set_ylabel(ylabel)
-    if title is not None:
+    if title is not None and title != "none":
         axes.set_title(title, fontsize=title_fs, color=title_color)
     axes.set_aspect('equal')
     if xtick is not None:
@@ -1311,8 +1319,8 @@ def _plot_fitted_image_results(muse, imfit, muse_im, muse_ft, hst_im, hst_ft,
        dissapear as soon as another plot is drawn and the user will
        not be able to interact with it.
     title : str or None
-       A specific plot title, or None to request the default title.
-       Specify "" if no title is wanted.
+       A specific plot title, None or "none" to request the default title,
+       or "" to specify that no title is wanted.
 
     """
 
@@ -1331,7 +1339,7 @@ def _plot_fitted_image_results(muse, imfit, muse_im, muse_ft, hst_im, hst_ft,
 
     # Substitute a default title?
 
-    if title is None:
+    if title is None or title == "none":
         title = "MUSE image: %s" % imfit.name
 
     # Display a plot title?
