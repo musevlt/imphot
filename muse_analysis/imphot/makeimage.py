@@ -17,6 +17,7 @@ from .core import (UserError, WorkerError)
 
 __all__ = ['bandpass_image']
 
+
 def bandpass_image(cube, wavelengths, sensitivities,
                    unit_wave=u.angstrom, interpolation="linear",
                    truncation_warning=True, nprocess=0):
@@ -158,8 +159,8 @@ def bandpass_image(cube, wavelengths, sensitivities,
     # the cube, modify the effective ending wavelength of the last
     # overlapping pixel to match it.
 
-    if wavelengths[-1] < hiwave[stop-1]:
-        hiwave[stop-1] = wavelengths[-1]
+    if wavelengths[-1] < hiwave[stop - 1]:
+        hiwave[stop - 1] = wavelengths[-1]
 
     # Obtain an interpolator of the bandpass curve.
 
@@ -210,7 +211,7 @@ def bandpass_image(cube, wavelengths, sensitivities,
 
         if lossage > 0.005:
             cube._logger.warning(
-                "%.2g%% of the integrated " % (lossage*100.0) +
+                "%.2g%% of the integrated " % (lossage * 100.0) +
                 "filter curve is beyond the edges of the cube.")
 
     # If only one process has been requested, perform the computation
@@ -239,6 +240,7 @@ def bandpass_image(cube, wavelengths, sensitivities,
     # object, and return this.
 
     return Image.new_from_obj(cube, data=data, var=var)
+
 
 class _SpectralPlaneSums(object):
 
@@ -297,7 +299,7 @@ class _SpectralPlaneSums(object):
             self.wsum = np.zeros(image_shape)             # Sum[weight]
             self.wdsum = ma.array(np.zeros(image_shape),  # Sum[data * weight]
                                   mask=np.ones(image_shape, dtype=bool))
-            self.w2vsum = ma.array(np.zeros(image_shape), # Sum[var * weight^2]
+            self.w2vsum = ma.array(np.zeros(image_shape),  # Sum[var * weight^2]
                                    mask=np.ones(image_shape, dtype=bool))
         else:
             self.wsum = wsum
@@ -443,6 +445,7 @@ class _SpectralPlaneSums(object):
 
         return cls(cube, wsum, wdsum, w2vsum)
 
+
 class _WidebandImageWP(Process):
     """A worker process for the WidebandImageMP class.
 
@@ -525,6 +528,7 @@ class _WidebandImageWP(Process):
             self.result_queue.put((0, "exception", str(exc_type), str(e), tb))
             exit(1)
 
+
 class _WidebandImageMP(object):
     """A multiprocessing object that creates a pool or worker
     processes to repeatedly call combine_spectral_planes() for successive
@@ -569,6 +573,7 @@ class _WidebandImageMP(object):
        variances (if any).
 
     """
+
     def __init__(self, cube, start, stop, lowave, hiwave, spline,
                  max_planes_per_job, nprocess=0):
 
@@ -812,9 +817,3 @@ class _WidebandImageMP(object):
 
         for worker in self.workers:
             worker.join()
-
-
-
-
-
-

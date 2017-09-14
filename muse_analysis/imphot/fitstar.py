@@ -14,10 +14,10 @@ from .mp import _FitPhotometryMP
 
 __all__ = ['fit_star_photometry', 'FittedStarPhotometry', 'FitStarPhotometryMP']
 
+
 def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
                         display=False, nowait=False, hardcopy=None,
                         title=None, fig=None, apply=False, resample=False):
-
     """Given a MUSE image and an HST image that have been regridded
     and aligned onto the same coordinate grid as the MUSE image, fit
     moffat profiles to a specified star within both of these images,
@@ -136,7 +136,7 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
 
     # Get the floating point pixel index of the specified star position.
 
-    ystar,xstar = muse.wcs.sky2pix([dec,ra])[0]
+    ystar, xstar = muse.wcs.sky2pix([dec, ra])[0]
 
     # Check that the star is within the image.
 
@@ -183,7 +183,7 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
         fitmod.set_param_hint('fwhm', value=0.5, min=0.0)
     else:
         fitmod.set_param_hint('fwhm', value=fix_fwhm,
-                                min=0.0, vary=False)
+                              min=0.0, vary=False)
     if fix_beta is None:
         fitmod.set_param_hint('beta', value=3.0)
     else:
@@ -203,8 +203,8 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
 
     muse_model = _circular_moffat_profile(
         x, y, pixel_area,
-        muse_results.best_values['dx'],   muse_results.best_values['dy'],
-        muse_results.best_values['bg'],   muse_results.best_values['flux'],
+        muse_results.best_values['dx'], muse_results.best_values['dy'],
+        muse_results.best_values['bg'], muse_results.best_values['flux'],
         muse_results.best_values['fwhm'], muse_results.best_values['beta'])
 
     # Calculate the RMS of the residual image pixels.
@@ -241,7 +241,7 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
     if hardcopy is None or hardcopy == "" or hardcopy == "none":
         plotfile = None
     else:
-        prefix = muse.filename.replace(".fits","")
+        prefix = muse.filename.replace(".fits", "")
         plotfile = prefix + "_star_fit." + hardcopy
 
     # If requested plot the results.
@@ -264,6 +264,7 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
     # Return the fitted parameters.
 
     return imfit
+
 
 def _write_corrected_image(muse, imfit, resample):
     """Derive corrections from the fitted position errors and
@@ -295,7 +296,7 @@ def _write_corrected_image(muse, imfit, resample):
     if muse.filename is None:
         prefix = "muse"
     else:
-        prefix = muse.filename.replace(".fits","")
+        prefix = muse.filename.replace(".fits", "")
 
     # Write the corrected image to disk.
 
@@ -303,6 +304,7 @@ def _write_corrected_image(muse, imfit, resample):
 
 # Define the class that holds information returned by
 # fit_star_photometry().
+
 
 class FittedStarPhotometry(FittedPhotometry):
     """A class for returning the results of `fit_star_photometry()`.
@@ -444,6 +446,7 @@ class FittedStarPhotometry(FittedPhotometry):
        star in the HST image.
 
     """
+
     def __init__(self, muse, muse_results, hst_results, rms_error, ra, dec):
 
         # Record the reference RA and Dec of the fits.
@@ -478,30 +481,30 @@ class FittedStarPhotometry(FittedPhotometry):
         # Calculate the apparent scaling error muse/hst.
 
         scale = FittedValue(
-            value = self.muse_flux.value / self.hst_flux.value,
-            stdev = np.sqrt(((self.hst_flux.value * self.muse_flux.stdev)**2 +
-                             (self.muse_flux.value * self.hst_flux.stdev)**2)
-                            / self.hst_flux.value**4),
-            fixed = False)
+            value=self.muse_flux.value / self.hst_flux.value,
+            stdev=np.sqrt(((self.hst_flux.value * self.muse_flux.stdev)**2 +
+                           (self.muse_flux.value * self.hst_flux.stdev)**2)
+                          / self.hst_flux.value**4),
+            fixed=False)
 
         # Calculate the apparent background offset error muse-hst.
 
         bg = FittedValue(
-            value = self.muse_bg.value - self.hst_bg.value,
-            stdev = np.sqrt(self.muse_bg.stdev**2 + self.hst_bg.stdev**2),
-            fixed = False)
+            value=self.muse_bg.value - self.hst_bg.value,
+            stdev=np.sqrt(self.muse_bg.stdev**2 + self.hst_bg.stdev**2),
+            fixed=False)
 
         # Calculate the apparent point errors, muse.x - hst.x,
         # and muse.y - hst.y.
 
         dx = FittedValue(
-            value = self.muse_dx.value - self.hst_dx.value,
-            stdev = np.sqrt(self.muse_dx.stdev**2 + self.hst_dx.stdev**2),
-            fixed = False)
+            value=self.muse_dx.value - self.hst_dx.value,
+            stdev=np.sqrt(self.muse_dx.stdev**2 + self.hst_dx.stdev**2),
+            fixed=False)
         dy = FittedValue(
-            value = self.muse_dy.value - self.hst_dy.value,
-            stdev = np.sqrt(self.muse_dy.stdev**2 + self.hst_dy.stdev**2),
-            fixed = False)
+            value=self.muse_dy.value - self.hst_dy.value,
+            stdev=np.sqrt(self.muse_dy.stdev**2 + self.hst_dy.stdev**2),
+            fixed=False)
 
         # Concatenate the reports from the MUSE and HST fits.
 
@@ -517,6 +520,7 @@ class FittedStarPhotometry(FittedPhotometry):
                                   scale=scale, bg=bg, dx=dx, dy=dy,
                                   fwhm=self.muse_fwhm, beta=self.muse_beta,
                                   rms_error=rms_error)
+
 
 def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
                               x, y, muse_values, hst_values,
@@ -597,7 +601,7 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
 
     # Create a plot grid with 2 rows and 2 columns.
 
-    gs = gridspec.GridSpec(2,2)
+    gs = gridspec.GridSpec(2, 2)
 
     # Calculate the area of a pixel.
 
@@ -627,8 +631,8 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
 
         model = _circular_moffat_profile(
             x, y, pixel_area,
-            results.best_values['dx'],   results.best_values['dy'],
-            results.best_values['bg'],   results.best_values['flux'],
+            results.best_values['dx'], results.best_values['dy'],
+            results.best_values['bg'], results.best_values['flux'],
             results.best_values['fwhm'], results.best_values['beta'])
 
         # Calculate the model radii of x,y for the MUSE and HST models.
@@ -640,7 +644,7 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
 
         moffat_values = _circular_moffat_profile(
             moffat_r, 0.0, pixel_area, 0.0, 0.0,
-            results.best_values['bg'],   results.best_values['flux'],
+            results.best_values['bg'], results.best_values['flux'],
             results.best_values['fwhm'], results.best_values['beta'])
 
         # Decide the range of flux-densities to plot.
@@ -651,7 +655,7 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
         # Render the flux units of the pixels as a latex string,
         # excluding any scale factor.
 
-        units_label = u.Unit(muse.unit/muse.unit.scale).to_string("latex_inline")
+        units_label = u.Unit(muse.unit / muse.unit.scale).to_string("latex_inline")
 
         # Matplotlib doesn't yet support \mathring, so replace
         # the anstrom symbol, \mathring{A}, by the smaller
@@ -686,14 +690,14 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
 
         # Plot the actual PSF and the model Moffat function.
 
-        ax = fig.add_subplot(gs[0,col])
+        ax = fig.add_subplot(gs[0, col])
         ax.set_autoscale_on(False)
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
-        if col==0:
+        if col == 0:
             ax.set_ylabel(y_units_label)
         traces = []; labels = []
-        ax.plot(r, values, ls="",marker=".")
+        ax.plot(r, values, ls="", marker=".")
         ax.plot(moffat_r, moffat_values)
 
         # Label the contents of the graph.
@@ -703,22 +707,22 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
                 transform=ax.transAxes, ha="left", va="top")
         ax.text(0.28, 0.82,
                 u"%.3g %s\nfwhm: %.2g arcsec\nMoffat beta: %.2g" % (
-                    results.best_values['flux']*muse.unit.scale, units_label,
+                    results.best_values['flux'] * muse.unit.scale, units_label,
                     results.best_values['fwhm'], results.best_values['beta']),
                 transform=ax.transAxes, ha="left", va="top")
 
         # Plot the residuals between the actual PSF and the Moffat PSF.
 
-        ax = fig.add_subplot(gs[1,col])
+        ax = fig.add_subplot(gs[1, col])
         ax.set_autoscale_on(False)
         ax.set_xlim(xmin, xmax)
-        if col==0:
+        if col == 0:
             ax.set_ylabel(y_units_label)
         ax.set_xlabel("Radius (arcsec)")
         residuals = (values - model)
         res_min = residuals.min()
         res_max = residuals.max()
-        res_margin = (res_max - res_min)*0.5
+        res_margin = (res_max - res_min) * 0.5
         ax.set_ylim(res_min - res_margin, res_max + res_margin)
         ax.plot(r, residuals, ls="", marker=".")
         ax.text(0.5, 0.95, "%s residuals (pixels - model)" % name,
@@ -740,7 +744,6 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
 
 
 def _circular_moffat_profile(x, y, pixel_area, dx, dy, bg, flux, fwhm, beta):
-
     """Return the flux/pixel of a circularly symmetric Moffat profile at a
     specified x, y position.
 
@@ -799,7 +802,8 @@ def _circular_moffat_profile(x, y, pixel_area, dx, dy, bg, flux, fwhm, beta):
     # scaled by the specified pixel area, to convert the brightness
     # to a flux density per pixel.
 
-    return bg + pixel_area * peak / (1.0 + ((x-dx)**2+(y-dy)**2) / asq)**beta
+    return bg + pixel_area * peak / (1.0 + ((x - dx)**2 + (y - dy)**2) / asq)**beta
+
 
 class FitStarPhotometryMP(_FitPhotometryMP):
     """A multiprocessing iterator that creates a pool or worker
@@ -828,6 +832,7 @@ class FitStarPhotometryMP(_FitPhotometryMP):
        for the star=(ra,dec,radius) argument.
 
     """
+
     def __init__(self, hst_filename, muse_filenames, kwargs, nworker=0):
 
         # Ensure that kwargs contains the mandatory star argument,

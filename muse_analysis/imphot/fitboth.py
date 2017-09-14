@@ -7,6 +7,7 @@ from mpdaf.obj import Image
 
 __all__ = ['fit_image_and_star_photometry', 'FitImageAndStarPhotometryMP']
 
+
 def fit_image_and_star_photometry(hst, muse, star, regions="star",
                                   fix_scale=None, fix_bg=None, fix_dx=None,
                                   fix_dy=None, fix_fwhm=None, fix_beta=None,
@@ -15,7 +16,6 @@ def fit_image_and_star_photometry(hst, muse, star, regions="star",
                                   margin=2.0, segment=False, display=False,
                                   nowait=False, hardcopy=None, title=None,
                                   save=False, fig=None):
-
     """Given a MUSE image and an HST image that has been regridded and
     aligned onto the same coordinate grid as the MUSE image, use the
     HST image as a calibrated reference to fit for the flux-scale, the
@@ -203,6 +203,7 @@ def fit_image_and_star_photometry(hst, muse, star, regions="star",
 
     return (image_results, star_results)
 
+
 class FitImageAndStarPhotometryMP(_FitPhotometryMP):
     """A multiprocessing iterator that creates a pool or worker processes
     to repeatedly call `fit_image_and_star_photometry()` for each of a
@@ -230,6 +231,7 @@ class FitImageAndStarPhotometryMP(_FitPhotometryMP):
        max(multiprocessing.cpu_count()-n,1) processes are created.
 
     """
+
     def __init__(self, hst_filename, muse_filenames, kwargs, nworker=0):
 
         # Ensure that kwargs contains the mandatory star argument,

@@ -22,6 +22,7 @@ __all__ = ['fit_photometry_main', 'regrid_hst_to_muse_main',
 
 # Create the main function of the fit_photometry program.
 
+
 def fit_photometry_main(argv):
     """This is the main function of the fit_photometry script.
     It attempts to determine the photometry characteristics of
@@ -79,7 +80,6 @@ def fit_photometry_main(argv):
                         extract an image of a given HST bandpass from a MUSE
                         cube.'''))
 
-
     # Parse the command-line options. Note that this will abort
     # the program if any argument errors are detected.
 
@@ -125,7 +125,7 @@ def fit_photometry_main(argv):
 
             else:
                 kwargs = extract_function_args(options,
-                                              fit_image_and_star_photometry)
+                                               fit_image_and_star_photometry)
                 (imfit, starfit) = fit_image_and_star_photometry(
                     options.hst_image, options.muse_images[0], **kwargs)
                 _report_results(imfit, True, options)
@@ -160,7 +160,7 @@ def fit_photometry_main(argv):
             # Get the subset of arguments for fit_image_and_star_photometry().
 
             kwargs = extract_function_args(options,
-                                          fit_image_and_star_photometry)
+                                           fit_image_and_star_photometry)
 
             with FitImageAndStarPhotometryMP(options.hst_image,
                                              options.muse_images, kwargs,
@@ -186,12 +186,14 @@ def fit_photometry_main(argv):
     except KeyboardInterrupt:
         exit(1)
 
+
 def _report_results(results, showheader, options):
     if options.verbose:
         print(results)
     print(results.summary(header=showheader))
 
 # Create the main function of the regrid_hst_to_muse script.
+
 
 def regrid_hst_to_muse_main(argv):
     """This is the main function of the regrid_hst_to_muse script.
@@ -330,7 +332,7 @@ def regrid_hst_to_muse_main(argv):
             if options.field != "":
                 field = options.field
             else:
-                field = basename(muse.filename).replace(".fits","")
+                field = basename(muse.filename).replace(".fits", "")
             output = "hst_" + filter_name + "_for_" + field + ".fits"
 
             # Write the output file.
@@ -456,7 +458,7 @@ def make_wideband_image_main(argv):
         try:
             if not options.quiet:
                 print("Reading filter: %s" % options.filter_curve)
-                curve = np.loadtxt(options.filter_curve, usecols=(0,1))
+                curve = np.loadtxt(options.filter_curve, usecols=(0, 1))
         except Exception as e:
             print("Error reading: %s (%s)" % (options.filter_curve, e),
                   file=sys.stderr)
@@ -488,7 +490,7 @@ def make_wideband_image_main(argv):
 
             if not options.quiet:
                 print("Computing the output image.")
-            image = bandpass_image(cube, curve[:,0], curve[:,1],
+            image = bandpass_image(cube, curve[:, 0], curve[:, 1],
                                    unit_wave=options.wave_units,
                                    nprocess=options.nprocess)
 

@@ -20,6 +20,7 @@ from .mp import _FitPhotometryMP
 __all__ = ['fit_image_photometry', 'FittedImagePhotometry',
            'FitImagePhotometryMP']
 
+
 def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
                          fix_bg=None, fix_dx=None, fix_dy=None,
                          fix_fwhm=None, fix_beta=None,
@@ -30,7 +31,6 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
                          star=None, save=False, fig=None, taper=9,
                          apply=False, resample=False, extramask=None,
                          init_dx=None, init_dy=None):
-
     """Given a MUSE image and an HST image that has been regridded and aligned
     onto the same coordinate grid as the MUSE image, use the HST image as a
     calibrated reference to fit for the flux-scale, the FWHM and beta
@@ -375,9 +375,9 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
 
         if segment:
             tmp = ma.array(hst_data, mask=hst_mask).filled(0.0)
-            kernel = np.array([[0,1,0],
-                               [1,1,1],
-                               [0,1,0]])
+            kernel = np.array([[0, 1, 0],
+                               [1, 1, 1],
+                               [0, 1, 0]])
             tmp = grey_opening(tmp, structure=kernel)
             tmp = grey_dilation(tmp, structure=kernel)
             tmpmask = tmp < np.median(tmp)
@@ -415,7 +415,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
             if pxoff >= 0:
                 xold = slice(0, nx - pxoff)
                 xnew = slice(pxoff, nx)
-            else: # pxoff < 0
+            else:  # pxoff < 0
                 xold = slice(-pxoff, nx)
                 xnew = slice(0, nx + pxoff)
 
@@ -425,7 +425,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
             if pyoff >= 0:
                 yold = slice(0, ny - pyoff)
                 ynew = slice(pyoff, ny)
-            else: # pyoff < 0
+            else:  # pyoff < 0
                 yold = slice(-pyoff, ny)
                 ynew = slice(0, ny + pyoff)
 
@@ -463,8 +463,8 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
         # Create a list of slices to select the above area that contains
         # unmasked pixels.
 
-        crop_indexes = [slice(used_rows.min(), used_rows.max()-1),
-                        slice(used_cols.min(), used_cols.max()-1)]
+        crop_indexes = [slice(used_rows.min(), used_rows.max() - 1),
+                        slice(used_cols.min(), used_cols.max() - 1)]
 
         # Crop the HST and MUSE images and the mask.
 
@@ -506,21 +506,21 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
         # shifts.
 
         shape = np.asarray(mdata.shape) + np.ceil(np.abs(
-            margin / muse.get_step(unit=u.arcsec) ) ).astype(int)
+            margin / muse.get_step(unit=u.arcsec))).astype(int)
 
         # Round the image dimensions up to integer powers of two, to
         # ensure that an efficient FFT implementation is used.
 
-        shape = (2**np.ceil(np.log(shape)/np.log(2.0))).astype(int)
+        shape = (2**np.ceil(np.log(shape) / np.log(2.0))).astype(int)
 
         # Extract the dimensions of the expanded Y and X axes.
 
-        ny,nx = shape
+        ny, nx = shape
 
         # Compute the slice needed to extract the original area from
         # expanded arrays of the above shape.
 
-        sky_slice = [slice(0,mdata.shape[0]), slice(0,mdata.shape[1])]
+        sky_slice = [slice(0, mdata.shape[0]), slice(0, mdata.shape[1])]
 
         # Zero-pad the MUSE image array to have the new shape.
 
@@ -548,7 +548,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
         # position offsets.
 
         if taper >= 2:
-            weight_img = _bevel_mask(~mask, 2*(taper//2)+1)
+            weight_img = _bevel_mask(~mask, 2 * (taper // 2) + 1)
         else:
             weight_img = (~mask).astype(float)
 
@@ -591,14 +591,14 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
         # Get 2D grids of the x,y spatial-frequency coordinates of each pixel
         # in the power spectra.
 
-        fx2d,fy2d = np.meshgrid(fx,fy)
+        fx2d, fy2d = np.meshgrid(fx, fy)
 
         # The initial guess for the factor to multiply the HST fluxes
         # by, is the ratio of the values at the origins of the MUSE
         # and HST power spectra. The values at the origin represent
         # the sums of the flux in the MUSE and HST images.
 
-        scale_guess = np.abs(mfft[0,0]) / np.abs(hfft[0,0])
+        scale_guess = np.abs(mfft[0, 0]) / np.abs(hfft[0, 0])
 
         # Calculate the frequency interval of the FFTs along the
         # X and Y axes.
@@ -610,7 +610,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
         # to pixel [0,0] (the spatial origin of the FFT algorithm).
 
         rsq = np.fft.fftfreq(nx, dfx)**2 + \
-              np.fft.fftfreq(ny, dfy)[np.newaxis,:].T**2
+            np.fft.fftfreq(ny, dfy)[np.newaxis, :].T**2
 
         # Wrap the modeling function in an object for the least-squares fitting
         # algorithm.
@@ -625,17 +625,17 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
             fitmod.set_param_hint('bg', value=subtracted)
         else:
             fitmod.set_param_hint('bg', value=fix_bg,
-                                    vary=False)
+                                  vary=False)
         if fix_scale is None:
             fitmod.set_param_hint('scale', value=scale_guess, min=0.0)
         else:
             fitmod.set_param_hint('scale', value=fix_scale,
-                                    min=0.0, vary=False)
+                                  min=0.0, vary=False)
         if fix_fwhm is None:
             fitmod.set_param_hint('fwhm', value=0.5, min=0.0)
         else:
             fitmod.set_param_hint('fwhm', value=fix_fwhm,
-                                    min=0.0, vary=False)
+                                  min=0.0, vary=False)
         if fix_dx is None:
             fitmod.set_param_hint('dx', value=init_dx)
         else:
@@ -675,7 +675,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
         # sky.
 
         if ((abs(xchange / dx) < 1.0 and abs(ychange / dy) < 1.0) or
-            refit_count >= max_refits):
+                refit_count >= max_refits):
             refine = False
 
         # Arrange to refine the fit using the latest fitted position
@@ -708,7 +708,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
 
     # Compute the root-mean square of the residuals.
 
-    rms_error = ma.sqrt((ma.array(muse_im-hst_im, mask=mask[sky_slice])**2).mean())
+    rms_error = ma.sqrt((ma.array(muse_im - hst_im, mask=mask[sky_slice])**2).mean())
 
     # Extract relevant results for return.
 
@@ -720,7 +720,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
     if hardcopy is None or hardcopy == "" or hardcopy == "none":
         plotfile = None
     else:
-        prefix = muse.filename.replace(".fits","")
+        prefix = muse.filename.replace(".fits", "")
         plotfile = prefix + "_image_fit." + hardcopy
 
     # If needed, generate the images needed for plotting and saving.
@@ -752,6 +752,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
 
 # Define the class that holds information returned by
 # fit_image_photometry().
+
 
 class FittedImagePhotometry(FittedPhotometry):
     """The class of the object that `fit_image_photometry()` returns.
@@ -849,9 +850,9 @@ class FittedImagePhotometry(FittedPhotometry):
                                   rms_error=rms_error)
         self.rchi = results.redchi
 
+
 def _xy_moffat_model_fn(fx, fy, rsq, hstfft, wfft, subtracted, xshift, yshift,
                         dx, dy, bg, scale, fwhm, beta):
-
     """This function is designed to be passed to lmfit to fit the FFT of
     an HST image to the FFT of a MUSE image on the same coordinate
     grid.
@@ -950,7 +951,7 @@ def _xy_moffat_model_fn(fx, fy, rsq, hstfft, wfft, subtracted, xshift, yshift,
 
     # Normalize it to have unit volume in the image plane.
 
-    moffat_ft /= moffat_ft[0,0]
+    moffat_ft /= moffat_ft[0, 0]
 
     # If the HST FFT array has been flattened to make it compatible with
     # lmfit, do the same to moffat_ft.
@@ -967,13 +968,14 @@ def _xy_moffat_model_fn(fx, fy, rsq, hstfft, wfft, subtracted, xshift, yshift,
     # scaled by the fitted scaling factor, smoothed to a lower resolution
     # by the above 2D Moffat function, and shifted by dx and dy.
 
-    model = (bg - subtracted) * wfft + hstfft * scale * moffat_ft * np.exp(argx*fx + argy*fy)
+    model = (bg - subtracted) * wfft + hstfft * scale * moffat_ft * np.exp(argx * fx + argy * fy)
 
     # The model-fitting function can't handle complex numbers, so
     # return the complex FFT model as an array of alternating real and
     # imaginary floats.
 
     return model.view(dtype=float)
+
 
 def _plot_2d_array(data, axes, vmin=None, vmax=None, pixw=None, pixh=None,
                    cmap=None, xlabel=None, ylabel=None, title=None,
@@ -1029,8 +1031,9 @@ def _plot_2d_array(data, axes, vmin=None, vmax=None, pixw=None, pixh=None,
         axes.set_yticks(np.arange(ax_bot, ax_top, ytick))
     axes.imshow(data, origin="lower",
                 vmin=vmin, vmax=vmax,
-                extent=(im_lft,im_rgt,im_bot,im_top), cmap=cmap,
+                extent=(im_lft, im_rgt, im_bot, im_top), cmap=cmap,
                 interpolation="nearest")
+
 
 def _bevel_mask(mask, width):
     """Return a floating point image that is a smoothed version of a
@@ -1063,16 +1066,16 @@ def _bevel_mask(mask, width):
 
     # Compute a [width,width] smoothing convolution mask.
 
-    w = np.blackman(width+2)[1:width+1]
-    m = w * w[np.newaxis,:].T
+    w = np.blackman(width + 2)[1:width + 1]
+    m = w * w[np.newaxis, :].T
     m /= m.sum()
 
     # Smooth the eroded edges of the mask.
 
     return convolve(im, m)
 
-def _apply_resampling_window(imfft, shape):
 
+def _apply_resampling_window(imfft, shape):
     """Multiply the FFT of an image with the blackman anti-aliasing window
     that would be used by default by the MPDAF Image.resample()
     function for the specified image grid. The multiplication is performed
@@ -1097,13 +1100,14 @@ def _apply_resampling_window(imfft, shape):
     # Nyquist folding frequency (ie. 0.5 cycles/image_pixel).
 
     f = np.sqrt((np.fft.rfftfreq(shape[1]) / 0.5)**2 +
-                (np.fft.fftfreq(shape[0]) / 0.5)[np.newaxis,:].T**2)
+                (np.fft.fftfreq(shape[0]) / 0.5)[np.newaxis, :].T**2)
 
     # Scale the FFT by the window function, calculating the blackman
     # window function as a function of frequency divided by its cutoff
     # frequency.
 
-    imfft *= np.where(f <= 1.0, 0.42 + 0.5 * np.cos(np.pi * f) + 0.08 * np.cos(2*np.pi * f), 0.0)
+    imfft *= np.where(f <= 1.0, 0.42 + 0.5 * np.cos(np.pi * f) + 0.08 * np.cos(2 * np.pi * f), 0.0)
+
 
 def _convolve_hst_psf(imfft, shape, dy, dx, fwhm, beta):
     """Convolve an image of MUSE pixel resolution with an HST PSF,
@@ -1155,7 +1159,7 @@ def _convolve_hst_psf(imfft, shape, dy, dx, fwhm, beta):
     dfx = 1.0 / (nx * dx)
     dfy = 1.0 / (ny * dy)
     mrsq = np.fft.fftfreq(nx * mag, dfx)**2 + \
-           np.fft.fftfreq(ny * mag, dfy)[np.newaxis,:].T**2
+        np.fft.fftfreq(ny * mag, dfy)[np.newaxis, :].T**2
 
     # Compute an image of a Moffat function centered at pixel 0,0.
 
@@ -1170,13 +1174,14 @@ def _convolve_hst_psf(imfft, shape, dy, dx, fwhm, beta):
 
     # Normalize it to have unit volume in the image plane.
 
-    moffat_ft /= moffat_ft[0,0]
+    moffat_ft /= moffat_ft[0, 0]
 
     # Multiply the MUSE FFT by the FFT of the Moffat function.
 
-    imfft[0:ny//2, 0:nx//2] *= moffat_ft[0:ny//2, 0:nx//2]
-    imfft[ny-ny//2:ny, 0:nx//2] *= moffat_ft[mag*ny-ny//2:mag*ny, 0:nx//2]
+    imfft[0:ny // 2, 0:nx // 2] *= moffat_ft[0:ny // 2, 0:nx // 2]
+    imfft[ny - ny // 2:ny, 0:nx // 2] *= moffat_ft[mag * ny - ny // 2:mag * ny, 0:nx // 2]
     del(moffat_ft)
+
 
 def _mask_inside_ds9region(im, reg):
     """A private function of _mask_ds9regions() that masks all pixels
@@ -1214,11 +1219,12 @@ def _mask_inside_ds9region(im, reg):
     elif reg.shape == "ellipse":
         im.mask_ellipse(center=center,
                         radius=[reg.width, reg.height], posangle=pa,
-                       unit_center=units, unit_radius=units)
+                        unit_center=units, unit_radius=units)
     elif reg.shape == "box":
         im.mask_region(center=center,
-                       radius=[reg.width/2.0, reg.height/2.0],
+                       radius=[reg.width / 2.0, reg.height / 2.0],
                        posangle=pa, unit_center=units, unit_radius=units)
+
 
 def _mask_ds9regions(im, regions):
     """Mask regions of a specified MPDAF image, using circle, ellipse
@@ -1275,6 +1281,7 @@ def _mask_ds9regions(im, regions):
         im.mask = exclusion_mask | ~im.mask
     else:
         im.mask = exclusion_mask
+
 
 def _plot_fitted_image_results(muse, imfit, muse_im, muse_ft, hst_im, hst_ft,
                                fig=None, display=True, plotfile=None,
@@ -1350,7 +1357,7 @@ def _plot_fitted_image_results(muse, imfit, muse_im, muse_ft, hst_im, hst_ft,
 
     # Create a plot grid with 2 rows and 3 columns.
 
-    gs = gridspec.GridSpec(2,3)
+    gs = gridspec.GridSpec(2, 3)
 
     # Determine a suitable range for displaying the the absolute
     # value of the FFT.
@@ -1369,36 +1376,36 @@ def _plot_fitted_image_results(muse, imfit, muse_im, muse_ft, hst_im, hst_ft,
 
     # Display the MUSE image and its FFT.
 
-    m_im_ax = fig.add_subplot(gs[0,0])
+    m_im_ax = fig.add_subplot(gs[0, 0])
     _plot_2d_array(muse_im, m_im_ax, vmin=im_vmin, vmax=im_vmax,
-                  title="MUSE image", ylabel="Pixels",
-                  title_fs=13)
-    m_ft_ax = fig.add_subplot(gs[1,0])
+                   title="MUSE image", ylabel="Pixels",
+                   title_fs=13)
+    m_ft_ax = fig.add_subplot(gs[1, 0])
     _plot_2d_array(abs(muse_ft), m_ft_ax, vmin=ft_vmin, vmax=ft_vmax,
-                  title="MUSE FFT", title_fs=13,
-                  ylabel="Pixels", xlabel="Pixels")
+                   title="MUSE FFT", title_fs=13,
+                   ylabel="Pixels", xlabel="Pixels")
 
     # Display the HST image and its FFT.
 
-    h_im_ax = fig.add_subplot(gs[0,1])
+    h_im_ax = fig.add_subplot(gs[0, 1])
     _plot_2d_array(hst_im, h_im_ax, vmin=im_vmin, vmax=im_vmax,
-                  title="HST image", title_fs=13)
-    h_ft_ax = fig.add_subplot(gs[1,1])
+                   title="HST image", title_fs=13)
+    h_ft_ax = fig.add_subplot(gs[1, 1])
     _plot_2d_array(abs(hst_ft), h_ft_ax, vmin=ft_vmin, vmax=ft_vmax,
-                  title="HST FFT", title_fs=13,
-                  xlabel="Pixels")
+                   title="HST FFT", title_fs=13,
+                   xlabel="Pixels")
 
     # Display the difference, MUSE-HST, and its FFT.
 
-    d_im_ax = fig.add_subplot(gs[0,2])
+    d_im_ax = fig.add_subplot(gs[0, 2])
     _plot_2d_array(muse_im - hst_im, d_im_ax,
-                  vmin=im_vmin, vmax=im_vmax, title="(MUSE - HST) image",
-                  title_fs=13)
-    d_ft_ax = fig.add_subplot(gs[1,2])
+                   vmin=im_vmin, vmax=im_vmax, title="(MUSE - HST) image",
+                   title_fs=13)
+    d_ft_ax = fig.add_subplot(gs[1, 2])
     _plot_2d_array(abs(muse_ft - hst_ft), d_ft_ax,
-                  vmin=ft_vmin, vmax=ft_vmax,
-                  title="FFT of (MUSE - HST) image", title_fs=13,
-                  xlabel="Pixels")
+                   vmin=ft_vmin, vmax=ft_vmax,
+                   title="FFT of (MUSE - HST) image", title_fs=13,
+                   xlabel="Pixels")
 
     # Display the plot?
 
@@ -1413,6 +1420,7 @@ def _plot_fitted_image_results(muse, imfit, muse_im, muse_ft, hst_im, hst_ft,
 
     if plotfile is not None:
         fig.savefig(plotfile, orientation="landscape", dpi=600)
+
 
 def _save_fitted_images(muse, muse_im, muse_ft, hst, hst_im, hst_ft,
                         crop_indexes, prefix=None):
@@ -1448,7 +1456,7 @@ def _save_fitted_images(muse, muse_im, muse_ft, hst, hst_im, hst_ft,
         if muse.filename is None:
             prefix = "muse"
         else:
-            prefix = muse.filename.replace(".fits","")
+            prefix = muse.filename.replace(".fits", "")
 
     # Write the images to FITS files.
 
@@ -1464,6 +1472,7 @@ def _save_fitted_images(muse, muse_im, muse_ft, hst, hst_im, hst_ft,
     _write_fft_to_fits(muse, muse_ft, prefix + "_fft.fits")
     _write_fft_to_fits(hst, hst_ft, prefix + "_hst_model_fft.fits")
     _write_fft_to_fits(muse, muse_ft - hst_ft, prefix + "_residual_fft.fits")
+
 
 def _write_image_to_fits(template, crop_indexes, data, filename):
     """Write an image to a simple FITS file, using
@@ -1511,6 +1520,7 @@ def _write_image_to_fits(template, crop_indexes, data, filename):
     # Save the file.
 
     hdu.writeto(filename, clobber=True)
+
 
 def _write_fft_to_fits(template, data, filename):
     """Write the absolute values of an FFT of a 2D image to a
@@ -1561,6 +1571,7 @@ def _write_fft_to_fits(template, data, filename):
 
     hdu.writeto(filename, clobber=True)
 
+
 def _generate_fft_images(mfft, hfft):
     """Convert half-plane FFTs of the the best-fit MUSE and HST images
     to full-sized FFTs with zero frequency at the center of the image,
@@ -1590,10 +1601,10 @@ def _generate_fft_images(mfft, hfft):
     nx = (mfft.shape[1] - 1) * 2
     ny = mfft.shape[0]
     tmp = np.empty((ny, nx), dtype=mfft.dtype)
-    tmp[ny//2:, nx//2:] = mfft[:ny//2, :-1]
-    tmp[:ny//2, nx//2:] = mfft[ny//2:, :-1]
-    tmp[:ny//2+1, :nx//2] = np.conj(mfft[ny//2::-1, nx//2:0:-1])
-    tmp[ny//2+1:,  :nx//2] = np.conj(mfft[ny-1:ny//2:-1, nx//2:0:-1])
+    tmp[ny // 2:, nx // 2:] = mfft[:ny // 2, :-1]
+    tmp[:ny // 2, nx // 2:] = mfft[ny // 2:, :-1]
+    tmp[:ny // 2 + 1, :nx // 2] = np.conj(mfft[ny // 2::-1, nx // 2:0:-1])
+    tmp[ny // 2 + 1:, :nx // 2] = np.conj(mfft[ny - 1:ny // 2:-1, nx // 2:0:-1])
     muse_ft = tmp
 
     # Do the same for the HST FFT.
@@ -1601,13 +1612,14 @@ def _generate_fft_images(mfft, hfft):
     nx = (hfft.shape[1] - 1) * 2
     ny = hfft.shape[0]
     tmp = np.empty((ny, nx), dtype=hfft.dtype)
-    tmp[ny//2:, nx//2:] = hfft[:ny//2, :-1]
-    tmp[:ny//2, nx//2:] = hfft[ny//2:, :-1]
-    tmp[:ny//2+1, :nx//2] = np.conj(hfft[ny//2::-1, nx//2:0:-1])
-    tmp[ny//2+1:,  :nx//2] = np.conj(hfft[ny-1:ny//2:-1, nx//2:0:-1])
+    tmp[ny // 2:, nx // 2:] = hfft[:ny // 2, :-1]
+    tmp[:ny // 2, nx // 2:] = hfft[ny // 2:, :-1]
+    tmp[:ny // 2 + 1, :nx // 2] = np.conj(hfft[ny // 2::-1, nx // 2:0:-1])
+    tmp[ny // 2 + 1:, :nx // 2] = np.conj(hfft[ny - 1:ny // 2:-1, nx // 2:0:-1])
     hst_ft = tmp
 
     return (muse_ft, hst_ft)
+
 
 def _write_corrected_image(muse, imfit, resample):
     """Derive corrections from the fitted position errors and
@@ -1639,11 +1651,12 @@ def _write_corrected_image(muse, imfit, resample):
     if muse.filename is None:
         prefix = "muse"
     else:
-        prefix = muse.filename.replace(".fits","")
+        prefix = muse.filename.replace(".fits", "")
 
     # Write the corrected image to disk.
 
     im.write(prefix + "_aligned.fits")
+
 
 class FitImagePhotometryMP(_FitPhotometryMP):
 
@@ -1672,6 +1685,7 @@ class FitImagePhotometryMP(_FitPhotometryMP):
        max(multiprocessing.cpu_count()-n,1) processes are created.
 
     """
+
     def __init__(self, hst_filename, muse_filenames, kwargs={}, nworker=0):
 
         # Instantiate the parent _FitPhotometryMP object.

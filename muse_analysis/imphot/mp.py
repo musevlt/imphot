@@ -8,6 +8,7 @@ from mpdaf.obj import Image
 
 from .core import (UserError, WorkerError)
 
+
 class _FitPhotometryWP(Process):
     """A worker process for the FitPhotometryMP class.
 
@@ -103,6 +104,7 @@ class _FitPhotometryWP(Process):
             self.result_queue.put((0, "exception", str(exc_type), str(e), tb))
             exit(1)
 
+
 class _FitPhotometryMP(object):
     """A multiprocessing iterator that creates a pool or worker
     processes to repeatedly call a specified function for each
@@ -134,6 +136,7 @@ class _FitPhotometryMP(object):
        max(multiprocessing.cpu_count()-n,1) processes are created.
 
     """
+
     def __init__(self, hst_filename, muse_filenames, cmd_fn, cmd_kwargs={},
                  nworker=0):
 
@@ -240,7 +243,6 @@ class _FitPhotometryMP(object):
 
         self.job_queue.close()
         self.result_queue.close()
-
 
     # Send the next job, if any remain, to the worker processes.
 

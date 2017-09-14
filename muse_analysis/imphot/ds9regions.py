@@ -10,6 +10,7 @@ import re
 
 __all__ = ['Ds9Regions', 'Ds9Region', 'Ds9Circle', 'Ds9Ellipse', 'Ds9Box']
 
+
 class Ds9Regions(object):
     """Parse circle, ellipse and box regions from a ds9 region file.
 
@@ -105,9 +106,9 @@ class Ds9Regions(object):
 
                     # Check for a coordinate-system specifier.
 
-                    if field.lower() in ["physical","image","fk4","b1950","fk5",
-                                         "j2000", "galactic","ecliptic","icrs",
-                                         "linear", "amplifier","detector"]:
+                    if field.lower() in ["physical", "image", "fk4", "b1950", "fk5",
+                                         "j2000", "galactic", "ecliptic", "icrs",
+                                         "linear", "amplifier", "detector"]:
                         system = field.lower()
 
                     # Keep a record of the last non-empty field that we haven't
@@ -170,7 +171,8 @@ class Ds9Regions(object):
                 if region is not None:
                     self._regions.append(region)
             except ValueError as e:
-                raise ValueError("Error on line %d (%s)" % (line_number+1, e.message))
+                raise ValueError("Error on line %d (%s)" % (line_number + 1, e.message))
+
 
 class Ds9Region(object):
     """A generic Ds9Region.
@@ -250,8 +252,10 @@ class Ds9Circle(Ds9Region):
     def __init__(self, exclude, system, x, y, radius):
         Ds9Region.__init__(self, "circle", exclude, system, x, y)
         self.radius = radius
+
     def __str__(self):
         return Ds9Region.__str__(self) + ("  r: %g" % self.radius)
+
 
 class Ds9Ellipse(Ds9Region):
     """An elliptical ds9 region.
@@ -301,8 +305,10 @@ class Ds9Ellipse(Ds9Region):
         self.width = width
         self.height = height
         self.pa = pa
+
     def __str__(self):
         return Ds9Region.__str__(self) + ("  w: %g  h: %g  PA: %g" % (self.width, self.height, self.pa))
+
 
 class Ds9Box(Ds9Region):
     """A rectangular ds9 region.
@@ -346,13 +352,16 @@ class Ds9Box(Ds9Region):
        sky coordinate systems.
 
     """
+
     def __init__(self, exclude, system, x, y, width, height, pa):
         Ds9Region.__init__(self, "box", exclude, system, x, y)
         self.width = width
         self.height = height
         self.pa = pa
+
     def __str__(self):
         return Ds9Region.__str__(self) + ("  w: %g  h: %g  PA: %g" % (self.width, self.height, self.pa))
+
 
 def _parse_x(s):
     """Parse an x-axis coordinate from a string.
@@ -369,6 +378,7 @@ def _parse_x(s):
     except:
         return _parse_sexagesimal(s) * 15.0
 
+
 def _parse_y(s):
     """Parse a y-axis coordinate from a string.
 
@@ -382,6 +392,7 @@ def _parse_y(s):
         return float(s)
     except:
         return _parse_sexagesimal(s)
+
 
 def _parse_sexagesimal(s):
     """Parse a sexagesimal number from a string. This can have up
@@ -418,8 +429,8 @@ def _parse_sexagesimal(s):
 
     return sign * angle
 
-def _parse_size(s):
 
+def _parse_size(s):
     """Parse a size from a string. This can be a simple number, or
     an angle in arc-minutes followed by "'", or an angle in arc-seconds
     followed by '"'. Arcseconds and arcminutes are converted to degrees.
@@ -427,7 +438,7 @@ def _parse_size(s):
 
     if s[-1] == "'":   # Arcmin
         return float(s[:-1]) / 60.0
-    elif s[-1] == '"': # Arcsec
+    elif s[-1] == '"':  # Arcsec
         return float(s[:-1]) / 3600.0
     else:
         return float(s)
@@ -435,6 +446,7 @@ def _parse_size(s):
 # When this module is invoked as a standalone program, parse the
 # contents of any region file that is specified on the command line
 # and print out what is parsed from that file to stdout.
+
 
 if __name__ == '__main__':
     import sys
