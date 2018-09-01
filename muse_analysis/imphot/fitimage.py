@@ -1014,7 +1014,7 @@ def _plot_2d_array(data, axes, vmin=None, vmax=None, pixw=None, pixh=None,
 
     # Create the graph.
 
-    axes.set_axis_bgcolor(axis_bg)
+    axes.set_facecolor(axis_bg)
     axes.set_autoscale_on(False)
     axes.set_xlim(ax_lft, ax_rgt)
     axes.set_ylim(ax_bot, ax_top)
