@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+
+# Choose a non-interactive backend if the DISPLAY variable is not set,
+# so that people can create hardcopy plots without an X-server.
+
+from os import environ
+import matplotlib as mpl
+if 'DISPLAY' in environ:
+    mpl.use('TkAgg')
+else:
+    mpl.use('Agg')
+
+import sys
+from muse_analysis import imphot
+
+imphot.fit_photometry_main(sys.argv)

@@ -1,0 +1,9 @@
+*.py[co]
+*.log
+*.egg-info/
+*~
+._*
+.DS_Store
+api/
+build/
+doc/_build
