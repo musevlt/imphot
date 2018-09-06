@@ -11,6 +11,6 @@ else:
     mpl.use('Agg')
 
 import sys
-from muse_analysis import imphot
+import imphot
 
 imphot.fit_photometry_main(sys.argv)

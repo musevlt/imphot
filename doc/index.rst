@@ -131,85 +131,85 @@ index of links into that section.
 
 Image Fitting
 -------------
-  `~muse_analysis.imphot.fit_image_photometry()`
+  `~imphot.fit_image_photometry()`
      Fit for the photometric parameters of a single MUSE image, by
      simulating the effects of different seeing conditions,
      calibration errors on pointing errors on a template HST image.
-  `~muse_analysis.imphot.FitImagePhotometryMP()`
+  `~imphot.FitImagePhotometryMP()`
      An iterator which uses multiple processes to run
-     `~muse_analysis.imphot.fit_image_photometry()` on a sequence of MUSE exposures of a
+     `~imphot.fit_image_photometry()` on a sequence of MUSE exposures of a
      field.
-  `~muse_analysis.imphot.FittedImagePhotometry`
+  `~imphot.FittedImagePhotometry`
      The object in which photometry results are returned by
-     `~muse_analysis.imphot.fit_image_photometry()` and `~muse_analysis.imphot.FitImagePhotometryMP()`.
+     `~imphot.fit_image_photometry()` and `~imphot.FitImagePhotometryMP()`.
 
 Star Fitting
 ------------
-  `~muse_analysis.imphot.fit_star_photometry()`
+  `~imphot.fit_star_photometry()`
     Fit for the photometric parameters of a single MUSE image, by
     fitting a Moffat PSF profile to a star in both the MUSE image and
     a corresponding HST image.
-  `~muse_analysis.imphot.FitStarPhotometryMP()`
+  `~imphot.FitStarPhotometryMP()`
      An iterator which uses multiple processes to run
-     `~muse_analysis.imphot.fit_star_photometry()` on multiple MUSE exposures of a
+     `~imphot.fit_star_photometry()` on multiple MUSE exposures of a
      field.
-  `~muse_analysis.imphot.FittedStarPhotometry`
+  `~imphot.FittedStarPhotometry`
      The object in which photometry results are returned by
-     `~muse_analysis.imphot.fit_star_photometry()` and `~muse_analysis.imphot.FitStarPhotometryMP()`.
+     `~imphot.fit_star_photometry()` and `~imphot.FitStarPhotometryMP()`.
 
 Combined image and star fitting
 -------------------------------
-  `~muse_analysis.imphot.fit_image_and_star_photometry()`
+  `~imphot.fit_image_and_star_photometry()`
     Fit for the photometric parameters of a single MUSE image,
     returning a tuple of results from both
-    `~muse_analysis.imphot.fit_image_photometry()` and
-    `~muse_analysis.imphot.fit_star_photometry()`.
-  `~muse_analysis.imphot.FitImageAndStarPhotometryMP()`
+    `~imphot.fit_image_photometry()` and
+    `~imphot.fit_star_photometry()`.
+  `~imphot.FitImageAndStarPhotometryMP()`
      An iterator which uses multiple processes to run
-     `~muse_analysis.imphot.fit_image_and_star_photometry()` on a sequence of
+     `~imphot.fit_image_and_star_photometry()` on a sequence of
      MUSE exposures of a field.
 
 Region handling
 ---------------
-  `~muse_analysis.imphot.ds9regions`
+  `~imphot.ds9regions`
      A module for reading simple ds9 region files.
 
 Miscellaneous
 -------------
-  `~muse_analysis.imphot.rescale_hst_like_muse()`
+  `~imphot.rescale_hst_like_muse()`
      Given an HST image, convert its flux units from electrons s\
      :sup:`-1` to the flux units of a MUSE observation (usually
      1e-20 erg cm\ :sup:`-2` s\ :sup:`-1` Angstrom\ :sup:`-1`).
-  `~muse_analysis.imphot.regrid_hst_like_muse()`
+  `~imphot.regrid_hst_like_muse()`
      Resample an HST image onto the pixel grid of a MUSE image.
-  `~muse_analysis.imphot.image_grids_aligned()`
+  `~imphot.image_grids_aligned()`
      Return ``True`` if the pixel coordinates of two MPDAF
      images are the same.
-  `~muse_analysis.imphot.FittedPhotometry`
-     The base class of `muse_analysis.imphot.FittedImagePhotometry` and
-     `muse_analysis.imphot.FittedStarPhotometry`. This contains the fitted photometric
+  `~imphot.FittedPhotometry`
+     The base class of `imphot.FittedImagePhotometry` and
+     `imphot.FittedStarPhotometry`. This contains the fitted photometric
      parameters and functions to report them, without the extra details
      that are specific to the two fitting methods.
-  `~muse_analysis.imphot.FittedValue`
+  `~imphot.FittedValue`
      A single fitted photometric value, which includes the
      value, its uncertainty and a bool value that indicates whether this
      parameter was held fixed during the least-squares fit, or allowed
      to vary.
-  `~muse_analysis.imphot.HstFilterInfo`
+  `~imphot.HstFilterInfo`
      An object that contains the filter characteristics of an HST image.
-  `~muse_analysis.imphot.UserError`
+  `~imphot.UserError`
      An exception which is raised for errors that are due to incorrect
      user-input. In the provided scripts, errors of this type are caught
      and reported without showing a traceback of the call stack.
-  `~muse_analysis.imphot.WorkerError`
+  `~imphot.WorkerError`
      An exception forwarded from a secondary worker process.
-  `~muse_analysis.imphot.ImphotArgumentParser`
+  `~imphot.ImphotArgumentParser`
      A command-line argument parser for receiving user arguments for the
-     `~muse_analysis.imphot.fit_image_photometry()`,
-     `~muse_analysis.imphot.fit_star_photometry()`, `~muse_analysis.imphot.FitImagePhotometryMP()`,
-     `~muse_analysis.imphot.FitStarPhotometryMP()` and
-     `~muse_analysis.imphot.FitImageAndStarPhotometryMP()` functions.
-  `~muse_analysis.imphot.extract_function_args()`
+     `~imphot.fit_image_photometry()`,
+     `~imphot.fit_star_photometry()`, `~imphot.FitImagePhotometryMP()`,
+     `~imphot.FitStarPhotometryMP()` and
+     `~imphot.FitImageAndStarPhotometryMP()` functions.
+  `~imphot.extract_function_args()`
      This takes either a dictionary of keyword/value pairs, or an
      ``argparse.Namespace`` object, returned by
      ``argparse.ArgumentParser.parse_args()``, and creates a new

@@ -5,9 +5,7 @@ setup(
     version='0.1',
     packages=find_packages(),
     zip_safe=False,
-    install_requires=['numpy', 'matplotlib', 'astropy', 'mpdaf', 'aplpy',
-                      'lineid_plot', 'joblib', 'six', 'lmfit', 'dataset',
-                      'scipy', 'adjustText', 'termcolor'],
+    install_requires=['mpdaf', 'lmfit'],
     scripts=[
         'imphot/scripts/fit_photometry',
         'imphot/scripts/make_wideband_image',
