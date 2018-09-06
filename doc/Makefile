@@ -232,4 +232,4 @@ dummy:
 
 .PHONY: sync
 sync:
-	rsync -avh --stats --progress --delete _build/html/ urania1:/srv/UDF/muse-analysis
+	rsync -avh --stats --progress --delete _build/html/ urania1:/srv/UDF/imphot
