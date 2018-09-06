@@ -8,7 +8,7 @@ Muse field UDF05 is a 1x1 arc-minute field centered at Right Ascension
 image of this region, seen through the F606W filter and resampled onto
 the pixel grid of the MUSE images of UDF05, is shown below.
 
-.. image:: ../_static/imphot/hst_udf05.jpeg
+.. image:: _static/imphot/hst_udf05.jpeg
 
 This field contains a bright star which should be excluded from the
 fit to obtain a good fit for all other sources between the MUSE and
@@ -22,7 +22,7 @@ the fit::
   #--------------------------------- ------  ------  ------  ------  --------  --------  --------
                      wfc_F606W_UDF05  image  1.0572  0.7027  2.8000   0.04707  -0.00697   0.00151
 
-.. image:: ../_static/imphot/udf05_global_image_fit.jpeg
+.. image:: _static/imphot/udf05_global_image_fit.jpeg
 
 The contents of the residual image indicate that this is a poor
 fit. If one looks closely at the residuals of sources other than the
@@ -34,7 +34,7 @@ of the star, because the star is the brightest object in the image.
 
 If the star is excluded from the fit, as recommended in the
 :ref:`pitfalls<pitfalls>` section, by passing
-:download:`exclude_udf_stars.reg<../_static/imphot/exclude_udf_stars.reg>`
+:download:`exclude_udf_stars.reg<_static/imphot/exclude_udf_stars.reg>`
 region file to the :ref:`fit_photometry<fit_photometry>` script, then
 the results are as follows::
 
@@ -44,7 +44,7 @@ the results are as follows::
   #--------------------------------- ------  ------  ------  ------  --------  --------  --------
                      wfc_F606W_UDF05  image  0.9402  0.7038  2.8000   0.05419   0.04955  -0.05088
 
-.. image:: ../_static/imphot/udf05_nostars_image_fit.jpeg
+.. image:: _static/imphot/udf05_nostars_image_fit.jpeg
 
 The residual image is now dominated by the instrumental background of
 the MUSE image, but there are still clear residuals from other
@@ -84,7 +84,7 @@ follows::
   #--------------------------------- ------  ------  ------  ------  --------  --------  --------
                      wfc_F606W_UDF05  image  1.0875  0.7072  2.8000  -1.54256  -0.00722   0.00376
 
-.. image:: ../_static/imphot/udf05_star_image_fit.jpeg
+.. image:: _static/imphot/udf05_star_image_fit.jpeg
 
 The vector difference between the X,Y pointing errors of the image-fit
 with the star excluded, and the fit with to the stellar image, gives
@@ -111,7 +111,7 @@ except for the bright star, which was excluded with a region file. The
 second fit was limited to a region of 3 arcseconds radius, centered on
 the star.
 
-.. image:: ../_static/imphot/udf05_fwhms_vs_lambda.png
+.. image:: _static/imphot/udf05_fwhms_vs_lambda.png
 
 The star is outside the area of UDF05 that is contaminated by the
 UDF10 observations, so the FWHMs fitted to the star should be believed

@@ -393,13 +393,13 @@ Region files for the MUSE UDF fields
 The following region files are provided for use with the MUSE
 UDF fields.
 
-.. _exclude_udf_stars.reg: ../_static/imphot/exclude_udf_stars.reg
-.. _udf01_star.reg: ../_static/imphot/udf01_star.reg
-.. _udf01_qso.reg: ../_static/imphot/udf01_qso.reg
-.. _udf04_star.reg: ../_static/imphot/udf04_star.reg
-.. _udf05_star.reg: ../_static/imphot/udf05_star.reg
-.. _udf06_star.reg: ../_static/imphot/udf06_star.reg
-.. _udf07_star.reg: ../_static/imphot/udf07_star.reg
+.. _exclude_udf_stars.reg: _static/imphot/exclude_udf_stars.reg
+.. _udf01_star.reg: _static/imphot/udf01_star.reg
+.. _udf01_qso.reg: _static/imphot/udf01_qso.reg
+.. _udf04_star.reg: _static/imphot/udf04_star.reg
+.. _udf05_star.reg: _static/imphot/udf05_star.reg
+.. _udf06_star.reg: _static/imphot/udf06_star.reg
+.. _udf07_star.reg: _static/imphot/udf07_star.reg
 
    +------------------------+-----------------------------------+
    | Region file            |  Purpose                          |
@@ -511,7 +511,7 @@ the FWHM, :math:`w`, as:
 The following figure shows a comparison of a Moffat profile of
 :math:`\beta=2.5` to a Gaussian profile of the same FWHM:
 
-.. image:: ../_static/imphot/moffat_vs_gaussian.png
+.. image:: _static/imphot/moffat_vs_gaussian.png
 
 In general, near the peak of the PSF, Moffat profiles are similar to
 Gaussian profiles. However they have wider wings, as can be seen in

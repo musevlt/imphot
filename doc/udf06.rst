@@ -8,7 +8,7 @@ Muse field UDF06 is a 1x1 arc-minute field centered at Right Ascension
 image of this region, seen through the F606W filter and resampled onto
 the pixel grid of the MUSE images of UDF06, is shown below.
 
-.. image:: ../_static/imphot/hst_udf06.jpeg
+.. image:: _static/imphot/hst_udf06.jpeg
 
 This field contains a bright star which should be excluded from the
 fit to obtain a good fit for all other sources between the MUSE and
@@ -23,7 +23,7 @@ the fit::
   #--------------------------------- ------  ------  ------  ------  --------  --------  --------
                      wfc_F606W_UDF06  image  1.0230  0.6410  2.8000   0.05630  -0.16250   0.21167
 
-.. image:: ../_static/imphot/udf06_global_image_fit.jpeg
+.. image:: _static/imphot/udf06_global_image_fit.jpeg
 
 A very poor fit was obtained on this image, as seen by the strong
 hints of the original sources in the residual image. The reason for
@@ -37,7 +37,7 @@ nature of the residuals of all of the sources except the star.
 
 If the star is excluded from the fit, as recommended in the
 :ref:`pitfalls<pitfalls>` section, by passing
-:download:`exclude_udf_stars.reg<../_static/imphot/exclude_udf_stars.reg>`
+:download:`exclude_udf_stars.reg<_static/imphot/exclude_udf_stars.reg>`
 region file to the :ref:`fit_photometry<fit_photometry>` script, then
 the results are as follows::
 
@@ -47,7 +47,7 @@ the results are as follows::
   #--------------------------------- ------  ------  ------  ------  --------  --------  --------
                      wfc_F606W_UDF06  image  0.9340  0.6681  2.8000   0.06155  -0.00153   0.00035
 
-.. image:: ../_static/imphot/udf06_nostars_image_fit.jpeg
+.. image:: _static/imphot/udf06_nostars_image_fit.jpeg
 
 Excluding the star resulted in a much better fit, in which the much
 smaller range of values in the residual image now allows one to see
@@ -78,7 +78,7 @@ When this is passed to the ``--regions`` argument, the fit changes as follows::
   #--------------------------------- ------  ------  ------  ------  --------  --------  --------
                      wfc_F606W_UDF06  image  0.9398  0.6503  2.8000   0.05477  -0.00385   0.00282
 
-.. image:: ../_static/imphot/udf06_extract_image_fit.jpeg
+.. image:: _static/imphot/udf06_extract_image_fit.jpeg
 
 This appears to be a slightly better fit for the sources within the
 extracted part of UDF06. There is still something left of the large
@@ -98,7 +98,7 @@ area of the image to a small region around the star, as follows::
                      wfc_F606W_UDF06  image  1.1027  0.6629  2.8000   0.04426  -0.17819   0.23157
 
 
-.. image:: ../_static/imphot/udf06_star_image_fit.jpeg
+.. image:: _static/imphot/udf06_star_image_fit.jpeg
 
 The FWHM of the PSF fitted to the star similar to the value fitted to
 the image without the star. The flux scale-factor is about 17% higher,
@@ -127,7 +127,7 @@ except for the bright star, which was excluded with a region file. The
 second fit was limited to a region of 3 arcseconds radius, centered on
 the star.
 
-.. image:: ../_static/imphot/udf06_fwhms_vs_lambda.png
+.. image:: _static/imphot/udf06_fwhms_vs_lambda.png
 
 It is not clear why the results for the F775W and F814W filters are so
 discrepant between the fits to the image without the star, and the

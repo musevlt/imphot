@@ -141,4 +141,4 @@ bandpass lies within the MUSE wavelength range. The response curves of
 these filters are shown in the following figure. Note the two vertical
 lines that delimit the wavelength coverage of MUSE cubes.
 
-.. image:: ../_static/imphot/hst_filter_curves.png
+.. image:: _static/imphot/hst_filter_curves.png

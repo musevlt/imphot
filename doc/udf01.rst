@@ -8,7 +8,7 @@ Muse field UDF01 is a 1x1 arc-minute field centered at Right Ascension
 image of this region, seen through the F606W filter and resampled onto
 the pixel grid of the MUSE images of UDF01, is shown below.
 
-.. image:: ../_static/imphot/hst_udf01.jpeg
+.. image:: _static/imphot/hst_udf01.jpeg
 
 Problematic issues that affect this field
 -----------------------------------------
@@ -26,7 +26,7 @@ following unsatisfactory results for the F606W image::
   #--------------------------------- ------  ------  ------  ------  --------  --------  --------
                      wfc_F606W_UDF01  image  1.1261  0.6557  2.8000   0.05043  -0.03945  -0.04462
 
-.. image:: ../_static/imphot/udf01_global_image_fit.jpeg
+.. image:: _static/imphot/udf01_global_image_fit.jpeg
 
 In the residual image, note that the bright point sources appear to be
 under-subtracted by the HST model of the MUSE image, whereas other
@@ -39,7 +39,7 @@ suffered flux loss for faint stars against dark backgrounds, as
 described in the section on common :ref:`pitfalls<pitfalls>`.
 
 Using the
-:download:`exclude_udf_stars.reg<../_static/imphot/exclude_udf_stars.reg>`
+:download:`exclude_udf_stars.reg<_static/imphot/exclude_udf_stars.reg>`
 region file to mask out the two bright point sources, produced the
 following fit::
 
@@ -49,7 +49,7 @@ following fit::
   #--------------------------------- ------  ------  ------  ------  --------  --------  --------
                 wfc_F606W_UDF01  image  0.9484  0.6519  2.8000   0.05713   0.01345   0.00617
 
-.. image:: ../_static/imphot/udf01_nostars_image_fit.jpeg
+.. image:: _static/imphot/udf01_nostars_image_fit.jpeg
 
 The residual image looks much better now. Note that only the fitted
 flux scale and X and Y position shifts significantly changed.
@@ -72,8 +72,8 @@ but the flux scale factor is significantly larger than that of the fit
 to the none star-like objects, and the fitted position error is very
 different.
 
-.. image:: ../_static/imphot/udf01_star_image_fit.jpeg
-.. image:: ../_static/imphot/udf01_star_star_fit.jpeg
+.. image:: _static/imphot/udf01_star_image_fit.jpeg
+.. image:: _static/imphot/udf01_star_star_fit.jpeg
 
 To get some more insight into the discrepancy between the values that
 were obtained on the stars, compared to those obtained on the dimmer
@@ -88,7 +88,7 @@ image when the stars are still included::
   #--------------------------------- ------  ------  ------  ------  --------  --------  --------
                      wfc_F606W_UDF01  image  0.9484  0.6519  2.8000   0.05713   0.01345   0.00617
 
-.. image:: ../_static/imphot/udf01_fixed_image_fit.jpeg
+.. image:: _static/imphot/udf01_fixed_image_fit.jpeg
 
 Since the fixed parameters were previously the best fits to everything
 except the stars, it is no surprise that the only significant
@@ -145,7 +145,7 @@ file. The second fit was limited to a region of 3 arcseconds radius,
 centered on the QSO. The final fit was similarly limited to a circle
 centered on the star in UDF01.
 
-.. image:: ../_static/imphot/udf01_fwhms_vs_lambda.png
+.. image:: _static/imphot/udf01_fwhms_vs_lambda.png
 
 The FWHMs that were fitted to the star and the QSO are so similar that
 their plotted values overlap. Together they trace out a straight line

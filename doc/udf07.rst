@@ -8,7 +8,7 @@ Muse field UDF07 is a 1x1 arc-minute field centered at Right Ascension
 image of this region, seen through the F606W filter and resampled onto
 the pixel grid of the MUSE images of UDF07, is shown below.
 
-.. image:: ../_static/imphot/hst_udf07.jpeg
+.. image:: _static/imphot/hst_udf07.jpeg
 
 This field contains a bright star which should be excluded from the
 fit to obtain a good fit for all other sources between the MUSE and
@@ -23,7 +23,7 @@ the fit::
   #--------------------------------- ------  ------  ------  ------  --------  --------  --------
                      wfc_F606W_UDF07  image  1.1583  0.6244  2.8000   0.04888   0.00633   0.00765
 
-.. image:: ../_static/imphot/udf07_global_image_fit.jpeg
+.. image:: _static/imphot/udf07_global_image_fit.jpeg
 
 With the bright star included in the fit, the residual image indicates
 a very poor fit, due to the HST stellar flux-loss problem, described
@@ -39,7 +39,7 @@ improves, as follows::
   #--------------------------------- ------  ------  ------  ------  --------  --------  --------
                      wfc_F606W_UDF07  image  0.9824  0.6548  2.8000   0.05633   0.00953  -0.05440
 
-.. image:: ../_static/imphot/udf07_nostars_image_fit.jpeg
+.. image:: _static/imphot/udf07_nostars_image_fit.jpeg
 
 The residual image is dominated by the instrumental background of the
 original MUSE image, so it appears to be a good fit. A slightly better
@@ -57,7 +57,7 @@ following results::
   #--------------------------------- ------  ------  ------  ------  --------  --------  --------
                      wfc_F606W_UDF07  image  1.1708  0.6263  2.8000   0.11258   0.00614   0.00829
 
-.. image:: ../_static/imphot/udf07_star_image_fit.jpeg
+.. image:: _static/imphot/udf07_star_image_fit.jpeg
 
 The amount that the star moved relative to the other sources in the
 image, can be estimated by taking the vector difference between the
@@ -89,7 +89,7 @@ except for the bright star, which was excluded with a region file. The
 second fit was limited to a region of 3 arcseconds radius, centered on
 the star.
 
-.. image:: ../_static/imphot/udf07_fwhms_vs_lambda.png
+.. image:: _static/imphot/udf07_fwhms_vs_lambda.png
 
 There is an obvious offset of about 0.03 arcseconds between the FWHM
 values fitted to the image with the star excluded, and the FWHM values

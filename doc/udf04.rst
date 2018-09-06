@@ -8,7 +8,7 @@ Muse field UDF04 is a 1x1 arc-minute field centered at Right Ascension
 image of this region, seen through the F606W filter and resampled onto
 the pixel grid of the MUSE images of UDF04, is shown below.
 
-.. image:: ../_static/imphot/hst_udf04.jpeg
+.. image:: _static/imphot/hst_udf04.jpeg
 
 This field contains a faint star which, as described in the
 :ref:`pitfalls<pitfalls>` section, should be excluded from the fit to
@@ -22,7 +22,7 @@ below it, show the result if the star is not excluded from the fit::
   #--------------------------------- ------  ------  ------  ------  --------  --------  --------
                      wfc_F606W_UDF04  image  0.9566  0.6543  2.8000   0.05379   0.00742  -0.02325
 
-.. image:: ../_static/imphot/udf04_global_image_fit.jpeg
+.. image:: _static/imphot/udf04_global_image_fit.jpeg
 
 The star is faint enough that the residual image is essentially empty,
 except for the obvious residuals of the star in the top right corner.
@@ -34,7 +34,7 @@ towards the left of the image, in the 11 years that elapsed between
 the HST observation and the MUSE observation.
 
 If the star is excluded, by passing the
-:download:`exclude_udf_stars.reg<../_static/imphot/exclude_udf_stars.reg>`
+:download:`exclude_udf_stars.reg<_static/imphot/exclude_udf_stars.reg>`
 region file to the :ref:`fit_photometry<fit_photometry>` script, then
 the results are as follows::
 
@@ -44,7 +44,7 @@ the results are as follows::
   #--------------------------------- ------  ------  ------  ------  --------  --------  --------
                      wfc_F606W_UDF04  image  0.9551  0.6562  2.8000   0.05378   0.01403  -0.02274
 
-.. image:: ../_static/imphot/udf04_nostars_image_fit.jpeg
+.. image:: _static/imphot/udf04_nostars_image_fit.jpeg
 
 The star is very faint, so the results with and without the star are
 essentially identical, except for the fitted X-axis position error.
@@ -59,7 +59,7 @@ follows::
   #--------------------------------- ------  ------  ------  ------  --------  --------  --------
                      wfc_F606W_UDF04  image  1.1357  0.6569  2.8000   0.05063  -0.13132  -0.02782
 
-.. image:: ../_static/imphot/udf04_star_image_fit.jpeg
+.. image:: _static/imphot/udf04_star_image_fit.jpeg
 
 The fitted parameters to the star are very similar to those of the
 global image fit with the star excluded, except for the flux
@@ -88,7 +88,7 @@ except for the faint star, which was excluded with a region file. The
 second fit was limited to a region of 3 arcseconds radius, centered on
 the star.
 
-.. image:: ../_static/imphot/udf04_fwhms_vs_lambda.png
+.. image:: _static/imphot/udf04_fwhms_vs_lambda.png
 
 The FWHMs that were fitted to the stellar image and to the image
 without the star, are very similar, and the best fit lines to the two
