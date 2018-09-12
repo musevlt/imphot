@@ -265,7 +265,8 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
 
         if isinstance(extramask, Image):
             if not image_grids_aligned(extramask, muse):
-                raise UserError("The pixels of the MUSE and extramask images are not aligned.")
+                raise UserError("The pixels of the MUSE and extramask images "
+                                "are not aligned.")
             extramask = extramask._data.astype(bool)
 
         # If an extra mask was specified as a simple numpy array, check
@@ -463,8 +464,8 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
         # Create a list of slices to select the above area that contains
         # unmasked pixels.
 
-        crop_indexes = [slice(used_rows.min(), used_rows.max() - 1),
-                        slice(used_cols.min(), used_cols.max() - 1)]
+        crop_indexes = (slice(used_rows.min(), used_rows.max() - 1),
+                        slice(used_cols.min(), used_cols.max() - 1))
 
         # Crop the HST and MUSE images and the mask.
 
@@ -520,7 +521,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
         # Compute the slice needed to extract the original area from
         # expanded arrays of the above shape.
 
-        sky_slice = [slice(0, mdata.shape[0]), slice(0, mdata.shape[1])]
+        sky_slice = (slice(0, mdata.shape[0]), slice(0, mdata.shape[1]))
 
         # Zero-pad the MUSE image array to have the new shape.
 
@@ -1491,35 +1492,23 @@ def _write_image_to_fits(template, crop_indexes, data, filename):
        The filename to give the FITS file.
     """
 
-    # Create a primary HDU for the image.
-
     hdu = fits.PrimaryHDU(data)
-
     # Get a cropped WCS object to represent the coordinate axes of
     # the image.
-
     wcs = template.wcs[crop_indexes]
-
     # Get header keywords for the cropped wcs information.
-
     wcs_header = wcs.to_header()
-
     # Add the WCS keywords to the header of the primary HDU.
-
     hdu.header.extend(wcs_header)
-
     # Copy selected keywords from the template image.
-
     for hdr in [template.primary_header, template.data_header]:
         if hdr is not None:
-            for key in ['ORIGIN', 'TELESCOP', 'MJD-OBS', 'DATE-OBS', 'OBSERVER',
-                        'OBJECT', 'DATE', 'BUNIT', 'FILTER']:
+            for key in ['ORIGIN', 'TELESCOP', 'MJD-OBS', 'DATE-OBS',
+                        'OBSERVER', 'OBJECT', 'DATE', 'BUNIT', 'FILTER']:
                 if key in hdr:
                     hdu.header[key] = (hdr[key], hdr.comments[key])
 
-    # Save the file.
-
-    hdu.writeto(filename, clobber=True)
+    hdu.writeto(filename, overwrite=True)
 
 
 def _write_fft_to_fits(template, data, filename):
@@ -1536,14 +1525,8 @@ def _write_fft_to_fits(template, data, filename):
        The filename to give the FITS file.
     """
 
-    # Create a primary HDU for the image.
-
     hdu = fits.PrimaryHDU(np.abs(data))
-
     # Copy selected keywords from the template image.
-
-    # Copy selected keywords from the template image.
-
     for hdr in [template.primary_header, template.data_header]:
         if hdr is not None:
             for key in ['ORIGIN', 'TELESCOP', 'MJD-OBS', 'DATE-OBS', 'OBSERVER',
@@ -1552,12 +1535,10 @@ def _write_fft_to_fits(template, data, filename):
                     hdu.header[key] = (hdr[key], hdr.comments[key])
 
     # Calculate the spatial-frequency increment in cycles per degree.
-
     im_steps = template.get_step(unit=u.deg)
     ft_steps = 1.0 / im_steps / np.asarray(data.shape)
 
     # Add header keywords to describe the coordinates.
-
     hdu.header['CRPIX1'] = data.shape[1] // 2 + 1
     hdu.header['CRPIX2'] = data.shape[0] // 2 + 1
     hdu.header['CRVAL1'] = (0.0, 'The x-axis spatial-frequency origin')
@@ -1567,9 +1548,7 @@ def _write_fft_to_fits(template, data, filename):
     hdu.header['CD2_1'] = 0.0
     hdu.header['CD2_2'] = (ft_steps[0], 'cycles/degree')
 
-    # Save the file.
-
-    hdu.writeto(filename, clobber=True)
+    hdu.writeto(filename, overwrite=True)
 
 
 def _generate_fft_images(mfft, hfft):
