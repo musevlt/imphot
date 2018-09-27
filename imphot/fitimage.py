@@ -778,63 +778,63 @@ class FittedImagePhotometry(FittedPhotometry):
     name : str
        The basename of the MUSE FITS without the .fits extension.
     fit_report : str
-       A printable report on the fit from the least-squares\n
+       A printable report on the fit from the least-squares
        fitting function.
     scale  : `FittedValue`
-       The best-fit value and error of the calibration scale\n
+       The best-fit value and error of the calibration scale
        factor, (MUSE.flux / HST.flux).
     bg  : `FittedValue`
-       The best-fit value and error of the calibration offset,\n
+       The best-fit value and error of the calibration offset,
        (MUSE.flux - HST.flux).
     dx : `FittedValue`
-       The best-fit value and error of the x-axis pointing offset,\n
-       MUSE.x-HST.x (arcsec). This is the distance that features\n
-       in the HST image had to be moved to the right, in the\n
-       direction of increasing x-axis pixel index, to line them up\n
-       with the same features in the MUSE image. One way to\n
-       correct the pointing error of the MUSE observation, is to\n
-       divide 'dx' by the pixel size along the x-axis (usually\n
-       0.2 arcsec), then add the resulting pixel offset to the\n
+       The best-fit value and error of the x-axis pointing offset,
+       MUSE.x-HST.x (arcsec). This is the distance that features
+       in the HST image had to be moved to the right, in the
+       direction of increasing x-axis pixel index, to line them up
+       with the same features in the MUSE image. One way to
+       correct the pointing error of the MUSE observation, is to
+       divide 'dx' by the pixel size along the x-axis (usually
+       0.2 arcsec), then add the resulting pixel offset to the
        CRPIX1 header parameter.
     dy : `FittedValue`
-       The best-fit value and error of the y-axis pointing offset,\n
-       MUSE.y-HST.y (arcsec). This is the distance that features\n
-       in the HST image had to be moved upwards, in the direction\n
-       of increasing y-axis pixel index, to line them up with the\n
-       same features in the MUSE image. One way to correct the\n
-       pointing error of the MUSE observation, is to divide 'dy'\n
-       by the pixel size along the y-axis (usually 0.2 arcsec),\n
-       then add the resulting pixel offset to the CRPIX2 header\n
+       The best-fit value and error of the y-axis pointing offset,
+       MUSE.y-HST.y (arcsec). This is the distance that features
+       in the HST image had to be moved upwards, in the direction
+       of increasing y-axis pixel index, to line them up with the
+       same features in the MUSE image. One way to correct the
+       pointing error of the MUSE observation, is to divide 'dy'
+       by the pixel size along the y-axis (usually 0.2 arcsec),
+       then add the resulting pixel offset to the CRPIX2 header
        parameter.
     dra : `FittedValue`
-       The right-ascension error (arcsec) that corresponds to the\n
-       pointing error dx,dy. This is the angular distance that\n
-       features in the HST image had to be moved towards increased\n
-       right-ascension, to line them up with the same feaures in\n
-       the MUSE image. One way to correct the pointing error of\n
-       the MUSE observation is to subtract 'dra' from the CRVAL1\n
+       The right-ascension error (arcsec) that corresponds to the
+       pointing error dx,dy. This is the angular distance that
+       features in the HST image had to be moved towards increased
+       right-ascension, to line them up with the same feaures in
+       the MUSE image. One way to correct the pointing error of
+       the MUSE observation is to subtract 'dra' from the CRVAL1
        header value of the MUSE observation.
     ddec : `FittedValue`
-       The declination error (arcsec) that corresponds to the\n
-       pointing error dx,dy. This is the angular distance that\n
-       features in the HST image had to be moved towards increased\n
-       declination, to line them up with the same feaures in\n
-       the MUSE image. One way to correct the pointing error of\n
-       the MUSE observation is to subtract 'ddec' from the CRVAL2\n
+       The declination error (arcsec) that corresponds to the
+       pointing error dx,dy. This is the angular distance that
+       features in the HST image had to be moved towards increased
+       declination, to line them up with the same feaures in
+       the MUSE image. One way to correct the pointing error of
+       the MUSE observation is to subtract 'ddec' from the CRVAL2
        header value of the MUSE observation.
     fwhm : `FittedValue`
        The best-fit value and error of the FWHM of the Moffat PSF.
     beta : `FittedValue`
-       The best-fit value and error of the beta parameter of the\n
+       The best-fit value and error of the beta parameter of the
        Moffat PSF
     rchi : float
-       The reduced chi-squared value of the fit. Beware that the\n
-       absolute value of this number is not very useful, because\n
-       the fit is performed to the complex pixels of zero-padded\n
-       FFTs, which are not independent observables, rather than to\n
+       The reduced chi-squared value of the fit. Beware that the
+       absolute value of this number is not very useful, because
+       the fit is performed to the complex pixels of zero-padded
+       FFTs, which are not independent observables, rather than to
        image pixels.
     rms_error : float
-       The root-mean square of the residual image pixels, in the\n
+       The root-mean square of the residual image pixels, in the
        same units as the pixels of the original MUSE image.
 
     """
