@@ -23,28 +23,14 @@ __all__ = ['fit_photometry_main', 'regrid_hst_to_muse_main',
 # Create the main function of the fit_photometry program.
 
 
-def fit_photometry_main(argv):
+def fit_photometry_main():
     """This is the main function of the fit_photometry script.
     It attempts to determine the photometry characteristics of
     a MUSE image via comparisons with an HST image, according to
     arguments passed by the user.
-
-    Parameters
-    ----------
-    argv : list
-       The list of command line arguments. In this list, argv[0] must
-       be the name of the calling program. The remaining elements
-       should be the arguments. To see what those arguments can be,
-       pass argv[1]='--help'.
     """
 
-    # Get the name of the script.
-
-    prog = basename(argv[0])
-
-    # Get a parser for the command-line arguments.
-
-    parser = ImphotArgumentParser(FIT_BOTH, prog)
+    parser = ImphotArgumentParser(FIT_BOTH)
 
     # Add optional arguments for selecting how much is printed for each
     # result.
@@ -83,7 +69,7 @@ def fit_photometry_main(argv):
     # Parse the command-line options. Note that this will abort
     # the program if any argument errors are detected.
 
-    options = parser.parse_args(argv[1:])
+    options = parser.parse_args()
 
     # Extract a dictionary of the keyword/value arguments that are
     # specific to fit_image_photometry().
@@ -177,7 +163,7 @@ def fit_photometry_main(argv):
     # then abort.
 
     except UserError as e:
-        print("%s: %s" % (prog, str(e)))
+        print(e)
         exit(1)
 
     # If somebody deliberately kills the program, just abort the
@@ -195,7 +181,7 @@ def _report_results(results, showheader, options):
 # Create the main function of the regrid_hst_to_muse script.
 
 
-def regrid_hst_to_muse_main(argv):
+def regrid_hst_to_muse_main():
     """This is the main function of the regrid_hst_to_muse script.
 
     Given a MUSE image or MUSE cube and one or more HST images with
@@ -204,29 +190,9 @@ def regrid_hst_to_muse_main(argv):
     the flux units of the MUSE image (usually 1e-20
     erg/cm^2/s/Angstrom).
 
-    Parameters
-    ----------
-    argv : list
-       The list of command line arguments. In this list, argv[0] must
-       be the name of the calling program. The remaining elements
-       should be the arguments. To see what those arguments can be,
-       pass argv[1]='--help'.
-
     """
-
-    # Get the name of the script.
-
-    prog = basename(argv[0])
-
-    # Catch keyboard interrupts and user-input errors.
-
     try:
-
-        # Get a parser for the command-line arguments.
-
-        parser = argparse.ArgumentParser(prog)
-
-        # Specify optional the arguments.
+        parser = argparse.ArgumentParser()
 
         parser.add_argument('--quiet', action='store_true',
                             help='''
@@ -263,7 +229,7 @@ def regrid_hst_to_muse_main(argv):
         # Parse the command-line options. Note that this will abort
         # the program if any argument errors are detected.
 
-        options = parser.parse_args(argv[1:])
+        options = parser.parse_args()
 
         # Read the MUSE image or MUSE cube.
 
@@ -345,7 +311,7 @@ def regrid_hst_to_muse_main(argv):
     # then abort.
 
     except UserError as e:
-        print("%s: %s" % (prog, e))
+        print(e)
         exit(1)
 
     except KeyboardInterrupt:
@@ -354,36 +320,17 @@ def regrid_hst_to_muse_main(argv):
 
 # Create the main function of the make_wideband_image script.
 
-def make_wideband_image_main(argv):
+def make_wideband_image_main():
     """This is the main function of the make_wideband_image script.
 
     Given a MUSE cube and the wavelength sensitivity curve of a
     monochromatic camera, extract an image from the cube that has the
     same wavelength sensitivity curve as the camera.
 
-    Parameters
-    ----------
-    argv : list
-       The list of command line arguments. In this list, argv[0] must
-       be the name of the calling program. The remaining elements
-       should be the arguments. To see what those arguments can be,
-       pass argv[1]='--help'.
-
     """
 
-    # Get the name of the script.
-
-    prog = basename(argv[0])
-
-    # Catch keyboard interrupts and user-input errors.
-
     try:
-
-        # Get a parser for the command-line arguments.
-
-        parser = argparse.ArgumentParser(prog)
-
-        # Specify optional the arguments.
+        parser = argparse.ArgumentParser()
 
         parser.add_argument('--prefix', nargs='?', default="",
                             metavar="output-prefix",
@@ -451,7 +398,7 @@ def make_wideband_image_main(argv):
         # Parse the command-line options. Note that this will abort
         # the program if any argument errors are detected.
 
-        options = parser.parse_args(argv[1:])
+        options = parser.parse_args()
 
         # Read the filter response curve.
 
@@ -524,7 +471,7 @@ def make_wideband_image_main(argv):
     # then abort.
 
     except UserError as e:
-        print("%s: %s" % (prog, e))
+        print(e)
         exit(1)
 
     except KeyboardInterrupt:
