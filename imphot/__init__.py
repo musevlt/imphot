@@ -93,6 +93,8 @@ __all__ = ['ds9regions']
 # package layout, or on internal functions that may be removed or
 # modified in the future.
 
+from .version import __version__
+
 from . import core
 from .core import *
 __all__.extend(core.__all__)
