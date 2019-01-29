@@ -658,7 +658,7 @@ class FittedPhotometry(object):
 
         if header:
             name_width = len(self.name)
-            s = "#%-*s Method  Flux    FWHM    beta     Flux    x-offset  y-offset  ra-offset dec-offset  RMS\n" % (name_width - 1, " MUSE observation ID")
+            s = "#%-*s Method  Flux    FWHM    beta     Flux    x-offset  y-offset  ra-offset dec-offset  RMS\n" % (name_width - 1, " MUSE ID")
             s += "#%*s         scale  arcsec           offset    arcsec    arcsec    arcsec    arcsec    error\n" % (name_width - 1, "")
             s += "#%s ------ ------- ------- ------- --------- --------- --------- --------- --------- -------\n" % ('-' * (name_width - 1))
 
