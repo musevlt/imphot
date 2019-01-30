@@ -617,7 +617,6 @@ class FittedPhotometry(object):
 
         steps = muse.wcs.get_step(unit=u.arcsec)
         p = np.array([dy.value, dx.value]) / steps
-        s = np.array([dy.stdev, dx.stdev]) / steps
 
         # We need to Right Ascension and declination offsets that
         # correspond, approximately, to the dx,dy pointing errors.
@@ -628,16 +627,18 @@ class FittedPhotometry(object):
         center_dec_ra = muse.wcs.pix2sky(center_pix, unit=u.arcsec)[0]
         ddec, dra = muse.wcs.pix2sky(center_pix + p, unit=u.arcsec)[0] -\
             center_dec_ra
-        sdec, sra = muse.wcs.pix2sky(center_pix + s, unit=u.arcsec)[0] -\
-            center_dec_ra
 
-        # Record the right ascension and declination corrections in
-        # arcseconds.
+        if dx.stdev is not None and dy.stdev is not None:
+            s = np.array([dy.stdev, dx.stdev]) / steps
+            sdec, sra = muse.wcs.pix2sky(center_pix + s, unit=u.arcsec)[0] -\
+                center_dec_ra
+        else:
+            sdec, sra = None, None
 
-        self.dra = FittedValue(value=dra, stdev=sra,
-                               fixed=dx.fixed and dy.fixed)
-        self.ddec = FittedValue(value=ddec, stdev=sdec,
-                                fixed=dx.fixed and dy.fixed)
+        # Record the right ascension and declination corrections in arcseconds
+        fixed = dx.fixed and dy.fixed
+        self.dra = FittedValue(value=dra, stdev=sra, fixed=fixed)
+        self.ddec = FittedValue(value=ddec, stdev=sdec, fixed=fixed)
 
     def __str__(self):
         return "Report of HST %s photometry fit of MUSE observation %s\n" % (self.method, self.name) + self.fit_report
