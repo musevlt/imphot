@@ -2,7 +2,6 @@ from sys import exc_info
 from multiprocessing import (Process, Queue, cpu_count)
 from signal import (signal, SIGINT, SIG_IGN)
 from traceback import format_exception
-import string
 
 from mpdaf.obj import Image
 

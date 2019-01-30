@@ -3,18 +3,17 @@ import numpy as np
 from numpy import ma
 import astropy.units as u
 from astropy.io import fits
-from scipy.ndimage.morphology import (grey_opening, grey_dilation, binary_erosion)
+from scipy.ndimage.morphology import (grey_opening, grey_dilation,
+                                      binary_erosion)
 from scipy.ndimage.filters import convolve
 from lmfit import Model
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
 
 from mpdaf.obj import Image
 
 from . import ds9regions
-from .core import (UserError, FittedValue, FittedPhotometry, HstFilterInfo,
-                   image_grids_aligned, _default_hst_fwhm, _default_hst_beta,
-                   apply_corrections)
+from .core import (UserError, FittedValue, FittedPhotometry, apply_corrections,
+                   image_grids_aligned, _default_hst_fwhm, _default_hst_beta)
 from .mp import _FitPhotometryMP
 
 __all__ = ['fit_image_photometry', 'FittedImagePhotometry',
@@ -969,7 +968,8 @@ def _xy_moffat_model_fn(fx, fy, rsq, hstfft, wfft, subtracted, xshift, yshift,
     # scaled by the fitted scaling factor, smoothed to a lower resolution
     # by the above 2D Moffat function, and shifted by dx and dy.
 
-    model = (bg - subtracted) * wfft + hstfft * scale * moffat_ft * np.exp(argx * fx + argy * fy)
+    model = ((bg - subtracted) * wfft +
+             hstfft * scale * moffat_ft * np.exp(argx * fx + argy * fy))
 
     # The model-fitting function can't handle complex numbers, so
     # return the complex FFT model as an array of alternating real and
@@ -979,15 +979,11 @@ def _xy_moffat_model_fn(fx, fy, rsq, hstfft, wfft, subtracted, xshift, yshift,
 
 
 def _plot_2d_array(data, axes, vmin=None, vmax=None, pixw=None, pixh=None,
-                   cmap=None, xlabel=None, ylabel=None, title=None,
+                   cmap='gray', xlabel=None, ylabel=None, title=None,
                    title_fs=10, title_color="black", xtick=None, ytick=None,
                    axis_bg="#cccccc"):
 
     # Substitute defaults for omitted parameters.
-
-    if cmap is None:
-        cmap = plt.cm.gray
-
     if pixw is None:
         pixw = data.shape[1]
     if pixh is None:
@@ -1000,21 +996,18 @@ def _plot_2d_array(data, axes, vmin=None, vmax=None, pixw=None, pixh=None,
         vmax = mean + 2.0 * std
 
     # Get the axis extent of the image.
-
     im_lft = 0
     im_rgt = data.shape[1]
     im_bot = 0
     im_top = data.shape[0]
 
     # Axis limits.
-
     ax_lft = 0
     ax_rgt = pixw
     ax_bot = 0
     ax_top = pixh
 
     # Create the graph.
-
     axes.set_facecolor(axis_bg)
     axes.set_autoscale_on(False)
     axes.set_xlim(ax_lft, ax_rgt)
@@ -1107,7 +1100,10 @@ def _apply_resampling_window(imfft, shape):
     # window function as a function of frequency divided by its cutoff
     # frequency.
 
-    imfft *= np.where(f <= 1.0, 0.42 + 0.5 * np.cos(np.pi * f) + 0.08 * np.cos(2 * np.pi * f), 0.0)
+    imfft *= np.where(
+        f <= 1.0,
+        0.42 + 0.5 * np.cos(np.pi * f) + 0.08 * np.cos(2 * np.pi * f),
+        0.0)
 
 
 def _convolve_hst_psf(imfft, shape, dy, dx, fwhm, beta):
@@ -1180,7 +1176,8 @@ def _convolve_hst_psf(imfft, shape, dy, dx, fwhm, beta):
     # Multiply the MUSE FFT by the FFT of the Moffat function.
 
     imfft[0:ny // 2, 0:nx // 2] *= moffat_ft[0:ny // 2, 0:nx // 2]
-    imfft[ny - ny // 2:ny, 0:nx // 2] *= moffat_ft[mag * ny - ny // 2:mag * ny, 0:nx // 2]
+    imfft[ny - ny // 2:ny, 0:nx // 2] *= \
+        moffat_ft[mag * ny - ny // 2:mag * ny, 0:nx // 2]
     del(moffat_ft)
 
 
@@ -1351,13 +1348,12 @@ def _plot_fitted_image_results(muse, imfit, muse_im, muse_ft, hst_im, hst_ft,
         title = "MUSE image: %s" % imfit.name
 
     # Display a plot title?
-
     if title != "":
         title_y = 0.98 if "\n" in title else 0.95
         fig.suptitle(title, ha="left", x=0.12, y=title_y, fontsize=14)
 
     # Create a plot grid with 2 rows and 3 columns.
-
+    import matplotlib.gridspec as gridspec
     gs = gridspec.GridSpec(2, 3)
 
     # Determine a suitable range for displaying the the absolute
