@@ -720,15 +720,15 @@ class HstFilterInfo(object):
     # 2012-01-01
     _filters = {
         "F435W": {"abmag_zero": 25.68, "photplam": 4328.2,
-                  "photflam": 3.11e-19, "photbw": 298.2}
+                  "photflam": 3.11e-19, "photbw": 298.2},
         "F475W": {"abmag_zero": 26.06, "photplam": 4746.9,
-                  "photflam": 1.82e-19, "photbw": 420.2}
+                  "photflam": 1.82e-19, "photbw": 420.2},
         "F555W": {"abmag_zero": 25.72, "photplam": 5361.0,
-                  "photflam": 1.96e-19, "photbw": 360.1}
+                  "photflam": 1.96e-19, "photbw": 360.1},
         "F606W": {"abmag_zero": 26.51, "photplam": 5921.1,
                   "photflam": 7.73e-20, "photbw": 672.3},
         "F625W": {"abmag_zero": 25.91, "photplam": 6311.4,
-                  "photflam": 1.18e-19, "photbw": 415.4}
+                  "photflam": 1.18e-19, "photbw": 415.4},
         "F775W": {"abmag_zero": 25.69, "photplam": 7692.4,
                   "photflam": 9.74e-20, "photbw": 434.4},
         "F814W": {"abmag_zero": 25.94, "photplam": 8057.0,
