@@ -4,6 +4,7 @@
 *~
 ._*
 .DS_Store
+.eggs/
 api/
 build/
 doc/_build
