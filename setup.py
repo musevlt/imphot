@@ -1,4 +1,8 @@
+import sys
 from setuptools import setup, find_packages
+
+if sys.version_info < (3, 5):
+    raise Exception('python 3.5 or newer is required')
 
 setup(
     name='imphot',
@@ -6,6 +10,8 @@ setup(
     setup_requires=['setuptools_scm'],
     packages=find_packages(),
     zip_safe=False,
+    include_package_data=True,
+    python_requires='>=3.5',
     install_requires=['mpdaf', 'lmfit'],
     entry_points={
         'console_scripts': [
