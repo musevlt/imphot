@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function, division
-
 # This module lets one read circle, ellipse and box regions from a ds9
 # region file. Beware that it assumes that the coordinate system of
 # the central coordinates of each region is fk5.
@@ -11,7 +9,7 @@ import re
 __all__ = ['Ds9Regions', 'Ds9Region', 'Ds9Circle', 'Ds9Ellipse', 'Ds9Box']
 
 
-class Ds9Regions(object):
+class Ds9Regions:
     """Parse circle, ellipse and box regions from a ds9 region file.
 
     Only circle, ellipse, and box regions are recognized. Other types
@@ -174,7 +172,7 @@ class Ds9Regions(object):
                 raise ValueError("Error on line %d (%s)" % (line_number + 1, e.message))
 
 
-class Ds9Region(object):
+class Ds9Region:
     """A generic Ds9Region.
 
     Parameters

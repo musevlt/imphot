@@ -104,7 +104,7 @@ class _FitPhotometryWP(Process):
             exit(1)
 
 
-class _FitPhotometryMP(object):
+class _FitPhotometryMP:
     """A multiprocessing iterator that creates a pool or worker
     processes to repeatedly call a specified function for each
     of a list of MUSE files, returning the results via the

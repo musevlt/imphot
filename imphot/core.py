@@ -22,7 +22,7 @@ _default_hst_beta = 1.6
 # Define a class that will hold the fitted value of a single parameter.
 
 
-class FittedValue(object):
+class FittedValue:
     """A parameter value returned by a least-squares fitting function.
 
     Parameters
@@ -500,7 +500,7 @@ def extract_function_args(options, function):
 # Define a class that holds fitted photometry parameters.
 
 
-class FittedPhotometry(object):
+class FittedPhotometry:
     """The superclass of `FittedImagePhotometry` and `FittedStarPhotometry`
     which contains the fitted photometry parameters of a MUSE image,
     the identity of the original MUSE image, and a report from the
@@ -673,7 +673,7 @@ class FittedPhotometry(object):
         return s
 
 
-class HstFilterInfo(object):
+class HstFilterInfo:
     """An object that contains the filter characteristics of an HST
     image.
 

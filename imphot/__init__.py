@@ -81,8 +81,6 @@ just invoke the main function within the imphot module::
 
 """
 
-from __future__ import division, absolute_import, print_function
-
 __all__ = ['ds9regions']
 
 # Make all public functions and their documentation visible at the

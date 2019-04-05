@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function, division
-
 import math
 import astropy.units as u
 from scipy import integrate, interpolate
@@ -242,7 +240,7 @@ def bandpass_image(cube, wavelengths, sensitivities,
     return Image.new_from_obj(cube, data=data, var=var)
 
 
-class _SpectralPlaneSums(object):
+class _SpectralPlaneSums:
 
     '''A class that accumulates the weighted sums of images from multiple
     spectral planes of a MUSE cube, weighted by a filter throughput curve.
@@ -529,7 +527,7 @@ class _WidebandImageWP(Process):
             exit(1)
 
 
-class _WidebandImageMP(object):
+class _WidebandImageMP:
     """A multiprocessing object that creates a pool or worker
     processes to repeatedly call combine_spectral_planes() for successive
     ranges of spectral planes, and accumulates the combined image and its

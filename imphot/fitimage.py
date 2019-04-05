@@ -1,4 +1,3 @@
-from __future__ import division
 import numpy as np
 from numpy import ma
 import astropy.units as u
