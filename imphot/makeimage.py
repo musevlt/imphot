@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import math
 import astropy.units as u
 from scipy import integrate, interpolate
@@ -9,7 +7,7 @@ from signal import (signal, SIGINT, SIG_IGN)
 from traceback import format_exception
 import numpy as np
 from numpy import ma
-from mpdaf.obj import (Cube, Image)
+from mpdaf.obj import Image
 
 from .core import (UserError, WorkerError)
 

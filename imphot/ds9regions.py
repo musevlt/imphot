@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # This module lets one read circle, ellipse and box regions from a ds9
 # region file. Beware that it assumes that the coordinate system of
 # the central coordinates of each region is fk5.

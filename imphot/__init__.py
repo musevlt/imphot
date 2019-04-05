@@ -74,7 +74,6 @@ The main() functions of the ``fit_photometry``, ``regrid_hst_to_muse`` and
 ``fit_photometry`` script is comprised of the following few lines that
 just invoke the main function within the imphot module::
 
-  #!/usr/bin/env python
   import sys
   import imphot
   imphot.fit_photometry_main(sys.argv)
