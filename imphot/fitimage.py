@@ -21,7 +21,7 @@ __all__ = ['fit_image_photometry', 'FittedImagePhotometry',
 
 def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
                          fix_bg=None, fix_dx=None, fix_dy=None,
-                         fix_fwhm=None, fix_beta=None,
+                         fix_fwhm=None, fix_beta=None, min_scale=0,
                          hst_fwhm=_default_hst_fwhm,
                          hst_beta=_default_hst_beta,
                          margin=2.0, segment=False, display=False,
@@ -626,7 +626,8 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
             fitmod.set_param_hint('bg', value=fix_bg,
                                   vary=False)
         if fix_scale is None:
-            fitmod.set_param_hint('scale', value=scale_guess, min=0.0)
+            fitmod.set_param_hint('scale', value=max(scale_guess, min_scale),
+                                  min=min_scale)
         else:
             fitmod.set_param_hint('scale', value=fix_scale,
                                   min=0.0, vary=False)
@@ -658,7 +659,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
                              rsq=rsq, hstfft=hfft.ravel(),
                              wfft=weight_fft.ravel(),
                              subtracted=subtracted, xshift=xshift,
-                             yshift=yshift)
+                             yshift=yshift, method='least_squares')
 
         # How much change has there been from the initial guesses at the
         # x and y offsets?
