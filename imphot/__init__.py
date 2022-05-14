@@ -90,7 +90,7 @@ __all__ = ['ds9regions']
 # package layout, or on internal functions that may be removed or
 # modified in the future.
 
-from .version import __version__
+from .version import version as __version__
 
 from . import core
 from .core import *
