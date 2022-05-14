@@ -13,6 +13,10 @@ setup(
     include_package_data=True,
     python_requires='>=3.5',
     install_requires=['mpdaf', 'lmfit'],
+    extras_require={
+        'docs': ['sphinx', 'sphinx_rtd_theme', 'sphinx_automodapi',
+                 'numpydoc', 'matplotlib'],
+    },
     entry_points={
         'console_scripts': [
             'fit_photometry = imphot.programs:fit_photometry_main',
