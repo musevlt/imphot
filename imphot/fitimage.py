@@ -473,11 +473,9 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
 
         # Get the median of the unmasked parts of the MUSE image, to
         # use as an initial estimate of the constant part of the
-        # background.  Note that the call to np.asscalar works around
-        # a bug in an old version of np.ma.median() which returned a 1
-        # element array.
+        # background.
 
-        subtracted = np.asscalar(np.ma.median(mdata))
+        subtracted = np.ma.median(mdata)
 
         # Get ndarray versions of the above arrays with masked pixels
         # filled with zeros. Note that the choice of zeros (as opposed
@@ -975,7 +973,7 @@ def _xy_moffat_model_fn(fx, fy, rsq, hstfft, wfft, subtracted, xshift, yshift,
     # return the complex FFT model as an array of alternating real and
     # imaginary floats.
 
-    return model.view(dtype=float)
+    return np.ascontiguousarray(model).view(dtype=float)
 
 
 def _plot_2d_array(data, axes, vmin=None, vmax=None, pixw=None, pixh=None,
