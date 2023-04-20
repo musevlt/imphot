@@ -1,5 +1,5 @@
 from os.path import basename
-from inspect import getargspec
+from inspect import getfullargspec
 import astropy.units as u
 import string
 import argparse
@@ -491,7 +491,7 @@ def extract_function_args(options, function):
 
     # Get the argument list of the function.
 
-    argspec = getargspec(function)
+    argspec = getfullargspec(function)
 
     # Get the intersection of the two dictionaries.
 
