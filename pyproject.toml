@@ -1,6 +1,45 @@
 [build-system]
-requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2", "wheel"]
+requires = ["setuptools>=77.0.0", "setuptools_scm>=8.0.0"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "imphot"
+description = "Determine the photometric parameters of individual MUSE images"
+readme = "README.md"
+authors = [
+    {name = "Martin Shepherd"}
+]
+keywords = ["astronomy", "astrophysics", "science", "muse", "vlt"]
+license = "MIT"
+license-files = ["LICENSE"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+requires-python = ">=3.11"
+dependencies = ["mpdaf", "lmfit"]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+docs = [
+    "matplotlib",
+    "numpydoc",
+    "sphinx",
+    "sphinx_automodapi",
+    "sphinx_rtd_theme",
+]
+
+[project.scripts]
+fit_photometry = "imphot.programs:fit_photometry_main"
+make_wideband_image = "imphot.programs:make_wideband_image_main"
+regrid_hst_to_muse = "imphot.programs:regrid_hst_to_muse_main"
+
+[project.urls]
+documentation = "https://imphot.readthedocs.io"
+github = "https://github.com/musevlt/imphot"
 
 [tool.setuptools_scm]
 write_to = "imphot/version.py"
