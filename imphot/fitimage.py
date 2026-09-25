@@ -231,13 +231,13 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
         if isinstance(hst, str):
             hst = Image(hst)
     except Exception as e:
-        raise UserError("Error reading HST file (%s)" % e.message)
+        raise UserError(f"Error reading HST file ({e.message})")
 
     try:
         if isinstance(muse, str):
             muse = Image(muse)
     except Exception as e:
-        raise UserError("Error reading MUSE file (%s)" % e.message)
+        raise UserError(f"Error reading MUSE file ({e.message})")
 
     # Require that the image arrays of the HST and MUSE images
     # sample the same coordinate grid.
@@ -259,7 +259,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
                 if isinstance(extramask, str):
                     extramask = Image(extramask)
             except Exception as e:
-                raise UserError("Error reading mask file (%s)" % e.message)
+                raise UserError(f"Error reading mask file ({e.message})")
 
         # If a FITS file or MPDAF Image was specified, verify that the
         # it is for the correct field, and that it has the correct
@@ -312,7 +312,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
 
     if regions == "star":
         if star is not None:
-            regions = ["fk5; circle(%g, %g, %g\")" % (ra, dec, radius)]
+            regions = [f"fk5; circle({ra:g}, {dec:g}, {radius:g}\")"]
         else:
             regions = None
 
@@ -321,7 +321,7 @@ def fit_image_photometry(hst, muse, regions=None, fix_scale=None,
 
     elif regions == "notstar":
         if star is not None:
-            regions = ["fk5; -circle(%g, %g, %g\")" % (ra, dec, radius)]
+            regions = [f"fk5; -circle({ra:g}, {dec:g}, {radius:g}\")"]
         else:
             regions = None
 
@@ -1257,9 +1257,9 @@ def _mask_ds9regions(im, regions):
         try:
             regions = ds9regions.Ds9Regions(regions)
         except ValueError as e:
-            raise UserError("Region parsing error: %s" % str(e))
-        except IOError as e:
-            raise UserError("Region file error, %s" % str(e))
+            raise UserError(f"Region parsing error: {str(e)}")
+        except OSError as e:
+            raise UserError(f"Region file error, {str(e)}")
 
     # Mask all regions that are marked for exclusion.
     for reg in regions:
@@ -1348,7 +1348,7 @@ def _plot_fitted_image_results(muse, imfit, muse_im, muse_ft, hst_im, hst_ft,
     # Substitute a default title?
 
     if title is None or title == "none":
-        title = "MUSE image: %s" % imfit.name
+        title = f"MUSE image: {imfit.name}"
 
     # Display a plot title?
     if title != "":
@@ -1668,7 +1668,7 @@ class FitImagePhotometryMP(_FitPhotometryMP):
 
         # Instantiate the parent _FitPhotometryMP object.
 
-        super(FitImagePhotometryMP, self).__init__(
+        super().__init__(
             hst_filename, muse_filenames, cmd_fn=fit_image_photometry,
             cmd_kwargs=kwargs, nworker=nworker)
 
@@ -1683,4 +1683,4 @@ class FitImagePhotometryMP(_FitPhotometryMP):
 
         """
 
-        return super(FitImagePhotometryMP, self).next()
+        return super().next()

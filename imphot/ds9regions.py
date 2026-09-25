@@ -65,7 +65,7 @@ class Ds9Regions:
     def __str__(self):
         s = ""
         for region in self._regions:
-            s += "%s\n" % region.__str__()
+            s += f"{region.__str__()}\n"
         return s
 
     def __len__(self):
@@ -167,7 +167,7 @@ class Ds9Regions:
                 if region is not None:
                     self._regions.append(region)
             except ValueError as e:
-                raise ValueError("Error on line %d (%s)" % (line_number + 1, e.message))
+                raise ValueError(f"Error on line {line_number} ({e.message})")
 
 
 class Ds9Region:
@@ -209,7 +209,7 @@ class Ds9Region:
         self.y = y
 
     def __str__(self):
-        return "%s %s %s x: %.6f  y: %.6f" % ("exclude" if self.exclude else "include", self.system, self.shape, self.x, self.y)
+        return "{} {} {} x: {:.6f}  y: {:.6f}".format("exclude" if self.exclude else "include", self.system, self.shape, self.x, self.y)
 
 
 class Ds9Circle(Ds9Region):
@@ -250,7 +250,7 @@ class Ds9Circle(Ds9Region):
         self.radius = radius
 
     def __str__(self):
-        return Ds9Region.__str__(self) + ("  r: %g" % self.radius)
+        return Ds9Region.__str__(self) + (f"  r: {self.radius:g}")
 
 
 class Ds9Ellipse(Ds9Region):
@@ -303,7 +303,7 @@ class Ds9Ellipse(Ds9Region):
         self.pa = pa
 
     def __str__(self):
-        return Ds9Region.__str__(self) + ("  w: %g  h: %g  PA: %g" % (self.width, self.height, self.pa))
+        return Ds9Region.__str__(self) + (f"  w: {self.width:g}  h: {self.height:g}  PA: {self.pa:g}")
 
 
 class Ds9Box(Ds9Region):
@@ -356,7 +356,7 @@ class Ds9Box(Ds9Region):
         self.pa = pa
 
     def __str__(self):
-        return Ds9Region.__str__(self) + ("  w: %g  h: %g  PA: %g" % (self.width, self.height, self.pa))
+        return Ds9Region.__str__(self) + (f"  w: {self.width:g}  h: {self.height:g}  PA: {self.pa:g}")
 
 
 def _parse_x(s):
@@ -450,5 +450,5 @@ if __name__ == '__main__':
         regs = Ds9Regions(sys.argv[1])
         print(regs)
     else:
-        print("Usage: %s <filename>" % sys.argv[0])
+        print(f"Usage: {sys.argv[0]} <filename>")
         exit(1)

@@ -164,13 +164,13 @@ def fit_image_and_star_photometry(hst, muse, star, regions="star",
         if isinstance(hst, str):
             hst = Image(hst)
     except Exception as e:
-        raise UserError("Error reading HST file (%s)" % e.message)
+        raise UserError(f"Error reading HST file ({e.message})")
 
     try:
         if isinstance(muse, str):
             muse = Image(muse)
     except Exception as e:
-        raise UserError("Error reading MUSE file (%s)" % e.message)
+        raise UserError(f"Error reading MUSE file ({e.message})")
 
     # Check the star argument.
 
@@ -247,7 +247,7 @@ class FitImageAndStarPhotometryMP(_FitPhotometryMP):
             raise UserError("The radius given to the star argument must be > 0")
         # Instantiate the parent _FitPhotometryMP object.
 
-        super(FitImageAndStarPhotometryMP, self).__init__(
+        super().__init__(
             hst_filename, muse_filenames,
             cmd_fn=fit_image_and_star_photometry, cmd_kwargs=kwargs,
             nworker=nworker)
@@ -263,4 +263,4 @@ class FitImageAndStarPhotometryMP(_FitPhotometryMP):
 
         """
 
-        return super(FitImageAndStarPhotometryMP, self).next()
+        return super().next()

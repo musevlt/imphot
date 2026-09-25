@@ -106,13 +106,13 @@ def fit_star_photometry(hst, muse, star, fix_fwhm=None, fix_beta=None,
         if isinstance(hst, str):
             hst = Image(hst)
     except Exception as e:
-        raise UserError("Error reading HST file (%s)" % e.message)
+        raise UserError(f"Error reading HST file ({e.message})")
 
     try:
         if isinstance(muse, str):
             muse = Image(muse)
     except Exception as e:
-        raise UserError("Error reading MUSE file (%s)" % e.message)
+        raise UserError(f"Error reading MUSE file ({e.message})")
 
     # Require that the image arrays of the HST and MUSE images
     # sample the same coordinate grid.
@@ -596,7 +596,7 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
     # Substitute a default title?
 
     if title is None or title == "none":
-        title = "MUSE image: %s " % basename(muse.filename).replace(".fits", "")
+        title = "MUSE image: {} ".format(basename(muse.filename).replace(".fits", ""))
 
     # Display a plot title?
 
@@ -666,7 +666,7 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
         # the anstrom symbol, \mathring{A}, by the smaller
         # unicode angstrom character.
 
-        units_label = units_label.replace(r'\mathring{A}', u"\u00c5")
+        units_label = units_label.replace(r'\mathring{A}', "\u00c5")
 
         # Also remove the excessive '\,' spaces that astropy.units
         # adds after exponents.
@@ -683,7 +683,7 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
 
         # Compose a units label for labelling the Y-axis.
 
-        y_units_label = "%s%s" % (u.Unit(muse.unit.scale / y_multiplier).to_string("latex_inline"), units_label)
+        y_units_label = "{}{}".format(u.Unit(muse.unit.scale / y_multiplier).to_string("latex_inline"), units_label)
 
         # Rescale the y-axis values and the y-axis range.
 
@@ -707,11 +707,11 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
 
         # Label the contents of the graph.
 
-        ax.text(0.2, 0.95, (("%s pixels plotted over a\n" % name) +
+        ax.text(0.2, 0.95, ((f"{name} pixels plotted over a\n") +
                             "Moffat model of total flux:"),
                 transform=ax.transAxes, ha="left", va="top")
         ax.text(0.28, 0.82,
-                u"%.3g %s\nfwhm: %.2g arcsec\nMoffat beta: %.2g" % (
+                "{:.3g} {}\nfwhm: {:.2g} arcsec\nMoffat beta: {:.2g}".format(
                     results.best_values['flux'] * muse.unit.scale, units_label,
                     results.best_values['fwhm'], results.best_values['beta']),
                 transform=ax.transAxes, ha="left", va="top")
@@ -730,7 +730,7 @@ def _plot_fitted_star_results(muse, hst, radius, muse_results, hst_results,
         res_margin = (res_max - res_min) * 0.5
         ax.set_ylim(res_min - res_margin, res_max + res_margin)
         ax.plot(r, residuals, ls="", marker=".")
-        ax.text(0.5, 0.95, "%s residuals (pixels - model)" % name,
+        ax.text(0.5, 0.95, f"{name} residuals (pixels - model)",
                 transform=ax.transAxes, ha="center", va="top")
 
     # Display the plot?
@@ -854,7 +854,7 @@ class FitStarPhotometryMP(_FitPhotometryMP):
 
         # Instantiate the parent _FitPhotometryMP object.
 
-        super(FitStarPhotometryMP, self).__init__(
+        super().__init__(
             hst_filename, muse_filenames,
             cmd_fn=fit_star_photometry, cmd_kwargs=kwargs, nworker=nworker)
 
@@ -869,4 +869,4 @@ class FitStarPhotometryMP(_FitPhotometryMP):
 
         """
 
-        return super(FitStarPhotometryMP, self).next()
+        return super().next()

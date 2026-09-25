@@ -175,7 +175,7 @@ class ImphotArgumentParser(argparse.ArgumentParser):
 
         # Instantiate the super-class OptionParser object.
 
-        super(ImphotArgumentParser, self).__init__(*args, formatter_class=argparse.RawTextHelpFormatter, **kwargs)
+        super().__init__(*args, formatter_class=argparse.RawTextHelpFormatter, **kwargs)
 
         # Define command-line arguments according to the function
         # that is being configured.
@@ -642,7 +642,7 @@ class FittedPhotometry:
         self.ddec = FittedValue(value=ddec, stdev=sdec, fixed=fixed)
 
     def __str__(self):
-        return "Report of HST %s photometry fit of MUSE observation %s\n" % (self.method, self.name) + self.fit_report
+        return f"Report of HST {self.method} photometry fit of MUSE observation {self.name}\n" + self.fit_report
 
     def summary(self, header=True):
         """Return a string that summarizes the results, optionally
@@ -660,13 +660,13 @@ class FittedPhotometry:
 
         if header:
             name_width = len(self.name)
-            s = "#%-*s Method  Flux    FWHM    beta     Flux    x-offset  y-offset  ra-offset dec-offset  RMS\n" % (name_width - 1, " MUSE ID")
-            s += "#%*s         scale  arcsec           offset    arcsec    arcsec    arcsec    arcsec    error\n" % (name_width - 1, "")
+            s = "#%-*s Method  Flux    FWHM    beta     Flux    x-offset y-offset  ra-offset dec-offset  RMS\n" % (name_width - 1, " MUSE ID") # noqa
+            s += "#%*s         scale  arcsec           offset    arcsec    arcsec    arcsec    arcsec    error\n" % (name_width - 1, "") # noqa
             s += "#%s ------ ------- ------- ------- --------- --------- --------- --------- --------- -------\n" % ('-' * (name_width - 1))
 
         # Format the fitted values.
 
-        s += "%s %6s % 7.4f % 7.4f % 7.4f % 9.5f % 9.5f % 9.5f % 9.5f % 9.5f %7.4f" % (
+        s += "%s %6s % 7.4f % 7.4f % 7.4f % 9.5f % 9.5f % 9.5f % 9.5f % 9.5f %7.4f" % ( # noqa
             self.name, self.method, self.scale.value, self.fwhm.value,
             self.beta.value, self.bg.value,
             self.dx.value, self.dy.value, self.dra.value, self.ddec.value,
@@ -763,8 +763,7 @@ class HstFilterInfo:
         if self.filter_name in self.__class__._filters:
             info = self.__class__._filters[self.filter_name]
         else:
-            raise UserError("Unrecognized filter (%s) in HST image header" %
-                            self.filter_name)
+            raise UserError(f"Unrecognized filter ({self.filter_name}) in HST image header")
 
         # Record the characteristics of the filer.
 

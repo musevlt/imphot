@@ -49,7 +49,7 @@ select = [
   # "E", "F", "W", # flake8
   # "B",           # bugbear
   "I",           # isort
-  # "UP",          # pyupgrade
+  "UP",          # pyupgrade
 ]
 # ignore = ["E731"]
 unfixable = [

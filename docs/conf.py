@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 from pkg_resources import get_distribution
 
@@ -89,9 +88,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Imphot'
-copyright = u'2016, Muse Team'
-author = u'Muse Team'
+project = 'Imphot'
+copyright = '2016, Muse Team'
+author = 'Muse Team'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -254,6 +253,6 @@ htmlhelp_basename = 'MuseAnalysisdoc'
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'Imphot.tex', u'Imphot Documentation',
-     u'Muse Team', 'manual'),
+    (master_doc, 'Imphot.tex', 'Imphot Documentation',
+     'Muse Team', 'manual'),
 ]

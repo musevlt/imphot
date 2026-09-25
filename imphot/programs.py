@@ -233,7 +233,7 @@ def regrid_hst_to_muse_main():
 
         try:
             if not options.quiet:
-                print("Reading MUSE image: %s" % options.muse_image)
+                print(f"Reading MUSE image: {options.muse_image}")
             try:
                 muse = Image(options.muse_image)
                 if muse.ndim != 2:
@@ -244,7 +244,7 @@ def regrid_hst_to_muse_main():
                     raise ValueError("Invalid cube dimensions")
 
         except Exception as e:
-            print("Error reading: %s (%s)" % (options.muse_image, e),
+            print(f"Error reading: {options.muse_image} ({e})",
                   file=sys.stderr)
             exit(1)
 
@@ -256,7 +256,7 @@ def regrid_hst_to_muse_main():
 
             try:
                 if not options.quiet:
-                    print("Reading HST image: %s" % hst_image)
+                    print(f"Reading HST image: {hst_image}")
 
                 # If there is no DATA or SCI extension, MPDAF will
                 # refuse to read the file unless it is told which
@@ -272,7 +272,7 @@ def regrid_hst_to_muse_main():
                 hst = Image(hst_image, ext=ext)
 
             except Exception as e:
-                print("Error reading: %s (%s)" % (hst_image, e),
+                print(f"Error reading: {hst_image} ({e})",
                       file=sys.stderr)
                 exit(1)
 
@@ -302,7 +302,7 @@ def regrid_hst_to_muse_main():
             # Write the output file.
 
             if not options.quiet:
-                print("Writing the output file: %s" % output)
+                print(f"Writing the output file: {output}")
             hst.write(output, savemask="dq")
 
     # For errors found in the input data, simply report the error
@@ -402,10 +402,10 @@ def make_wideband_image_main():
 
         try:
             if not options.quiet:
-                print("Reading filter: %s" % options.filter_curve)
+                print(f"Reading filter: {options.filter_curve}")
                 curve = np.loadtxt(options.filter_curve, usecols=(0, 1))
         except Exception as e:
-            print("Error reading: %s (%s)" % (options.filter_curve, e),
+            print(f"Error reading: {options.filter_curve} ({e})",
                   file=sys.stderr)
             exit(1)
 
@@ -424,10 +424,10 @@ def make_wideband_image_main():
 
             try:
                 if not options.quiet:
-                    print("Reading cube: %s" % muse_cube)
+                    print(f"Reading cube: {muse_cube}")
                 cube = Cube(muse_cube)
             except Exception as e:
-                print("Error reading: %s (%s)" % (muse_cube, e),
+                print(f"Error reading: {muse_cube} ({e})",
                       file=sys.stderr)
                 exit(1)
 
@@ -462,7 +462,7 @@ def make_wideband_image_main():
             # Save the resulting image.
 
             if not options.quiet:
-                print("Writing image to: %s" % output)
+                print(f"Writing image to: {output}")
             image.write(output, savemask="dq")
 
     # For errors found in the input data, simply report the error

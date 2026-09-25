@@ -37,7 +37,7 @@ class _FitPhotometryWP(Process):
 
         # Instantiate the super-class Process object.
 
-        super(_FitPhotometryWP, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.job_queue = job_queue
         self.result_queue = result_queue
@@ -69,7 +69,7 @@ class _FitPhotometryWP(Process):
                 # the exception.
 
             except Exception:
-                raise UserError("Error reading HST file: %s" % self.hst_filename)
+                raise UserError(f"Error reading HST file: {self.hst_filename}")
 
             # Run the jobs that the parent process sends us.
 
@@ -89,7 +89,7 @@ class _FitPhotometryWP(Process):
                 try:
                     muse = Image(muse_filename)
                 except Exception:
-                    raise UserError("Error reading MUSE file: %s" % muse_filename)
+                    raise UserError(f"Error reading MUSE file: {muse_filename}")
 
                 # Perform the photometry fitting operation.
 
@@ -258,7 +258,7 @@ class _FitPhotometryMP:
     # Throw an exception if __enter__() hasn't been called.
 
     def _assert_running(self):
-        assert self.running, "Each %s instance must be used within a context manager" % self.__class__.__name__
+        assert self.running, f"Each {self.__class__.__name__} instance must be used within a context manager"
 
     # Mark this object as an interator.
 

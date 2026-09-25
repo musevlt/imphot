@@ -394,7 +394,7 @@ class _SpectralPlaneSums:
         # so for integer pixel index k, we need to integrate from
         # k-0.5 to k+0.5.
 
-        w = np.empty((stop - start))
+        w = np.empty(stop - start)
         for k in range(start, stop):
             w[k - start], err = integrate.quad(spline, lowave[k], hiwave[k])
 
@@ -740,7 +740,7 @@ class _WidebandImageMP:
 
         # Is the object ready?
 
-        assert self.running, "Each %s instance must be used within a context manager" % self.__class__.__name__
+        assert self.running, f"Each {self.__class__.__name__} instance must be used within a context manager"
 
         # Repeatedly send job requests and receive responses until all
         # all jobs have been finished and reported.
