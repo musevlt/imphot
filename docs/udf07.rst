@@ -112,4 +112,3 @@ used to align exposures improve.
          Malhotra, S.; Rhoads, J. E.; Koekemoer, A. M.; Nelan, E. P.;
          Windhorst, R. A.; Panagia, N.; Gronwall, C.; Pasquali, A.;
          Walsh, J. R., Ap. J. (2005) 622, 319
-

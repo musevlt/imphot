@@ -244,7 +244,7 @@ class _FitPhotometryMP:
         for worker in self.workers:
             try:
                 worker.join()
-            except:
+            except Exception:
                 pass
 
         # Close the communication queues.
@@ -268,7 +268,8 @@ class _FitPhotometryMP:
 
     def _assert_running(self):
         assert self.running, (
-            f"Each {self.__class__.__name__} instance must be used within a context manager"
+            f"Each {self.__class__.__name__} instance must be used within "
+            "a context manager"
         )
 
     # Mark this object as an interator.

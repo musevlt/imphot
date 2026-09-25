@@ -100,5 +100,3 @@ function, followed by `imphot.rescale_hst_like_muse()`. For example::
   muse = Image(muse_fits_filename)
   imphot.regrid_hst_like_muse(hst, muse, inplace=True)
   imphot.rescale_hst_like_muse(hst, muse, inplace=True)
-
-

@@ -129,7 +129,7 @@ def main():
     # relative to the origin and wrap-around rules that are assumed by
     # the FFT algorithm.
 
-    rsq = x**2 + x[np.newaxis, :].T ** 2
+    # rsq = x**2 + x[np.newaxis, :].T ** 2
 
     # Compute the pixels of the Blackman window in the Fourier plane.
 

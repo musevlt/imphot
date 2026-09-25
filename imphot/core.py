@@ -725,8 +725,8 @@ class FittedPhotometry:
 
     def __str__(self):
         return (
-            f"Report of HST {self.method} photometry fit of MUSE observation {self.name}\n"
-            + self.fit_report
+            f"Report of HST {self.method} photometry fit of "
+            f"MUSE observation {self.name}\n" + self.fit_report
         )
 
     def summary(self, header=True):
@@ -746,15 +746,15 @@ class FittedPhotometry:
         if header:
             name_width = len(self.name)
             s = (
-                "#%-*s Method  Flux    FWHM    beta     Flux    x-offset y-offset  ra-offset dec-offset  RMS\n"
+                "#%-*s Method  Flux    FWHM    beta     Flux    x-offset y-offset  ra-offset dec-offset  RMS\n"  # noqa
                 % (name_width - 1, " MUSE ID")
-            )  # noqa
+            )
             s += (
-                "#%*s         scale  arcsec           offset    arcsec    arcsec    arcsec    arcsec    error\n"
+                "#%*s         scale  arcsec           offset    arcsec    arcsec    arcsec    arcsec    error\n"  # noqa
                 % (name_width - 1, "")
-            )  # noqa
+            )
             s += (
-                "#%s ------ ------- ------- ------- --------- --------- --------- --------- --------- -------\n"
+                "#%s ------ ------- ------- ------- --------- --------- --------- --------- --------- -------\n"  # noqa
                 % ("-" * (name_width - 1))
             )
 

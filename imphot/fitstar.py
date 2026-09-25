@@ -779,8 +779,6 @@ def _plot_fitted_star_results(
         ax.set_ylim(ymin, ymax)
         if col == 0:
             ax.set_ylabel(y_units_label)
-        traces = []
-        labels = []
         ax.plot(r, values, ls="", marker=".")
         ax.plot(moffat_r, moffat_values)
 

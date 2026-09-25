@@ -99,7 +99,7 @@ prompt, uses the :ref:`make_wideband_image<make_wideband_image>`
 script to extract an image of this response curve from a MUSE cube
 called ``udf04_cube.fits``::
 
-  % make_wideband_image wfc_F775W.dat udf04_cube.fits 
+  % make_wideband_image wfc_F775W.dat udf04_cube.fits
   Reading filter: wfc_F775W.dat
   Reading cube: udf04_cube.fits
   Computing the output image.

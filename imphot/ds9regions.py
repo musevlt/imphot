@@ -41,24 +41,18 @@ class Ds9Regions:
 
     def __init__(self, regions):
 
-        # Start with an empty list of regions.
-
         self._regions = []
 
-        # Have we been given the name of a ds9 region file, or an
-        # iterable.
+        # Have we been given the name of a ds9 region file, or an iterable.
         if isinstance(regions, str):
             lines = open(regions)
         else:
             lines = regions
 
-        # Parse the lines of the region file to build up the list of
-        # regions.
-
-        region = self._parse_regions(lines)
+        # Parse the lines of the region file to build up the list of regions.
+        self._parse_regions(lines)
 
         # Close the region file if we opened one.
-
         if isinstance(regions, str):
             lines.close()
 
@@ -401,7 +395,7 @@ def _parse_x(s):
     """
     try:
         return float(s)
-    except:
+    except Exception:
         return _parse_sexagesimal(s) * 15.0
 
 
@@ -416,7 +410,7 @@ def _parse_y(s):
     """
     try:
         return float(s)
-    except:
+    except Exception:
         return _parse_sexagesimal(s)
 
 

@@ -91,46 +91,46 @@ __all__ = ["ds9regions"]
 # modified in the future.
 
 from . import core
-from .core import *
-from .version import version as __version__
+from .core import *  # noqa
+from .version import version as __version__  # noqa
 
 __all__.extend(core.__all__)
 del core
 
-from . import fitimage
-from .fitimage import *
+from . import fitimage  # noqa
+from .fitimage import *  # noqa
 
 __all__.extend(fitimage.__all__)
 del fitimage
 
-from . import fitstar
-from .fitstar import *
+from . import fitstar  # noqa
+from .fitstar import *  # noqa
 
 __all__.extend(fitstar.__all__)
 del fitstar
 
-from . import fitboth
-from .fitboth import *
+from . import fitboth  # noqa
+from .fitboth import *  # noqa
 
 __all__.extend(fitboth.__all__)
 del fitboth
 
-from . import makeimage
-from .makeimage import *
+from . import makeimage  # noqa
+from .makeimage import *  # noqa
 
 __all__.extend(makeimage.__all__)
 del makeimage
 
-from . import programs
-from .programs import *
+from . import programs  # noqa
+from .programs import *  # noqa
 
 __all__.extend(programs.__all__)
 del programs
 
 # Turn the ds9regions class into a sub-module of imphot.
 
-from . import ds9regions
+from . import ds9regions  # noqa
 
 # Remove access to all modules that only contain internal functions.
 
-del mp
+del mp  # noqa

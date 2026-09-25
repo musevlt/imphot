@@ -737,7 +737,7 @@ class _WidebandImageMP:
         for worker in self.workers:
             try:
                 worker.join()
-            except:
+            except Exception:
                 pass
 
         # Close the communication queues.
@@ -777,7 +777,8 @@ class _WidebandImageMP:
         # Is the object ready?
 
         assert self.running, (
-            f"Each {self.__class__.__name__} instance must be used within a context manager"
+            f"Each {self.__class__.__name__} instance must be used within "
+            "a context manager"
         )
 
         # Repeatedly send job requests and receive responses until all
@@ -785,12 +786,10 @@ class _WidebandImageMP:
 
         while self.reported_jobs < self.njob:
             # Get the results of the next job to be completed.
-
             r = self.result_queue.get()
 
             # Get the sequential number and status of the job.
-
-            job = r[0]
+            # job = r[0]
             status = r[1]
 
             # Did an exception occur in the worker process?
