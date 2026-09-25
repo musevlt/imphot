@@ -1,11 +1,11 @@
+from multiprocessing import Process, Queue, cpu_count
+from signal import SIG_IGN, SIGINT, signal
 from sys import exc_info
-from multiprocessing import (Process, Queue, cpu_count)
-from signal import (signal, SIGINT, SIG_IGN)
 from traceback import format_exception
 
 from mpdaf.obj import Image
 
-from .core import (UserError, WorkerError)
+from .core import UserError, WorkerError
 
 
 class _FitPhotometryWP(Process):

@@ -1,11 +1,12 @@
-from os.path import basename
-from inspect import getfullargspec
-import astropy.units as u
-import string
 import argparse
+import string
+from inspect import getfullargspec
+from os.path import basename
+from textwrap import dedent
+
+import astropy.units as u
 import numpy as np
 from scipy.ndimage.interpolation import affine_transform
-from textwrap import dedent
 
 __all__ = ['FittedValue', 'UserError', 'WorkerError',
            'FIT_IMAGE', 'FIT_STAR', 'FIT_BOTH',

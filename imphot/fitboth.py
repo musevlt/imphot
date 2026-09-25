@@ -1,9 +1,9 @@
-from .mp import _FitPhotometryMP
+from mpdaf.obj import Image
+
+from .core import UserError, _default_hst_beta, _default_hst_fwhm, extract_function_args
 from .fitimage import fit_image_photometry
 from .fitstar import fit_star_photometry
-from .core import (extract_function_args, UserError, _default_hst_fwhm,
-                   _default_hst_beta)
-from mpdaf.obj import Image
+from .mp import _FitPhotometryMP
 
 __all__ = ['fit_image_and_star_photometry', 'FitImageAndStarPhotometryMP']
 

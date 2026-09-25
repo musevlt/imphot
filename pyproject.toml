@@ -43,3 +43,18 @@ github = "https://github.com/musevlt/imphot"
 
 [tool.setuptools_scm]
 write_to = "imphot/version.py"
+
+[tool.ruff.lint]
+select = [
+  # "E", "F", "W", # flake8
+  # "B",           # bugbear
+  "I",           # isort
+  # "UP",          # pyupgrade
+]
+# ignore = ["E731"]
+unfixable = [
+  "F841", # Removes unused variables
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["imphot"]

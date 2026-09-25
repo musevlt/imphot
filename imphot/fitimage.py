@@ -1,18 +1,23 @@
-import numpy as np
-from numpy import ma
 import astropy.units as u
-from astropy.io import fits
-from scipy.ndimage.morphology import (grey_opening, grey_dilation,
-                                      binary_erosion)
-from scipy.ndimage.filters import convolve
-from lmfit import Model
 import matplotlib.pyplot as plt
-
+import numpy as np
+from astropy.io import fits
+from lmfit import Model
 from mpdaf.obj import Image
+from numpy import ma
+from scipy.ndimage.filters import convolve
+from scipy.ndimage.morphology import binary_erosion, grey_dilation, grey_opening
 
 from . import ds9regions
-from .core import (UserError, FittedValue, FittedPhotometry, apply_corrections,
-                   image_grids_aligned, _default_hst_fwhm, _default_hst_beta)
+from .core import (
+    FittedPhotometry,
+    FittedValue,
+    UserError,
+    _default_hst_beta,
+    _default_hst_fwhm,
+    apply_corrections,
+    image_grids_aligned,
+)
 from .mp import _FitPhotometryMP
 
 __all__ = ['fit_image_photometry', 'FittedImagePhotometry',

@@ -1,15 +1,16 @@
 import math
-import astropy.units as u
-from scipy import integrate, interpolate
+from multiprocessing import Process, Queue, cpu_count
+from signal import SIG_IGN, SIGINT, signal
 from sys import exc_info
-from multiprocessing import (Process, Queue, cpu_count)
-from signal import (signal, SIGINT, SIG_IGN)
 from traceback import format_exception
-import numpy as np
-from numpy import ma
-from mpdaf.obj import Image
 
-from .core import (UserError, WorkerError)
+import astropy.units as u
+import numpy as np
+from mpdaf.obj import Image
+from numpy import ma
+from scipy import integrate, interpolate
+
+from .core import UserError, WorkerError
 
 __all__ = ['bandpass_image']
 

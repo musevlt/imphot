@@ -90,35 +90,40 @@ __all__ = ['ds9regions']
 # package layout, or on internal functions that may be removed or
 # modified in the future.
 
-from .version import version as __version__
-
 from . import core
 from .core import *
+from .version import version as __version__
+
 __all__.extend(core.__all__)
 del(core)
 
 from . import fitimage
 from .fitimage import *
+
 __all__.extend(fitimage.__all__)
 del(fitimage)
 
 from . import fitstar
 from .fitstar import *
+
 __all__.extend(fitstar.__all__)
 del(fitstar)
 
 from . import fitboth
 from .fitboth import *
+
 __all__.extend(fitboth.__all__)
 del(fitboth)
 
 from . import makeimage
 from .makeimage import *
+
 __all__.extend(makeimage.__all__)
 del(makeimage)
 
 from . import programs
 from .programs import *
+
 __all__.extend(programs.__all__)
 del(programs)
 

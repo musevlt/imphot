@@ -1,16 +1,18 @@
+import argparse
+import re
 import sys
 from os.path import basename
-import argparse
-import astropy.units as u
-from astropy.io import fits
-import numpy as np
-import re
 from textwrap import dedent
-from mpdaf.obj import (Image, Cube)
+
+import astropy.units as u
+import numpy as np
+from astropy.io import fits
+from mpdaf.obj import Cube, Image
+
 from .core import *
+from .fitboth import *
 from .fitimage import *
 from .fitstar import *
-from .fitboth import *
 from .makeimage import *
 
 __all__ = ['fit_photometry_main', 'regrid_hst_to_muse_main',

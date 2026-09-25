@@ -1,15 +1,20 @@
-from os.path import basename
 import re
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
-import astropy.units as u
-from lmfit import Model
+from os.path import basename
 
+import astropy.units as u
+import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
+import numpy as np
+from lmfit import Model
 from mpdaf.obj import Image
 
-from .core import (UserError, FittedValue, FittedPhotometry,
-                   image_grids_aligned, apply_corrections)
+from .core import (
+    FittedPhotometry,
+    FittedValue,
+    UserError,
+    apply_corrections,
+    image_grids_aligned,
+)
 from .mp import _FitPhotometryMP
 
 __all__ = ['fit_star_photometry', 'FittedStarPhotometry', 'FitStarPhotometryMP']
