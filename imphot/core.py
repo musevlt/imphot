@@ -198,43 +198,41 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                 default="star",
                 type=str,
                 metavar="file-star-notstar-or-none",
-                help=dedent("""\
-                          DEFAULT=%(default)s
+                help=dedent("""
+                    DEFAULT=%(default)s
 
-                          This can be "none", to indicate that all pixels
-                          should be used in the global image fit, "star" to
-                          restrict the fit to pixels within any optional circle
-                          defined by the --star argument, "notstar" to restrict
-                          the image fit to pixels outside any circle defined by
-                          the --star argument, or the filename of a ds9 region
-                          file.
+                    This can be "none", to indicate that all pixels should be
+                    used in the global image fit, "star" to restrict the fit to
+                    pixels within any optional circle defined by the --star
+                    argument, "notstar" to restrict the image fit to pixels
+                    outside any circle defined by the --star argument, or the
+                    filename of a ds9 region file.
 
-                          This option can be used to exclude damaged regions of
-                          an image, or to exclude sources that would degrade
-                          the global PSF fit, such as saturated stars, stars
-                          with significant proper motion, or variable sources.
+                    This option can be used to exclude damaged regions of an
+                    image, or to exclude sources that would degrade the global
+                    PSF fit, such as saturated stars, stars with significant
+                    proper motion, or variable sources.
 
-                          Alternatively this option can also be used to
-                          restrict the fit to one or more objects, by masking
-                          everything except small regions around these objects.
+                    Alternatively this option can also be used to restrict the
+                    fit to one or more objects, by masking everything except
+                    small regions around these objects.
 
-                          Only ds9 circle, ellipse and box regions are
-                          supported. Other types of ds9 regions and
-                          configuration parameters, are simply ignored. For
-                          each region, be careful to tell ds9 whether you want
-                          the region to be included or excluded. Also be
-                          careful to specify either fk5 or physical pixel
-                          coordinates.
+                    Only ds9 circle, ellipse and box regions are supported.
+                    Other types of ds9 regions and configuration parameters,
+                    are simply ignored. For each region, be careful to tell ds9
+                    whether you want the region to be included or excluded.
+                    Also be careful to specify either fk5 or physical pixel
+                    coordinates.
 
-                          If the value of this argument is "star", and the
-                          --star argument has also been provided, then a region
-                          is substituted that only includes the circular region
-                          specified by the --star argument.
+                    If the value of this argument is "star", and the --star
+                    argument has also been provided, then a region is
+                    substituted that only includes the circular region
+                    specified by the --star argument.
 
-                          Similarly, if "notstar" is passed, and the --star
-                          argument has been provided, then a region is
-                          substituted that excludes the circular region set by
-                          the --star argument."""),
+                    Similarly, if "notstar" is passed, and the --star argument
+                    has been provided, then a region is substituted that
+                    excludes the circular region set by the --star
+                    argument."""),
             )
 
         if (FIT_IMAGE | FIT_STAR) & functions:
