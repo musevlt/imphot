@@ -12,12 +12,18 @@ from scipy import integrate, interpolate
 
 from .core import UserError, WorkerError
 
-__all__ = ['bandpass_image']
+__all__ = ["bandpass_image"]
 
 
-def bandpass_image(cube, wavelengths, sensitivities,
-                   unit_wave=u.angstrom, interpolation="linear",
-                   truncation_warning=True, nprocess=0):
+def bandpass_image(
+    cube,
+    wavelengths,
+    sensitivities,
+    unit_wave=u.angstrom,
+    interpolation="linear",
+    truncation_warning=True,
+    nprocess=0,
+):
     """Given a cube of images versus wavelength and the bandpass
     filter-curve of a wide-band monochromatic instrument, extract
     an image from the cube that has the spectral response of the
@@ -110,10 +116,15 @@ def bandpass_image(cube, wavelengths, sensitivities,
     # The sensitivities and wavelengths arrays must be one
     # dimensional and have the same length.
 
-    if (wavelengths.ndim != 1 or sensitivities.ndim != 1 or
-            len(wavelengths) != len(sensitivities)):
-        raise UserError('The wavelengths and sensititivies arguments'
-                        ' should be 1D arrays of equal length')
+    if (
+        wavelengths.ndim != 1
+        or sensitivities.ndim != 1
+        or len(wavelengths) != len(sensitivities)
+    ):
+        raise UserError(
+            "The wavelengths and sensititivies arguments"
+            " should be 1D arrays of equal length"
+        )
 
     # Convert the array of wavelengths to the wavelength units of the cube.
 
@@ -135,15 +146,17 @@ def bandpass_image(cube, wavelengths, sensitivities,
     # ending wavelengths of the filter bandpass.
 
     start = max(0, int(math.floor(cube.wave.pixel(wavelengths[0]) + 0.5)))
-    stop = min(cube.shape[0],
-               int(math.floor(cube.wave.pixel(wavelengths[-1]) + 0.5)) + 1)
+    stop = min(
+        cube.shape[0], int(math.floor(cube.wave.pixel(wavelengths[-1]) + 0.5)) + 1
+    )
 
     # Abort if there is no overlap between the bandpass filter curve
     # and the wavelength coverage of the cube.
 
     if start >= cube.shape[0] or stop <= 0 or start >= stop:
-        raise UserError("The filter curve does not overlap the "
-                        "wavelength coverage of the cube.")
+        raise UserError(
+            "The filter curve does not overlap the wavelength coverage of the cube."
+        )
 
     # If the bandpass does not start at the beginning of a wavelength
     # pixel of the cube, modify the effective beginning wavelength for
@@ -161,27 +174,26 @@ def bandpass_image(cube, wavelengths, sensitivities,
 
     # Obtain an interpolator of the bandpass curve.
 
-    spline = interpolate.interp1d(x=wavelengths, y=sensitivities,
-                                  kind=interpolation)
+    spline = interpolate.interp1d(x=wavelengths, y=sensitivities, kind=interpolation)
 
     # If the bandpass curve isn't completely contained within the
     # wavelength range of the cube, tell the user the fraction of the
     # integrated bandpass that lies beyond the bounds of the cube.
 
-    if truncation_warning and \
-       (wavelengths[0] < lowave[0] or wavelengths[-1] > hiwave[-1]):
-
+    if truncation_warning and (
+        wavelengths[0] < lowave[0] or wavelengths[-1] > hiwave[-1]
+    ):
         # Work out the start and stop indexes of the slice needed
         # to truncate the arrays of the bandpass filter curve to
         # the wavelength range of the cube.
 
         if wavelengths[0] < lowave[0]:
-            bpstart = np.searchsorted(wavelengths, lowave[0], 'right')
+            bpstart = np.searchsorted(wavelengths, lowave[0], "right")
         else:
             bpstart = 0
 
         if wavelengths[-1] > hiwave[-1]:
-            bpstop = np.searchsorted(wavelengths, hiwave[-1], 'left')
+            bpstop = np.searchsorted(wavelengths, hiwave[-1], "left")
         else:
             bpstop = wavelengths.shape[0]
 
@@ -208,24 +220,36 @@ def bandpass_image(cube, wavelengths, sensitivities,
 
         if lossage > 0.005:
             cube._logger.warning(
-                "%.2g%% of the integrated " % (lossage * 100.0) +
-                "filter curve is beyond the edges of the cube.")
+                "%.2g%% of the integrated " % (lossage * 100.0)
+                + "filter curve is beyond the edges of the cube."
+            )
 
     # If only one process has been requested, perform the computation
     # here.
 
     if nprocess == 1:
         sums = _SpectralPlaneSums.combine_spectral_planes(
-            cube=cube, start=start, stop=stop, lowave=lowave,
-            hiwave=hiwave, spline=spline)
+            cube=cube,
+            start=start,
+            stop=stop,
+            lowave=lowave,
+            hiwave=hiwave,
+            spline=spline,
+        )
 
     # Use multiple processes to combine successive ranges of spectral planes?
 
     else:
-        with _WidebandImageMP(cube=cube, start=start, stop=stop,
-                              lowave=lowave, hiwave=hiwave,
-                              spline=spline, max_planes_per_job=500,
-                              nprocess=nprocess) as mp:
+        with _WidebandImageMP(
+            cube=cube,
+            start=start,
+            stop=stop,
+            lowave=lowave,
+            hiwave=hiwave,
+            spline=spline,
+            max_planes_per_job=500,
+            nprocess=nprocess,
+        ) as mp:
             mp.run()
         sums = mp.sums
 
@@ -240,8 +264,7 @@ def bandpass_image(cube, wavelengths, sensitivities,
 
 
 class _SpectralPlaneSums:
-
-    '''A class that accumulates the weighted sums of images from multiple
+    """A class that accumulates the weighted sums of images from multiple
     spectral planes of a MUSE cube, weighted by a filter throughput curve.
 
     Parameters
@@ -280,7 +303,7 @@ class _SpectralPlaneSums:
        An image of the sum of the variance of each pixel scaled by its
        weight squared.
 
-    '''
+    """
 
     def __init__(self, cube, wsum=None, wdsum=None, w2vsum=None):
 
@@ -293,11 +316,15 @@ class _SpectralPlaneSums:
         # of weights.
 
         if wsum is None:
-            self.wsum = np.zeros(image_shape)             # Sum[weight]
-            self.wdsum = ma.array(np.zeros(image_shape),  # Sum[data * weight]
-                                  mask=np.ones(image_shape, dtype=bool))
-            self.w2vsum = ma.array(np.zeros(image_shape),  # Sum[var * weight^2]
-                                   mask=np.ones(image_shape, dtype=bool))
+            self.wsum = np.zeros(image_shape)  # Sum[weight]
+            self.wdsum = ma.array(
+                np.zeros(image_shape),  # Sum[data * weight]
+                mask=np.ones(image_shape, dtype=bool),
+            )
+            self.w2vsum = ma.array(
+                np.zeros(image_shape),  # Sum[var * weight^2]
+                mask=np.ones(image_shape, dtype=bool),
+            )
         else:
             self.wsum = wsum
             self.wdsum = wdsum
@@ -341,7 +368,7 @@ class _SpectralPlaneSums:
             self.w2vsum = None
 
     def combined_data_var(self):
-        '''Return the filter-curve weighted mean data and variance images
+        """Return the filter-curve weighted mean data and variance images
         by dividing the weighted sums by the sum of their weights.
 
         Returns
@@ -350,7 +377,7 @@ class _SpectralPlaneSums:
            The final image and either the corresponding image of pixel
            variances, or None if the input cube had no variance
            information.
-        '''
+        """
 
         data = self.wdsum / self.wsum
         if self.w2vsum is None:
@@ -360,8 +387,7 @@ class _SpectralPlaneSums:
         return (data, var)
 
     @classmethod
-    def combine_spectral_planes(cls, cube, start, stop, lowave, hiwave,
-                                spline):
+    def combine_spectral_planes(cls, cube, start, stop, lowave, hiwave, spline):
         """For a specified range of spectral planes of a cube, and a spline
         filter curve, return filter-weighted image sums that can later
         either be combined with other weighted sums, or be divided by
@@ -410,7 +436,6 @@ class _SpectralPlaneSums:
         # Obtain masked arrays of the data and variances for the sums.
 
         if subcube._mask is ma.nomask:
-
             # Create a mask tha masks all invalid values in both data and var.
 
             mask = ~np.isfinite(subcube._data)
@@ -468,8 +493,9 @@ class _WidebandImageWP(Process):
 
     """
 
-    def __init__(self, job_queue, result_queue, cube, lowave, hiwave, spline,
-                 *args, **kwargs):
+    def __init__(
+        self, job_queue, result_queue, cube, lowave, hiwave, spline, *args, **kwargs
+    ):
 
         # Instantiate the super-class Process object.
 
@@ -496,11 +522,9 @@ class _WidebandImageWP(Process):
         # to the parent process.
 
         try:
-
             # Run the jobs that the parent process sends us.
 
             while True:
-
                 # Get the next job from the parent process.
 
                 (job, start, stop) = self.job_queue.get()
@@ -513,8 +537,13 @@ class _WidebandImageWP(Process):
                 # Combine the specified range of spectral planes.
 
                 sums = _SpectralPlaneSums.combine_spectral_planes(
-                    self.cube, start=start, stop=stop, lowave=self.lowave,
-                    hiwave=self.hiwave, spline=self.spline)
+                    self.cube,
+                    start=start,
+                    stop=stop,
+                    lowave=self.lowave,
+                    hiwave=self.hiwave,
+                    spline=self.spline,
+                )
                 results = [sums, start, stop]
                 self.result_queue.put((job, "results", results))
 
@@ -571,8 +600,9 @@ class _WidebandImageMP:
 
     """
 
-    def __init__(self, cube, start, stop, lowave, hiwave, spline,
-                 max_planes_per_job, nprocess=0):
+    def __init__(
+        self, cube, start, stop, lowave, hiwave, spline, max_planes_per_job, nprocess=0
+    ):
 
         # Record the cube that is being processed.
 
@@ -622,8 +652,9 @@ class _WidebandImageMP:
         # If possible divide the planes between processes such that
         # each process only has to do one job each.
 
-        self.planes_per_job = min(int(math.ceil(float(self.nplane) / nprocess)),
-                                  self.max_planes_per_job)
+        self.planes_per_job = min(
+            int(math.ceil(float(self.nplane) / nprocess)), self.max_planes_per_job
+        )
 
         # How many jobs will be needed?
 
@@ -653,11 +684,17 @@ class _WidebandImageMP:
 
         # Create a list of worker processes.
 
-        self.workers = [_WidebandImageWP(job_queue=self.job_queue,
-                                         result_queue=self.result_queue,
-                                         cube=cube, lowave=lowave,
-                                         hiwave=hiwave, spline=spline)
-                        for i in range(nprocess)]
+        self.workers = [
+            _WidebandImageWP(
+                job_queue=self.job_queue,
+                result_queue=self.result_queue,
+                cube=cube,
+                lowave=lowave,
+                hiwave=hiwave,
+                spline=spline,
+            )
+            for i in range(nprocess)
+        ]
 
     def __enter__(self):
         """Start the worker processes. This function is called when
@@ -716,7 +753,6 @@ class _WidebandImageMP:
         # range of spectral planes to the next free worker process.
 
         if self.sent_jobs < self.njob:
-
             # Get the index of the next job.
 
             job = self.sent_jobs
@@ -740,13 +776,14 @@ class _WidebandImageMP:
 
         # Is the object ready?
 
-        assert self.running, f"Each {self.__class__.__name__} instance must be used within a context manager"
+        assert self.running, (
+            f"Each {self.__class__.__name__} instance must be used within a context manager"
+        )
 
         # Repeatedly send job requests and receive responses until all
         # all jobs have been finished and reported.
 
         while self.reported_jobs < self.njob:
-
             # Get the results of the next job to be completed.
 
             r = self.result_queue.get()
@@ -759,7 +796,6 @@ class _WidebandImageMP:
             # Did an exception occur in the worker process?
 
             if status == "exception":
-
                 # Make sure that any subsequent call to next()
                 # returns StopIteration, just in case the caller
                 # catches the following exceptions and tries to

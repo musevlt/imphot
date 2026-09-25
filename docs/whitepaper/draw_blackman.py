@@ -4,7 +4,6 @@ import numpy as np
 
 
 def circular_blackman_profile(f, fc):
-
     """Return the value of a circularly symmetric Blackman window at a
     specified value of the radius-squared from the center of the
     profile.
@@ -33,11 +32,14 @@ def circular_blackman_profile(f, fc):
     #     y(f,fc) = 0.0
 
     theta = np.pi * f / fc
-    return np.where(np.abs(theta) <= np.pi,
-                    0.42 + 0.5 * np.cos(theta) + 0.08 * np.cos(2*theta), 0.0)
+    return np.where(
+        np.abs(theta) <= np.pi,
+        0.42 + 0.5 * np.cos(theta) + 0.08 * np.cos(2 * theta),
+        0.0,
+    )
+
 
 def circular_gaussian_profile(rsq, fwhm):
-
     """Return the value of a circularly symmetric Gaussian profile at a
     specified value of the radius-squared from the center of the
     profile.  The profile is normalized to be 1.0 at rsq=0.0.
@@ -64,11 +66,12 @@ def circular_gaussian_profile(rsq, fwhm):
     #
     # Calculate arg = -0.5/sigma**2
 
-    arg = -4.0 * np.log(2.0)/ fwhm**2
+    arg = -4.0 * np.log(2.0) / fwhm**2
 
     # Compute the Gaussian function at each value of rsq.
 
     return np.exp(arg * rsq)
+
 
 def main():
 
@@ -92,11 +95,11 @@ def main():
 
     # Set the maximum radial distance of the profile to be plotted.
 
-    xmax = 1.5      # Arcsec
+    xmax = 1.5  # Arcsec
 
     # Set the maximum radial frequency of the FFT to be plotted.
 
-    fmax = 1.5*fc   # Cycles per arcsec
+    fmax = 1.5 * fc  # Cycles per arcsec
 
     # Calculate the interval between pixels in the Fourier domain.
 
@@ -109,24 +112,24 @@ def main():
     # Calculate the coordinate of the center of each pixel along
     # the X and Y axes.
 
-    x = np.fft.fftfreq(n,df)
+    x = np.fft.fftfreq(n, df)
 
     # Calculate the frequency coordinate of the center of each Fourier
     # transform pixel along the X and Y axes.
 
-    f = np.fft.fftfreq(n,dx)
+    f = np.fft.fftfreq(n, dx)
 
     # Calculate the radius squared of each pixel in the Fourier
     # transform image, relative to the origin and wrap-around rules
     # that are assumed by the FFT algorithm.
 
-    fsq = f**2 + f[np.newaxis,:].T**2
+    fsq = f**2 + f[np.newaxis, :].T ** 2
 
     # Calculate the radius squared of each pixel in the image plane,
     # relative to the origin and wrap-around rules that are assumed by
     # the FFT algorithm.
 
-    rsq = x**2 + x[np.newaxis,:].T**2
+    rsq = x**2 + x[np.newaxis, :].T ** 2
 
     # Compute the pixels of the Blackman window in the Fourier plane.
 
@@ -135,11 +138,11 @@ def main():
     # Compute the inverse FFT of the above images and normalize it.
 
     b_im = np.real(np.fft.ifft2(b_ft))
-    b_im /= b_im[0,0]
+    b_im /= b_im[0, 0]
 
     # Calculate the FWHM of the blackman window.
 
-    #fwhm = 0.810957290099188 * fc
+    # fwhm = 0.810957290099188 * fc
 
     # Find the FWHM of the inverse Fourier transform of the Blackman window.
     # (This was found empirically)
@@ -156,14 +159,14 @@ def main():
 
     g_ft = circular_gaussian_profile(fsq, gwin_fwhm)
     g_im = np.real(np.fft.ifft2(g_ft))
-    g_im /= g_im[0,0]
+    g_im /= g_im[0, 0]
 
     # Create the figure that will host the plots.
 
     if interactive:
         fig = plt.figure()
     else:
-        fig = plt.figure(figsize=(7.5,3.5), dpi=600)
+        fig = plt.figure(figsize=(7.5, 3.5), dpi=600)
 
     # Configure a grid of 2x2 plots.
 
@@ -177,8 +180,8 @@ def main():
     # Blackman profiles, plotting twice; the second time magnified
     # to show the tails of the functions close to zero.
 
-    ax1 = fig.add_subplot(gs[0,0])
-    ax2 = fig.add_subplot(gs[1,0])
+    ax1 = fig.add_subplot(gs[0, 0])
+    ax2 = fig.add_subplot(gs[1, 0])
     ax1.set_autoscale_on(False)
     ax2.set_autoscale_on(False)
     ax1.set_xlim(0.0, xmax)
@@ -192,7 +195,7 @@ def main():
     # Get the slice prescription for extracting a radial cut along the
     # X-axis.
 
-    sx = slice(0,int((xmax+dx) / dx)+1)
+    sx = slice(0, int((xmax + dx) / dx) + 1)
 
     # Get the radii of the slice elements.
 
@@ -201,27 +204,33 @@ def main():
     # Plot a slice along the positive X-axis of the Gaussian image.
 
     g_slice = g_im[0, sx]
-    gim1_trace, = ax1.plot(x_slice, g_slice,ls=':')
-    gim2_trace, = ax2.plot(x_slice, g_slice,ls=':')
+    (gim1_trace,) = ax1.plot(x_slice, g_slice, ls=":")
+    (gim2_trace,) = ax2.plot(x_slice, g_slice, ls=":")
 
     # Plot a slice along the positive X-axis of the Blackman image.
 
     b_slice = b_im[0, sx]
-    bim1_trace, = ax1.plot(x_slice, b_slice)
-    bim2_trace, = ax2.plot(x_slice, b_slice)
+    (bim1_trace,) = ax1.plot(x_slice, b_slice)
+    (bim2_trace,) = ax2.plot(x_slice, b_slice)
 
     # Plot a legend that identifies the two traces.
 
-    ax1.legend([gim1_trace, bim1_trace], ["Gaussian IFT", "Blackman IFT"],
-              loc='upper right', fontsize=10, labelspacing=0.3, frameon=False)
-    ax1.text(0.65*xmax, 0.4, "Image Plane", ha="center")
+    ax1.legend(
+        [gim1_trace, bim1_trace],
+        ["Gaussian IFT", "Blackman IFT"],
+        loc="upper right",
+        fontsize=10,
+        labelspacing=0.3,
+        frameon=False,
+    )
+    ax1.text(0.65 * xmax, 0.4, "Image Plane", ha="center")
 
     # Draw a 1D cut through the positive part of the Gaussian and
     # Blackman FFT profiles, plotting twice; the second time magnified
     # to show the tails of the functions close to zero.
 
-    ax1 = fig.add_subplot(gs[0,1])
-    ax2 = fig.add_subplot(gs[1,1])
+    ax1 = fig.add_subplot(gs[0, 1])
+    ax2 = fig.add_subplot(gs[1, 1])
     ax1.set_autoscale_on(False)
     ax2.set_autoscale_on(False)
     ax1.set_xlim(0.0, fmax)
@@ -235,7 +244,7 @@ def main():
     # Get the slice prescription for extracting a radial cut along the
     # X-axis.
 
-    sx = slice(0,int((fmax+df) / df) + 1)
+    sx = slice(0, int((fmax + df) / df) + 1)
 
     # Get the radii of the slice elements.
 
@@ -244,36 +253,40 @@ def main():
     # Plot a slice along the positive X-axis of the Gaussian FFT.
 
     g_slice = g_ft[0, sx]
-    gim1_trace, = ax1.plot(f_slice, g_slice,ls=':')
-    gim2_trace, = ax2.plot(f_slice, g_slice,ls=':')
+    (gim1_trace,) = ax1.plot(f_slice, g_slice, ls=":")
+    (gim2_trace,) = ax2.plot(f_slice, g_slice, ls=":")
 
     # Plot a slice along the positive X-axis of the Blackman FFT.
 
     b_slice = b_ft[0, sx]
-    bim1_trace, = ax1.plot(f_slice, b_slice)
-    bim2_trace, = ax2.plot(f_slice, b_slice)
+    (bim1_trace,) = ax1.plot(f_slice, b_slice)
+    (bim2_trace,) = ax2.plot(f_slice, b_slice)
 
     # Plot a legend that identifies the two traces.
 
-    ax1.legend([gim1_trace, bim1_trace], ["Gaussian window", "Blackman window"],
-              loc='upper right', fontsize=10, labelspacing=0.3, frameon=False)
-    ax1.text(0.65*fmax, 0.4, "Fourier Plane", ha="center")
-    ax1.plot([fc,fc], [-0.1,0.1])
-    ax2.plot([fc,fc], [-0.0025,-0.0018])
-    ax1.text(fc, 0.12, r"$f_c$", ha="center", va="bottom", color="red",
-             fontsize=14)
-    ax2.text(fc, -0.0016, r"$f_c$", ha="center", va="bottom", color="red",
-             fontsize=14)
+    ax1.legend(
+        [gim1_trace, bim1_trace],
+        ["Gaussian window", "Blackman window"],
+        loc="upper right",
+        fontsize=10,
+        labelspacing=0.3,
+        frameon=False,
+    )
+    ax1.text(0.65 * fmax, 0.4, "Fourier Plane", ha="center")
+    ax1.plot([fc, fc], [-0.1, 0.1])
+    ax2.plot([fc, fc], [-0.0025, -0.0018])
+    ax1.text(fc, 0.12, r"$f_c$", ha="center", va="bottom", color="red", fontsize=14)
+    ax2.text(fc, -0.0016, r"$f_c$", ha="center", va="bottom", color="red", fontsize=14)
 
     # Plot a common Y-axis label.
 
-    fig.text(0.02, 0.5, "Fraction of peak", rotation="vertical", ha="left",
-             va="center")
+    fig.text(0.02, 0.5, "Fraction of peak", rotation="vertical", ha="left", va="center")
 
     if interactive:
         plt.show()
     else:
         fig.savefig("blackman_ift.pdf", landscape=True)
+
 
 def set_xticks(ax, minor, major):
     """Change the major and/or minor ticks of an X-axis.
@@ -298,14 +311,23 @@ def set_xticks(ax, minor, major):
     # Define the major ticks.
 
     if major is not None:
-        ax.set_xticks(np.arange(np.ceil(vmin/major)*major,
-                                np.ceil(vmax/major)*major,major), minor=False)
+        ax.set_xticks(
+            np.arange(
+                np.ceil(vmin / major) * major, np.ceil(vmax / major) * major, major
+            ),
+            minor=False,
+        )
 
     # Define the minor ticks.
 
     if minor is not None:
-        ax.set_xticks(np.arange(np.ceil(vmin/minor)*minor,
-                                np.ceil(vmax/minor)*minor,minor), minor=True)
+        ax.set_xticks(
+            np.arange(
+                np.ceil(vmin / minor) * minor, np.ceil(vmax / minor) * minor, minor
+            ),
+            minor=True,
+        )
+
 
 def set_yticks(ax, minor, major):
     """Change the major and/or minor ticks of an Y-axis.
@@ -330,13 +352,19 @@ def set_yticks(ax, minor, major):
     # Define the major ticks.
 
     if major is not None:
-        ax.set_yticks(np.arange(np.ceil(vmin/major)*major,
-                                np.ceil(vmax/major)*major,major), minor=False)
+        ax.set_yticks(
+            np.arange(
+                np.ceil(vmin / major) * major, np.ceil(vmax / major) * major, major
+            ),
+            minor=False,
+        )
 
     # Define the minor ticks.
 
     if minor is not None:
-        ax.set_yticks(np.arange(
-            np.ceil(vmin/minor), np.ceil(vmax/minor)) * minor, minor=True)
+        ax.set_yticks(
+            np.arange(np.ceil(vmin / minor), np.ceil(vmax / minor)) * minor, minor=True
+        )
+
 
 main()

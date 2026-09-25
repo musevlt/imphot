@@ -4,7 +4,7 @@
 
 import re
 
-__all__ = ['Ds9Regions', 'Ds9Region', 'Ds9Circle', 'Ds9Ellipse', 'Ds9Box']
+__all__ = ["Ds9Regions", "Ds9Region", "Ds9Circle", "Ds9Ellipse", "Ds9Box"]
 
 
 class Ds9Regions:
@@ -84,7 +84,6 @@ class Ds9Regions:
 
         for line_number, line in enumerate(lines):
             try:
-
                 # No region has been parsed from this line yet.
 
                 region = None
@@ -94,17 +93,27 @@ class Ds9Regions:
                 # semicolons.
 
                 last = ""
-                for field in re.split(' *; *', line):
-
+                for field in re.split(" *; *", line):
                     # Trim white-space and newlines.
 
                     field = field.strip()
 
                     # Check for a coordinate-system specifier.
 
-                    if field.lower() in ["physical", "image", "fk4", "b1950", "fk5",
-                                         "j2000", "galactic", "ecliptic", "icrs",
-                                         "linear", "amplifier", "detector"]:
+                    if field.lower() in [
+                        "physical",
+                        "image",
+                        "fk4",
+                        "b1950",
+                        "fk5",
+                        "j2000",
+                        "galactic",
+                        "ecliptic",
+                        "icrs",
+                        "linear",
+                        "amplifier",
+                        "detector",
+                    ]:
                         system = field.lower()
 
                     # Keep a record of the last non-empty field that we haven't
@@ -125,7 +134,7 @@ class Ds9Regions:
                 # Regions that start with a minus sign are to be excluded.
                 # If a minus sign is present, record this and remove it.
 
-                if line[0] == '-':
+                if line[0] == "-":
                     exclude = True
                     line = line[1:]
                 else:
@@ -134,12 +143,12 @@ class Ds9Regions:
                 # All lines that describe regions specify the shape followed by
                 # an open parenthesis
 
-                if re.match(r'[a-z]+\(', line) is None:
+                if re.match(r"[a-z]+\(", line) is None:
                     continue
 
                 # Split the line into its fields.
 
-                fields = re.split(' *[(),] *', line)
+                fields = re.split(" *[(),] *", line)
 
                 # All fields have a shape name, followed by the x and y axis
                 # coordinates of the center of the region.
@@ -150,19 +159,30 @@ class Ds9Regions:
 
                 # Parse the distinct parameters of different shapes.
 
-                if shape == 'circle':
-                    region = Ds9Circle(exclude, system, x, y,
-                                       radius=_parse_size(fields[3]))
-                elif shape == 'ellipse':
-                    region = Ds9Ellipse(exclude, system, x, y,
-                                        width=_parse_size(fields[3]),
-                                        height=_parse_size(fields[4]),
-                                        pa=float(fields[5]))
-                elif shape == 'box':
-                    region = Ds9Box(exclude, system, x, y,
-                                    width=_parse_size(fields[3]),
-                                    height=_parse_size(fields[4]),
-                                    pa=float(fields[5]))
+                if shape == "circle":
+                    region = Ds9Circle(
+                        exclude, system, x, y, radius=_parse_size(fields[3])
+                    )
+                elif shape == "ellipse":
+                    region = Ds9Ellipse(
+                        exclude,
+                        system,
+                        x,
+                        y,
+                        width=_parse_size(fields[3]),
+                        height=_parse_size(fields[4]),
+                        pa=float(fields[5]),
+                    )
+                elif shape == "box":
+                    region = Ds9Box(
+                        exclude,
+                        system,
+                        x,
+                        y,
+                        width=_parse_size(fields[3]),
+                        height=_parse_size(fields[4]),
+                        pa=float(fields[5]),
+                    )
 
                 if region is not None:
                     self._regions.append(region)
@@ -209,7 +229,13 @@ class Ds9Region:
         self.y = y
 
     def __str__(self):
-        return "{} {} {} x: {:.6f}  y: {:.6f}".format("exclude" if self.exclude else "include", self.system, self.shape, self.x, self.y)
+        return "{} {} {} x: {:.6f}  y: {:.6f}".format(
+            "exclude" if self.exclude else "include",
+            self.system,
+            self.shape,
+            self.x,
+            self.y,
+        )
 
 
 class Ds9Circle(Ds9Region):
@@ -303,7 +329,9 @@ class Ds9Ellipse(Ds9Region):
         self.pa = pa
 
     def __str__(self):
-        return Ds9Region.__str__(self) + (f"  w: {self.width:g}  h: {self.height:g}  PA: {self.pa:g}")
+        return Ds9Region.__str__(self) + (
+            f"  w: {self.width:g}  h: {self.height:g}  PA: {self.pa:g}"
+        )
 
 
 class Ds9Box(Ds9Region):
@@ -356,7 +384,9 @@ class Ds9Box(Ds9Region):
         self.pa = pa
 
     def __str__(self):
-        return Ds9Region.__str__(self) + (f"  w: {self.width:g}  h: {self.height:g}  PA: {self.pa:g}")
+        return Ds9Region.__str__(self) + (
+            f"  w: {self.width:g}  h: {self.height:g}  PA: {self.pa:g}"
+        )
 
 
 def _parse_x(s):
@@ -398,15 +428,15 @@ def _parse_sexagesimal(s):
     # Get the sign of the number, and remove any sign character
     # from the string.
 
-    if s[0] == '-' or s[0] == '+':
-        sign = -1.0 if s[0] == '-' else 1.0
+    if s[0] == "-" or s[0] == "+":
+        sign = -1.0 if s[0] == "-" else 1.0
         s = s[1:]
     else:
         sign = 1.0
 
     # Split the sexagesimal number into fields.
 
-    numbers = re.split(' *[ :] *', s)
+    numbers = re.split(" *[ :] *", s)
 
     # Complain if there are less than 1 or more than 3 numeric fields.
 
@@ -432,20 +462,22 @@ def _parse_size(s):
     followed by '"'. Arcseconds and arcminutes are converted to degrees.
     """
 
-    if s[-1] == "'":   # Arcmin
+    if s[-1] == "'":  # Arcmin
         return float(s[:-1]) / 60.0
     elif s[-1] == '"':  # Arcsec
         return float(s[:-1]) / 3600.0
     else:
         return float(s)
 
+
 # When this module is invoked as a standalone program, parse the
 # contents of any region file that is specified on the command line
 # and print out what is parsed from that file to stdout.
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     if len(sys.argv) > 1:
         regs = Ds9Regions(sys.argv[1])
         print(regs)

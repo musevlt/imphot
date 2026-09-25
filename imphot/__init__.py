@@ -80,7 +80,7 @@ just invoke the main function within the imphot module::
 
 """
 
-__all__ = ['ds9regions']
+__all__ = ["ds9regions"]
 
 # Make all public functions and their documentation visible at the
 # package level. In the following, for each file add its public
@@ -95,37 +95,37 @@ from .core import *
 from .version import version as __version__
 
 __all__.extend(core.__all__)
-del(core)
+del core
 
 from . import fitimage
 from .fitimage import *
 
 __all__.extend(fitimage.__all__)
-del(fitimage)
+del fitimage
 
 from . import fitstar
 from .fitstar import *
 
 __all__.extend(fitstar.__all__)
-del(fitstar)
+del fitstar
 
 from . import fitboth
 from .fitboth import *
 
 __all__.extend(fitboth.__all__)
-del(fitboth)
+del fitboth
 
 from . import makeimage
 from .makeimage import *
 
 __all__.extend(makeimage.__all__)
-del(makeimage)
+del makeimage
 
 from . import programs
 from .programs import *
 
 __all__.extend(programs.__all__)
-del(programs)
+del programs
 
 # Turn the ds9regions class into a sub-module of imphot.
 

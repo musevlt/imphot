@@ -24,8 +24,7 @@ from .makeimage import bandpass_image
 
 # from .fitstar import fit_star_photometry
 
-__all__ = ['fit_photometry_main', 'regrid_hst_to_muse_main',
-           'make_wideband_image_main']
+__all__ = ["fit_photometry_main", "regrid_hst_to_muse_main", "make_wideband_image_main"]
 
 # Create the main function of the fit_photometry program.
 
@@ -42,16 +41,20 @@ def fit_photometry_main():
     # Add optional arguments for selecting how much is printed for each
     # result.
 
-    parser.add_argument('--verbose', action='store_true',
-                        help=dedent('''\
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help=dedent("""\
                         Report details of each fit, including chi-squared,
                         correlations, etc. Normally only summaries of the
-                        fitted parameters are displayed.'''))
+                        fitted parameters are displayed."""),
+    )
 
     # Add mandatory arguments for the HST image and the MUSE images.
 
-    parser.add_argument('hst_image',
-                        help=dedent('''\
+    parser.add_argument(
+        "hst_image",
+        help=dedent("""\
                         The name of the FITS file containing the reference
                         HST image. This must have been decimated and
                         resampled onto the same coordinate grid as the MUSE
@@ -61,17 +64,21 @@ def fit_photometry_main():
                         script or the `mpdaf.obj.Image.align_with_image()`
                         function can be used create a subimage of an HST
                         image that has the same coordinate grid as a MUSE
-                        image.'''))
+                        image."""),
+    )
 
-    parser.add_argument('muse_images', nargs="+",
-                        help=dedent('''\
+    parser.add_argument(
+        "muse_images",
+        nargs="+",
+        help=dedent("""\
                         One or more FITS files containing MUSE images.  These
                         should all be images of the same field and bandpass
                         as the HST image named by the --hst argument. Note
                         that the `make_wideband_image` script or the
                         `mpdaf.obj.Cube.bandpass_image()` can be used to
                         extract an image of a given HST bandpass from a MUSE
-                        cube.'''))
+                        cube."""),
+    )
 
     # Parse the command-line options. Note that this will abort
     # the program if any argument errors are detected.
@@ -96,29 +103,28 @@ def fit_photometry_main():
     # Catch keyboard interrupts and user input errors.
 
     try:
-
         # If there is only one MUSE image to be processed, perform the
         # job inline.
 
         if len(options.muse_images) == 1:
-
             # If no star fit has been requested, just perform
             # an image fit.
 
             if options.star is None:
                 kwargs = extract_function_args(options, fit_image_photometry)
-                imfit = fit_image_photometry(options.hst_image,
-                                             options.muse_images[0], **kwargs)
+                imfit = fit_image_photometry(
+                    options.hst_image, options.muse_images[0], **kwargs
+                )
                 _report_results(imfit, True, options)
 
             # If a star fit has been requested, perform both the
             # image and the star fits.
 
             else:
-                kwargs = extract_function_args(options,
-                                               fit_image_and_star_photometry)
+                kwargs = extract_function_args(options, fit_image_and_star_photometry)
                 (imfit, starfit) = fit_image_and_star_photometry(
-                    options.hst_image, options.muse_images[0], **kwargs)
+                    options.hst_image, options.muse_images[0], **kwargs
+                )
                 _report_results(imfit, True, options)
                 _report_results(starfit, False, options)
 
@@ -126,17 +132,15 @@ def fit_photometry_main():
         # Start with the case where we only want image photometry fits.
 
         elif options.star is None:
-
             # Get the subset of arguments for fit_image_photometry().
 
             kwargs = extract_function_args(options, fit_image_photometry)
 
             # Use a multiprocessing iterator for the image fitting procedure.
 
-            with FitImagePhotometryMP(options.hst_image,
-                                      options.muse_images, kwargs,
-                                      nworker=0) as image_iterator:
-
+            with FitImagePhotometryMP(
+                options.hst_image, options.muse_images, kwargs, nworker=0
+            ) as image_iterator:
                 # Iterate over the fits of each of the input files.
 
                 for imfit in image_iterator:
@@ -147,16 +151,13 @@ def fit_photometry_main():
         # have been requested.
 
         else:
-
             # Get the subset of arguments for fit_image_and_star_photometry().
 
-            kwargs = extract_function_args(options,
-                                           fit_image_and_star_photometry)
+            kwargs = extract_function_args(options, fit_image_and_star_photometry)
 
-            with FitImageAndStarPhotometryMP(options.hst_image,
-                                             options.muse_images, kwargs,
-                                             nworker=0) as dual_iterator:
-
+            with FitImageAndStarPhotometryMP(
+                options.hst_image, options.muse_images, kwargs, nworker=0
+            ) as dual_iterator:
                 # Iterate over fits to each of the input files.
 
                 for imfit, starfit in dual_iterator:
@@ -183,6 +184,7 @@ def _report_results(results, showheader, options):
         print(results)
     print(results.summary(header=showheader))
 
+
 # Create the main function of the regrid_hst_to_muse script.
 
 
@@ -199,14 +201,20 @@ def regrid_hst_to_muse_main():
     try:
         parser = argparse.ArgumentParser()
 
-        parser.add_argument('--quiet', action='store_true',
-                            help='''
+        parser.add_argument(
+            "--quiet",
+            action="store_true",
+            help="""
                             Suppress the messages that report each step as it
-                            is performed.''')
+                            is performed.""",
+        )
 
-        parser.add_argument('--field', nargs='?', default="",
-                            metavar="name",
-                            help='''
+        parser.add_argument(
+            "--field",
+            nargs="?",
+            default="",
+            metavar="name",
+            help="""
                             When this option used, it specifies a field name
                             to use in the output filename instead of using
                             the input filename. The output files are called
@@ -215,21 +223,27 @@ def regrid_hst_to_muse_main():
                             from the header of the HST FITS file, and <field>
                             is either the basename of the MUSE input file
                             (minus its .fits extension), or the value of this
-                            optional parameter.''')
+                            optional parameter.""",
+        )
 
         # Add mandatory arguments for the MUSE image and the HST images.
 
-        parser.add_argument('muse_image',
-                            help='''
+        parser.add_argument(
+            "muse_image",
+            help="""
                             The filename of a template MUSE image or MUSE
                             cube in FITS format.
-                            ''')
+                            """,
+        )
 
-        parser.add_argument('hst_images', nargs="+",
-                            help='''
+        parser.add_argument(
+            "hst_images",
+            nargs="+",
+            help="""
                             The filenames of one or more HST images
                             with 30mas pixels.
-                            ''')
+                            """,
+        )
 
         # Parse the command-line options. Note that this will abort
         # the program if any argument errors are detected.
@@ -251,14 +265,12 @@ def regrid_hst_to_muse_main():
                     raise ValueError("Invalid cube dimensions")
 
         except Exception as e:
-            print(f"Error reading: {options.muse_image} ({e})",
-                  file=sys.stderr)
+            print(f"Error reading: {options.muse_image} ({e})", file=sys.stderr)
             exit(1)
 
         # Process the HST images sequentially.
 
         for hst_image in options.hst_images:
-
             # Read the HST FITS file.
 
             try:
@@ -271,7 +283,7 @@ def regrid_hst_to_muse_main():
                 # array in this case.
 
                 hdulist = fits.open(hst_image)
-                ext = None if ('DATA' in hdulist or 'SCI' in hdulist) else 0
+                ext = None if ("DATA" in hdulist or "SCI" in hdulist) else 0
                 del hdulist
 
                 # Read the HST image.
@@ -279,8 +291,7 @@ def regrid_hst_to_muse_main():
                 hst = Image(hst_image, ext=ext)
 
             except Exception as e:
-                print(f"Error reading: {hst_image} ({e})",
-                      file=sys.stderr)
+                print(f"Error reading: {hst_image} ({e})", file=sys.stderr)
                 exit(1)
 
             # Get the name of the HST filter.
@@ -295,7 +306,9 @@ def regrid_hst_to_muse_main():
             # Rescale the HST image to have the same units as the MUSE image.
 
             if not options.quiet:
-                print("Changing the flux units of the HST image to match the MUSE image")
+                print(
+                    "Changing the flux units of the HST image to match the MUSE image"
+                )
             rescale_hst_like_muse(hst, muse, inplace=True)
 
             # Compose the name of the output file.
@@ -325,6 +338,7 @@ def regrid_hst_to_muse_main():
 
 # Create the main function of the make_wideband_image script.
 
+
 def make_wideband_image_main():
     """This is the main function of the make_wideband_image script.
 
@@ -337,9 +351,12 @@ def make_wideband_image_main():
     try:
         parser = argparse.ArgumentParser()
 
-        parser.add_argument('--prefix', nargs='?', default="",
-                            metavar="output-prefix",
-                            help='''
+        parser.add_argument(
+            "--prefix",
+            nargs="?",
+            default="",
+            metavar="output-prefix",
+            help="""
                             When this option used, it specifies a prefix to
                             use when constructing the names of the output
                             FITS files.  The output files are then named,
@@ -349,26 +366,37 @@ def make_wideband_image_main():
                             instance of either, "datacube" or "cube",
                             replaced with "image". When this option is
                             omitted, the prefix defaults to the base-name of
-                            the filter file.''')
+                            the filter file.""",
+        )
 
-        parser.add_argument('--quiet', action='store_true',
-                            help='''
+        parser.add_argument(
+            "--quiet",
+            action="store_true",
+            help="""
                             Suppress the messages that report each step as it
-                            is performed.''')
+                            is performed.""",
+        )
 
-        parser.add_argument('--wave_units', nargs='?', default=u.angstrom,
-                            metavar="wavelength-units",
-                            type=u.Unit,
-                            help='''DEFAULT=%(default)s.
+        parser.add_argument(
+            "--wave_units",
+            nargs="?",
+            default=u.angstrom,
+            metavar="wavelength-units",
+            type=u.Unit,
+            help="""DEFAULT=%(default)s.
                             The units of the wavelengths in the file of
                             sensitivity versus wavelength. If this
                             option is not specified, angstroms are
-                            assumed.''')
+                            assumed.""",
+        )
 
-        parser.add_argument('--nprocess', nargs='?', default=0,
-                            metavar="number-of-processes",
-                            type=int,
-                            help='''DEFAULT=%(default)s.
+        parser.add_argument(
+            "--nprocess",
+            nargs="?",
+            default=0,
+            metavar="number-of-processes",
+            type=int,
+            help="""DEFAULT=%(default)s.
                             The number of worker processes to use. The
                             default is 0, which creates one process
                             per CPU.  Alternatively, if a negative
@@ -378,12 +406,14 @@ def make_wideband_image_main():
                             the use of any worker processes, pass 1 to
                             this argument, and the computation will be
                             performed entirely within the current
-                            process.''')
+                            process.""",
+        )
 
         # Add mandatory arguments for the MUSE image and the HST images.
 
-        parser.add_argument('filter_curve',
-                            help='''
+        parser.add_argument(
+            "filter_curve",
+            help="""
                             The filename of the wavelength sensitivity
                             curve of the camera. The file should be a
                             text file with two columns of numbers. The
@@ -394,11 +424,15 @@ def make_wideband_image_main():
                             normalized by the area under the
                             sensitivity curve, so only their relative
                             values are important.
-                            ''')
+                            """,
+        )
 
-        parser.add_argument('muse_cubes', nargs="+",
-                            help='''The filenames of a MUSE
-                            cubes to be processed.''')
+        parser.add_argument(
+            "muse_cubes",
+            nargs="+",
+            help="""The filenames of a MUSE
+                            cubes to be processed.""",
+        )
 
         # Parse the command-line options. Note that this will abort
         # the program if any argument errors are detected.
@@ -412,8 +446,7 @@ def make_wideband_image_main():
                 print(f"Reading filter: {options.filter_curve}")
                 curve = np.loadtxt(options.filter_curve, usecols=(0, 1))
         except Exception as e:
-            print(f"Error reading: {options.filter_curve} ({e})",
-                  file=sys.stderr)
+            print(f"Error reading: {options.filter_curve} ({e})", file=sys.stderr)
             exit(1)
 
         # Get the prefix to use for the output files.
@@ -421,12 +454,11 @@ def make_wideband_image_main():
         if options.prefix != "":
             prefix = options.prefix
         else:
-            prefix = basename(options.filter_curve).split('.')[0]
+            prefix = basename(options.filter_curve).split(".")[0]
 
         # Process the cubes sequentially.
 
         for muse_cube in options.muse_cubes:
-
             # Read the cube.
 
             try:
@@ -434,17 +466,20 @@ def make_wideband_image_main():
                     print(f"Reading cube: {muse_cube}")
                 cube = Cube(muse_cube)
             except Exception as e:
-                print(f"Error reading: {muse_cube} ({e})",
-                      file=sys.stderr)
+                print(f"Error reading: {muse_cube} ({e})", file=sys.stderr)
                 exit(1)
 
             # Compute the output image.
 
             if not options.quiet:
                 print("Computing the output image.")
-            image = bandpass_image(cube, curve[:, 0], curve[:, 1],
-                                   unit_wave=options.wave_units,
-                                   nprocess=options.nprocess)
+            image = bandpass_image(
+                cube,
+                curve[:, 0],
+                curve[:, 1],
+                unit_wave=options.wave_units,
+                nprocess=options.nprocess,
+            )
 
             # Get the input filename.
 
@@ -453,7 +488,7 @@ def make_wideband_image_main():
             # Perform a case-insensitive search for the first occurrence of
             # the word "datacube", or "cube"
 
-            m = re.search(r'(data)?cube', name, re.IGNORECASE)
+            m = re.search(r"(data)?cube", name, re.IGNORECASE)
 
             # If a match was found, replace it with the word "image",
             # using the case of the first letter of the match.
@@ -464,7 +499,7 @@ def make_wideband_image_main():
 
             # Create the filename of the output file.
 
-            output = prefix + '_' + name
+            output = prefix + "_" + name
 
             # Save the resulting image.
 

@@ -32,8 +32,16 @@ class _FitPhotometryWP(Process):
 
     """
 
-    def __init__(self, job_queue, result_queue, hst_filename, cmd_fn,
-                 cmd_kwargs={}, *args, **kwargs):
+    def __init__(
+        self,
+        job_queue,
+        result_queue,
+        hst_filename,
+        cmd_fn,
+        cmd_kwargs={},
+        *args,
+        **kwargs,
+    ):
 
         # Instantiate the super-class Process object.
 
@@ -59,7 +67,6 @@ class _FitPhotometryWP(Process):
         # to the parent process.
 
         try:
-
             # Attempt to read the HST image.
 
             try:
@@ -74,7 +81,6 @@ class _FitPhotometryWP(Process):
             # Run the jobs that the parent process sends us.
 
             while True:
-
                 # Get the next job from the parent process.
 
                 (job, muse_filename) = self.job_queue.get()
@@ -136,8 +142,7 @@ class _FitPhotometryMP:
 
     """
 
-    def __init__(self, hst_filename, muse_filenames, cmd_fn, cmd_kwargs={},
-                 nworker=0):
+    def __init__(self, hst_filename, muse_filenames, cmd_fn, cmd_kwargs={}, nworker=0):
 
         # Keep a record of the names of the MUSE files to be processed.
 
@@ -187,12 +192,16 @@ class _FitPhotometryMP:
 
         # Create a list of worker processes.
 
-        self.workers = [_FitPhotometryWP(job_queue=self.job_queue,
-                                         result_queue=self.result_queue,
-                                         hst_filename=hst_filename,
-                                         cmd_fn=cmd_fn,
-                                         cmd_kwargs=cmd_kwargs)
-                        for i in range(nworker)]
+        self.workers = [
+            _FitPhotometryWP(
+                job_queue=self.job_queue,
+                result_queue=self.result_queue,
+                hst_filename=hst_filename,
+                cmd_fn=cmd_fn,
+                cmd_kwargs=cmd_kwargs,
+            )
+            for i in range(nworker)
+        ]
 
     def __enter__(self):
         """Start the worker processes. This function is called when
@@ -258,7 +267,9 @@ class _FitPhotometryMP:
     # Throw an exception if __enter__() hasn't been called.
 
     def _assert_running(self):
-        assert self.running, f"Each {self.__class__.__name__} instance must be used within a context manager"
+        assert self.running, (
+            f"Each {self.__class__.__name__} instance must be used within a context manager"
+        )
 
     # Mark this object as an interator.
 
@@ -292,7 +303,6 @@ class _FitPhotometryMP:
         # Stop if all jobs have been finished and reported.
 
         if self.reported_jobs >= self.njob:
-
             # Send all workers a stop command.
 
             for worker in self.workers:
@@ -314,7 +324,6 @@ class _FitPhotometryMP:
         # job that we want next.
 
         while self.job_results[self.reported_jobs] is None:
-
             # Get the results of the next job to be completed.
 
             r = self.result_queue.get()
@@ -327,7 +336,6 @@ class _FitPhotometryMP:
             # Did an exception occur in the worker process?
 
             if status == "exception":
-
                 # Make sure that any subsequent call to next()
                 # returns StopIteration, just in case the caller
                 # catches the following exceptions and tries to

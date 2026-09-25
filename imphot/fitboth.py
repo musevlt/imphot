@@ -5,17 +5,31 @@ from .fitimage import fit_image_photometry
 from .fitstar import fit_star_photometry
 from .mp import _FitPhotometryMP
 
-__all__ = ['fit_image_and_star_photometry', 'FitImageAndStarPhotometryMP']
+__all__ = ["fit_image_and_star_photometry", "FitImageAndStarPhotometryMP"]
 
 
-def fit_image_and_star_photometry(hst, muse, star, regions="star",
-                                  fix_scale=None, fix_bg=None, fix_dx=None,
-                                  fix_dy=None, fix_fwhm=None, fix_beta=None,
-                                  hst_fwhm=_default_hst_fwhm,
-                                  hst_beta=_default_hst_beta,
-                                  margin=2.0, segment=False, display=False,
-                                  nowait=False, hardcopy=None, title=None,
-                                  save=False, fig=None):
+def fit_image_and_star_photometry(
+    hst,
+    muse,
+    star,
+    regions="star",
+    fix_scale=None,
+    fix_bg=None,
+    fix_dx=None,
+    fix_dy=None,
+    fix_fwhm=None,
+    fix_beta=None,
+    hst_fwhm=_default_hst_fwhm,
+    hst_beta=_default_hst_beta,
+    margin=2.0,
+    segment=False,
+    display=False,
+    nowait=False,
+    hardcopy=None,
+    title=None,
+    save=False,
+    fig=None,
+):
     """Given a MUSE image and an HST image that has been regridded and
     aligned onto the same coordinate grid as the MUSE image, use the
     HST image as a calibrated reference to fit for the flux-scale, the
@@ -183,23 +197,43 @@ def fit_image_and_star_photometry(hst, muse, star, regions="star",
 
     # Perform the image fit.
 
-    image_results = fit_image_photometry(hst, muse, regions=regions,
-                                         fix_scale=fix_scale, fix_bg=fix_bg,
-                                         fix_dx=fix_dx, fix_dy=fix_dy,
-                                         fix_fwhm=fix_fwhm, fix_beta=fix_beta,
-                                         hst_fwhm=hst_fwhm, hst_beta=hst_beta,
-                                         margin=margin, segment=segment,
-                                         display=display,
-                                         nowait=nowait,
-                                         hardcopy=hardcopy, title=title,
-                                         star=star, save=save, fig=fig)
+    image_results = fit_image_photometry(
+        hst,
+        muse,
+        regions=regions,
+        fix_scale=fix_scale,
+        fix_bg=fix_bg,
+        fix_dx=fix_dx,
+        fix_dy=fix_dy,
+        fix_fwhm=fix_fwhm,
+        fix_beta=fix_beta,
+        hst_fwhm=hst_fwhm,
+        hst_beta=hst_beta,
+        margin=margin,
+        segment=segment,
+        display=display,
+        nowait=nowait,
+        hardcopy=hardcopy,
+        title=title,
+        star=star,
+        save=save,
+        fig=fig,
+    )
 
     # Perform the star fit.
 
-    star_results = fit_star_photometry(hst, muse, star, fix_fwhm=fix_fwhm,
-                                       fix_beta=fix_beta, display=display,
-                                       nowait=nowait, hardcopy=hardcopy,
-                                       title=title, fig=fig)
+    star_results = fit_star_photometry(
+        hst,
+        muse,
+        star,
+        fix_fwhm=fix_fwhm,
+        fix_beta=fix_beta,
+        display=display,
+        nowait=nowait,
+        hardcopy=hardcopy,
+        title=title,
+        fig=fig,
+    )
 
     return (image_results, star_results)
 
@@ -248,9 +282,12 @@ class FitImageAndStarPhotometryMP(_FitPhotometryMP):
         # Instantiate the parent _FitPhotometryMP object.
 
         super().__init__(
-            hst_filename, muse_filenames,
-            cmd_fn=fit_image_and_star_photometry, cmd_kwargs=kwargs,
-            nworker=nworker)
+            hst_filename,
+            muse_filenames,
+            cmd_fn=fit_image_and_star_photometry,
+            cmd_kwargs=kwargs,
+            nworker=nworker,
+        )
 
     def next(self):
         """Return the results from the next image in the list of input MUSE

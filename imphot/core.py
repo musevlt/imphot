@@ -8,12 +8,22 @@ import astropy.units as u
 import numpy as np
 from scipy.ndimage.interpolation import affine_transform
 
-__all__ = ['FittedValue', 'UserError', 'WorkerError',
-           'FIT_IMAGE', 'FIT_STAR', 'FIT_BOTH',
-           'ImphotArgumentParser', 'extract_function_args',
-           'FittedPhotometry', 'HstFilterInfo', 'rescale_hst_like_muse',
-           'regrid_hst_like_muse', 'image_grids_aligned',
-           'apply_corrections']
+__all__ = [
+    "FittedValue",
+    "UserError",
+    "WorkerError",
+    "FIT_IMAGE",
+    "FIT_STAR",
+    "FIT_BOTH",
+    "ImphotArgumentParser",
+    "extract_function_args",
+    "FittedPhotometry",
+    "HstFilterInfo",
+    "rescale_hst_like_muse",
+    "regrid_hst_like_muse",
+    "image_grids_aligned",
+    "apply_corrections",
+]
 
 # Set default parameters for the HST Moffat PSF.
 
@@ -54,6 +64,7 @@ class FittedValue:
 
 
 # Define an exception for errors found in the input files or other data.
+
 
 class UserError(Exception):
     """An exception that is raised when an error occurs that is due to
@@ -114,13 +125,14 @@ def _string_to_float_or_none(s):
     except ValueError as e:
         raise UserError(e.message)
 
+
 # Enumerate the two photometry fitting functions, and their combination,
 # using separate bits for FIT_IMAGE and FIT_STAR.
 
 
-FIT_IMAGE = 1                     # bit 0
-FIT_STAR = 2                      # bit 1
-FIT_BOTH = FIT_IMAGE + FIT_STAR   # bits 0 and 1
+FIT_IMAGE = 1  # bit 0
+FIT_STAR = 2  # bit 1
+FIT_BOTH = FIT_IMAGE + FIT_STAR  # bits 0 and 1
 
 # Describe the sub-set of command-line arguments that are
 # useful for calling fit_image_photometry().
@@ -181,9 +193,12 @@ class ImphotArgumentParser(argparse.ArgumentParser):
         # that is being configured.
 
         if FIT_IMAGE & functions:
-            self.add_argument('--regions', default="star", type=str,
-                              metavar="file-star-notstar-or-none",
-                              help=dedent('''\
+            self.add_argument(
+                "--regions",
+                default="star",
+                type=str,
+                metavar="file-star-notstar-or-none",
+                help=dedent("""\
                           DEFAULT=%(default)s
 
                           This can be "none", to indicate that all pixels
@@ -219,13 +234,17 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           Similarly, if "notstar" is passed, and the --star
                           argument has been provided, then a region is
                           substituted that excludes the circular region set by
-                          the --star argument.'''))
+                          the --star argument."""),
+            )
 
-        if ((FIT_IMAGE | FIT_STAR) & functions):
-
-            self.add_argument('--star', nargs=3, default=None, type=float,
-                              metavar=("ra", "dec", "radius"),
-                              help=dedent('''\
+        if (FIT_IMAGE | FIT_STAR) & functions:
+            self.add_argument(
+                "--star",
+                nargs=3,
+                default=None,
+                type=float,
+                metavar=("ra", "dec", "radius"),
+                help=dedent("""\
                           DEFAULT=%(default)s
                           Perform photometry fits to a star at a specified
                           position. This is done in addition to the global
@@ -243,83 +262,105 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           fitting procedure is also restricted to the
                           region of this star. This can be used as a
                           consistency check, as both methods should yield
-                          similar results.'''))
+                          similar results."""),
+            )
 
         if FIT_IMAGE & functions:
-
-            self.add_argument('--segment', action='store_true',
-                              help=dedent('''\
+            self.add_argument(
+                "--segment",
+                action="store_true",
+                help=dedent("""\
                           Ignore areas that don't contain significant objects
                           by ignoring pixels that are below the median value in
-                          a morphologically opened version of the HST image.'''))
+                          a morphologically opened version of the HST image."""),
+            )
 
-            self.add_argument('--fix_scale', default=None,
-                              metavar="factor",
-                              type=_string_to_float_or_none,
-                              help=dedent('''\
+            self.add_argument(
+                "--fix_scale",
+                default=None,
+                metavar="factor",
+                type=_string_to_float_or_none,
+                help=dedent("""\
                           DEFAULT=%(default)s
                           Use this option to fix the calibration scale
                           factor, (MUSE_flux / HST_flux) to the specified
                           value while fitting. The default value is "none",
-                          which means that the parameter will be fitted.'''))
+                          which means that the parameter will be fitted."""),
+            )
 
-            self.add_argument('--fix_bg', default=None,
-                              metavar="offset",
-                              type=_string_to_float_or_none,
-                              help=dedent('''\
+            self.add_argument(
+                "--fix_bg",
+                default=None,
+                metavar="offset",
+                type=_string_to_float_or_none,
+                help=dedent("""\
                           DEFAULT=%(default)s
                           Use this option to fix the calibration zero-offset
                           (MUSE_flux - HST_flux) to the specified value while
                           fitting. The default value is "none", which means
-                          that the parameter will be fitted.'''))
+                          that the parameter will be fitted."""),
+            )
 
-            self.add_argument('--fix_dx', default=None,
-                              metavar="arcsec",
-                              type=_string_to_float_or_none,
-                              help=dedent('''\
+            self.add_argument(
+                "--fix_dx",
+                default=None,
+                metavar="arcsec",
+                type=_string_to_float_or_none,
+                help=dedent("""\
                           DEFAULT=%(default)s (arcseconds)
                           Use this option to fix the x-axis pointing offset,
                           (MUSE_x - HST_x) to the specified value while
                           fitting. The default value is "none", which means
-                          that the parameter will be fitted.'''))
+                          that the parameter will be fitted."""),
+            )
 
-            self.add_argument('--fix_dy', default=None,
-                              metavar="arcsec",
-                              type=_string_to_float_or_none,
-                              help=dedent('''\
+            self.add_argument(
+                "--fix_dy",
+                default=None,
+                metavar="arcsec",
+                type=_string_to_float_or_none,
+                help=dedent("""\
                           DEFAULT=%(default)s (arcseconds)
                           Use this option to fix the y-axis pointing offset,
                           (MUSE_y - HST_y) to the specified value while
                           fitting. The default value is "none", which means
-                          that the parameter will be fitted.'''))
+                          that the parameter will be fitted."""),
+            )
 
-        if ((FIT_IMAGE | FIT_STAR) & functions):
-
-            self.add_argument('--fix_fwhm', default=None,
-                              metavar="arcsec",
-                              type=_string_to_float_or_none,
-                              help=dedent('''\
+        if (FIT_IMAGE | FIT_STAR) & functions:
+            self.add_argument(
+                "--fix_fwhm",
+                default=None,
+                metavar="arcsec",
+                type=_string_to_float_or_none,
+                help=dedent("""\
                           DEFAULT=%(default)s (arcseconds)
                           Use this option to fix the FWHM of the Moffat PSF
                           to the specified value while fitting. The default
                           value is "none", which means that the parameter
-                          will be fitted.'''))
+                          will be fitted."""),
+            )
 
-            self.add_argument('--fix_beta', default=2.5,
-                              metavar="value",
-                              type=_string_to_float_or_none,
-                              help=dedent('''\
+            self.add_argument(
+                "--fix_beta",
+                default=2.5,
+                metavar="value",
+                type=_string_to_float_or_none,
+                help=dedent("""\
                           DEFAULT=%(default)s
                           Use this option to fix the beta exponent of the
                           Moffat PSF to the specified value while fitting.
                           The default value is 2.5. Change this to "none"
-                          if you wish this parameter to be fitted.'''))
+                          if you wish this parameter to be fitted."""),
+            )
 
         if FIT_IMAGE & functions:
-
-            self.add_argument('--hst_fwhm', default=_default_hst_fwhm,
-                              type=float, metavar="arcsec",
-                              help=dedent('''\
+            self.add_argument(
+                "--hst_fwhm",
+                default=_default_hst_fwhm,
+                type=float,
+                metavar="arcsec",
+                help=dedent("""\
                           DEFAULT=%(default)s (arcseconds)
                           The FWHM of a Moffat model of the effective PSF of
                           the HST. The default value that is used if this
@@ -327,11 +368,15 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           stars within HST UDF images. To obtain the closest
                           estimate to the dithered instrumental PSF, these fits
                           were made to images with the smallest available pixel
-                          size (30mas).'''))
+                          size (30mas)."""),
+            )
 
-            self.add_argument('--hst_beta', default=_default_hst_beta,
-                              type=float, metavar="value",
-                              help=dedent('''\
+            self.add_argument(
+                "--hst_beta",
+                default=_default_hst_beta,
+                type=float,
+                metavar="value",
+                help=dedent("""\
                           DEFAULT=%(default)s
                           The beta parameter of a Moffat model of the effective
                           PSF of the HST.  The default value that is used if
@@ -343,11 +388,15 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           this range, a value was selected that yielded the
                           least scatter in the fitted MUSE PSFs in many MUSE
                           images from different MUSE fields and at different
-                          wavelengths.'''))
+                          wavelengths."""),
+            )
 
-            self.add_argument('--margin', default=2.0, type=float,
-                              metavar="arcsec",
-                              help=dedent('''\
+            self.add_argument(
+                "--margin",
+                default=2.0,
+                type=float,
+                metavar="arcsec",
+                help=dedent("""\
                           DEFAULT=%(default)s (arcseconds)
                           The width of a margin of zeros to add around the
                           image before processing. A margin is needed because
@@ -359,16 +408,23 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           features were widened by convolving them with a
                           larger PSF. The margin width should be the maximum of
                           the largest expected position error between the two
-                          input images, and the largest expected PSF width.'''))
+                          input images, and the largest expected PSF width."""),
+            )
 
-            self.add_argument('--save', action='store_true',
-                              help=dedent('''\
+            self.add_argument(
+                "--save",
+                action="store_true",
+                help=dedent("""\
                           Save the result images of each input image to FITS
-                          files.'''))
+                          files."""),
+            )
 
-            self.add_argument('--taper', default=9, type=int,
-                              metavar="pixels",
-                              help=dedent('''\
+            self.add_argument(
+                "--taper",
+                default=9,
+                type=int,
+                metavar="pixels",
+                help=dedent("""\
                           DEFAULT=%(default)s (pixels)
                           This argument controls how transitions
                           between unmasked and masked regions are
@@ -388,11 +444,15 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           rounded up to the next highest odd
                           number. Alternatively, the softening
                           algorithm can be disabled by specifying 0
-                          (or any value below 2).'''))
+                          (or any value below 2)."""),
+            )
 
-            self.add_argument('--extramask', default=None, type=str,
-                              metavar="text",
-                              help=dedent('''\
+            self.add_argument(
+                "--extramask",
+                default=None,
+                type=str,
+                metavar="text",
+                help=dedent("""\
                           DEFAULT=%(default)s
                           If the value of this argument is not the
                           word "none", or an empty string, then it
@@ -405,25 +465,34 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           the MUSE images. The pixels of the image
                           should be integers, with 0 used to denote
                           unmasked pixels, and 1 used to denote masked
-                          pixels.'''))
+                          pixels."""),
+            )
 
         # Describe command-line arguments that are common to
         # both fit_image_photometry() and fit_star_photometry().
 
-        if ((FIT_IMAGE | FIT_STAR) & functions):
+        if (FIT_IMAGE | FIT_STAR) & functions:
+            self.add_argument(
+                "--display",
+                action="store_true",
+                help=dedent("""\
+                          Display the images, FFTs and star fits, if any."""),
+            )
 
-            self.add_argument('--display', action='store_true',
-                              help=dedent('''\
-                          Display the images, FFTs and star fits, if any.'''))
-
-            self.add_argument('--nowait', action='store_true',
-                              help=dedent('''\
+            self.add_argument(
+                "--nowait",
+                action="store_true",
+                help=dedent("""\
                           Don't wait for the user to interact with each
-                          displayed plot before continuing.'''))
+                          displayed plot before continuing."""),
+            )
 
-            self.add_argument('--hardcopy', default="none",
-                              type=str, metavar="format-or-none",
-                              help=dedent('''\
+            self.add_argument(
+                "--hardcopy",
+                default="none",
+                type=str,
+                metavar="format-or-none",
+                help=dedent("""\
                           Write hardcopy plots of the fitting results to files
                           that have the specified graphics format (eg. "pdf",
                           "jpg", "png", "eps").  Plots of the fits will be
@@ -431,18 +500,25 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           MUSE input file, after removing any .fits suffix,
                           followed by either "_image_fit.<suffix>" for the plot
                           of the image fit, or "_star_fit.<suffix>" for plots
-                          of any star fits.'''))
+                          of any star fits."""),
+            )
 
-            self.add_argument('--title', default=None, type=str,
-                              metavar="text",
-                              help=dedent('''\
+            self.add_argument(
+                "--title",
+                default=None,
+                type=str,
+                metavar="text",
+                help=dedent("""\
                           DEFAULT=%(default)s
                           Either a plot title, "none" to request the default
                           title, or "" to request that no title be displayed
-                          above the plots.'''))
+                          above the plots."""),
+            )
 
-            self.add_argument('--apply', action='store_true',
-                              help=dedent('''\
+            self.add_argument(
+                "--apply",
+                action="store_true",
+                help=dedent("""\
                           Derive corrections from the fitted position errors
                           and calibration errors, apply these to the MUSE
                           image, and write the resulting image to a FITS
@@ -451,16 +527,20 @@ class ImphotArgumentParser(argparse.ArgumentParser):
                           extension with "_aligned.fits".  If the input muse
                           image was not read from a file, then a file called
                           "muse_aligned.fits" is written in the current
-                          directory. Also see the --resample option.'''))
+                          directory. Also see the --resample option."""),
+            )
 
-            self.add_argument('--resample', action='store_true',
-                              help=dedent('''\
+            self.add_argument(
+                "--resample",
+                action="store_true",
+                help=dedent("""\
                           By default the --apply option corrects position
                           errors by changing the coordinate reference pixel
                           (CRPIX1,CRPIX2) without changing any pixel values.
                           Alternatively, this option can be used to shift
                           the image by resampling its pixels, without
-                          changing the coordinates of the pixels.'''))
+                          changing the coordinates of the pixels."""),
+            )
 
 
 def extract_function_args(options, function):
@@ -497,6 +577,7 @@ def extract_function_args(options, function):
     # Get the intersection of the two dictionaries.
 
     return {key: opts[key] for key in argspec.args if key in opts}
+
 
 # Define a class that holds fitted photometry parameters.
 
@@ -600,8 +681,9 @@ class FittedPhotometry:
 
     """
 
-    def __init__(self, method, muse, fit_report, scale, bg, dx, dy,
-                 fwhm, beta, rms_error):
+    def __init__(
+        self, method, muse, fit_report, scale, bg, dx, dy, fwhm, beta, rms_error
+    ):
         self.method = method
         self.name = basename(muse.filename).replace(".fits", "")
         self.fit_report = fit_report
@@ -626,13 +708,13 @@ class FittedPhotometry:
 
         center_pix = np.array(np.asarray(muse.shape) / 2.0)
         center_dec_ra = muse.wcs.pix2sky(center_pix, unit=u.arcsec)[0]
-        ddec, dra = muse.wcs.pix2sky(center_pix + p, unit=u.arcsec)[0] -\
-            center_dec_ra
+        ddec, dra = muse.wcs.pix2sky(center_pix + p, unit=u.arcsec)[0] - center_dec_ra
 
         if dx.stdev is not None and dy.stdev is not None:
             s = np.array([dy.stdev, dx.stdev]) / steps
-            sdec, sra = muse.wcs.pix2sky(center_pix + s, unit=u.arcsec)[0] -\
-                center_dec_ra
+            sdec, sra = (
+                muse.wcs.pix2sky(center_pix + s, unit=u.arcsec)[0] - center_dec_ra
+            )
         else:
             sdec, sra = None, None
 
@@ -642,7 +724,10 @@ class FittedPhotometry:
         self.ddec = FittedValue(value=ddec, stdev=sdec, fixed=fixed)
 
     def __str__(self):
-        return f"Report of HST {self.method} photometry fit of MUSE observation {self.name}\n" + self.fit_report
+        return (
+            f"Report of HST {self.method} photometry fit of MUSE observation {self.name}\n"
+            + self.fit_report
+        )
 
     def summary(self, header=True):
         """Return a string that summarizes the results, optionally
@@ -660,17 +745,34 @@ class FittedPhotometry:
 
         if header:
             name_width = len(self.name)
-            s = "#%-*s Method  Flux    FWHM    beta     Flux    x-offset y-offset  ra-offset dec-offset  RMS\n" % (name_width - 1, " MUSE ID") # noqa
-            s += "#%*s         scale  arcsec           offset    arcsec    arcsec    arcsec    arcsec    error\n" % (name_width - 1, "") # noqa
-            s += "#%s ------ ------- ------- ------- --------- --------- --------- --------- --------- -------\n" % ('-' * (name_width - 1))
+            s = (
+                "#%-*s Method  Flux    FWHM    beta     Flux    x-offset y-offset  ra-offset dec-offset  RMS\n"
+                % (name_width - 1, " MUSE ID")
+            )  # noqa
+            s += (
+                "#%*s         scale  arcsec           offset    arcsec    arcsec    arcsec    arcsec    error\n"
+                % (name_width - 1, "")
+            )  # noqa
+            s += (
+                "#%s ------ ------- ------- ------- --------- --------- --------- --------- --------- -------\n"
+                % ("-" * (name_width - 1))
+            )
 
         # Format the fitted values.
 
-        s += "%s %6s % 7.4f % 7.4f % 7.4f % 9.5f % 9.5f % 9.5f % 9.5f % 9.5f %7.4f" % ( # noqa
-            self.name, self.method, self.scale.value, self.fwhm.value,
-            self.beta.value, self.bg.value,
-            self.dx.value, self.dy.value, self.dra.value, self.ddec.value,
-            self.rms_error)
+        s += "%s %6s % 7.4f % 7.4f % 7.4f % 9.5f % 9.5f % 9.5f % 9.5f % 9.5f %7.4f" % (  # noqa
+            self.name,
+            self.method,
+            self.scale.value,
+            self.fwhm.value,
+            self.beta.value,
+            self.bg.value,
+            self.dx.value,
+            self.dy.value,
+            self.dra.value,
+            self.ddec.value,
+            self.rms_error,
+        )
         return s
 
 
@@ -720,22 +822,54 @@ class HstFilterInfo:
     # are taken from https://acszeropoints.stsci.edu for the date
     # 2012-01-01
     _filters = {
-        "F435W": {"abmag_zero": 25.68, "photplam": 4328.2,
-                  "photflam": 3.11e-19, "photbw": 298.2},
-        "F475W": {"abmag_zero": 26.06, "photplam": 4746.9,
-                  "photflam": 1.82e-19, "photbw": 420.2},
-        "F555W": {"abmag_zero": 25.72, "photplam": 5361.0,
-                  "photflam": 1.96e-19, "photbw": 360.1},
-        "F606W": {"abmag_zero": 26.51, "photplam": 5921.1,
-                  "photflam": 7.73e-20, "photbw": 672.3},
-        "F625W": {"abmag_zero": 25.91, "photplam": 6311.4,
-                  "photflam": 1.18e-19, "photbw": 415.4},
-        "F775W": {"abmag_zero": 25.69, "photplam": 7692.4,
-                  "photflam": 9.74e-20, "photbw": 434.4},
-        "F814W": {"abmag_zero": 25.94, "photplam": 8057.0,
-                  "photflam": 7.05e-20, "photbw": 652.0},
-        "F850LP": {"abmag_zero": 24.87, "photplam": 9033.1,
-                   "photflam": 1.50e-19, "photbw": 525.7}
+        "F435W": {
+            "abmag_zero": 25.68,
+            "photplam": 4328.2,
+            "photflam": 3.11e-19,
+            "photbw": 298.2,
+        },
+        "F475W": {
+            "abmag_zero": 26.06,
+            "photplam": 4746.9,
+            "photflam": 1.82e-19,
+            "photbw": 420.2,
+        },
+        "F555W": {
+            "abmag_zero": 25.72,
+            "photplam": 5361.0,
+            "photflam": 1.96e-19,
+            "photbw": 360.1,
+        },
+        "F606W": {
+            "abmag_zero": 26.51,
+            "photplam": 5921.1,
+            "photflam": 7.73e-20,
+            "photbw": 672.3,
+        },
+        "F625W": {
+            "abmag_zero": 25.91,
+            "photplam": 6311.4,
+            "photflam": 1.18e-19,
+            "photbw": 415.4,
+        },
+        "F775W": {
+            "abmag_zero": 25.69,
+            "photplam": 7692.4,
+            "photflam": 9.74e-20,
+            "photbw": 434.4,
+        },
+        "F814W": {
+            "abmag_zero": 25.94,
+            "photplam": 8057.0,
+            "photflam": 7.05e-20,
+            "photbw": 652.0,
+        },
+        "F850LP": {
+            "abmag_zero": 24.87,
+            "photplam": 9033.1,
+            "photflam": 1.50e-19,
+            "photbw": 525.7,
+        },
     }
 
     def __init__(self, hst):
@@ -748,13 +882,17 @@ class HstFilterInfo:
         if isinstance(hst, str):
             self.filter_name = hst.upper()
         elif "FILTER" in hst.primary_header:
-            self.filter_name = hst.primary_header['FILTER'].upper()
-        elif ("FILTER1" in hst.primary_header and
-              hst.primary_header['FILTER1'] != 'CLEAR1L'):
-            self.filter_name = hst.primary_header['FILTER1'].upper()
-        elif ("FILTER2" in hst.primary_header and
-              hst.primary_header['FILTER2'] != 'CLEAR2L'):
-            self.filter_name = hst.primary_header['FILTER2'].upper()
+            self.filter_name = hst.primary_header["FILTER"].upper()
+        elif (
+            "FILTER1" in hst.primary_header
+            and hst.primary_header["FILTER1"] != "CLEAR1L"
+        ):
+            self.filter_name = hst.primary_header["FILTER1"].upper()
+        elif (
+            "FILTER2" in hst.primary_header
+            and hst.primary_header["FILTER2"] != "CLEAR2L"
+        ):
+            self.filter_name = hst.primary_header["FILTER2"].upper()
         else:
             raise UserError("Missing FILTER keyword in HST image header")
 
@@ -763,14 +901,16 @@ class HstFilterInfo:
         if self.filter_name in self.__class__._filters:
             info = self.__class__._filters[self.filter_name]
         else:
-            raise UserError(f"Unrecognized filter ({self.filter_name}) in HST image header")
+            raise UserError(
+                f"Unrecognized filter ({self.filter_name}) in HST image header"
+            )
 
         # Record the characteristics of the filer.
 
-        self.abmag_zero = info['abmag_zero']
-        self.photflam = info['photflam']
-        self.photplam = info['photplam']
-        self.photbw = info['photbw']
+        self.abmag_zero = info["abmag_zero"]
+        self.photflam = info["photflam"]
+        self.photplam = info["photplam"]
+        self.photbw = info["photbw"]
 
 
 def rescale_hst_like_muse(hst, muse, inplace=True):
@@ -900,8 +1040,7 @@ def image_grids_aligned(im1, im2, tolerance=0.01):
 
     # Are the coordinate conversion matrices of the two images the same?
 
-    if not np.allclose(im1.wcs.get_cd(), im2.wcs.get_cd(),
-                       rtol=0.0, atol=atol):
+    if not np.allclose(im1.wcs.get_cd(), im2.wcs.get_cd(), rtol=0.0, atol=atol):
         return False
 
     # Are the array dimensions of the images the same?
@@ -911,8 +1050,9 @@ def image_grids_aligned(im1, im2, tolerance=0.01):
 
     # Are the coordinates of the central pixel of each image the same?
 
-    if not np.allclose(im1.wcs.pix2sky(center), im2.wcs.pix2sky(center),
-                       rtol=0.0, atol=atol):
+    if not np.allclose(
+        im1.wcs.pix2sky(center), im2.wcs.pix2sky(center), rtol=0.0, atol=atol
+    ):
         return False
 
     # The images have matching coordinate grids.
@@ -920,8 +1060,9 @@ def image_grids_aligned(im1, im2, tolerance=0.01):
     return True
 
 
-def apply_corrections(im, imfit, corrections="xy,scale,zero", resample=False,
-                      inplace=False):
+def apply_corrections(
+    im, imfit, corrections="xy,scale,zero", resample=False, inplace=False
+):
     """Correct an image for pointing-errors, calibration errors and/or
     zero offsets, using the fitted errors returned by a preceding call
     to `imphot.fit_image_photometry()` or `imphot.fit_star_photometry()`.
@@ -979,7 +1120,6 @@ def apply_corrections(im, imfit, corrections="xy,scale,zero", resample=False,
     # Correct the pointing errors?
 
     if "xy" in pars:
-
         # Get the size of the image pixels in arcseconds.
 
         pixh, pixw = im.get_step(unit=u.arcsec)
@@ -992,7 +1132,6 @@ def apply_corrections(im, imfit, corrections="xy,scale,zero", resample=False,
         # Resample the image to correct its pointing errors?
 
         if resample:
-
             # Since we only need to shift the image, the affine transform
             # matrix is the identity matrix, and only the pixel offsets need
             # to be changed.
@@ -1002,18 +1141,36 @@ def apply_corrections(im, imfit, corrections="xy,scale,zero", resample=False,
 
             # Resample the MUSE image to correct its pointing error.
 
-            data = affine_transform(out.data.filled(0.0), affine_matrix,
-                                    affine_offset, prefilter=False, order=2)
+            data = affine_transform(
+                out.data.filled(0.0),
+                affine_matrix,
+                affine_offset,
+                prefilter=False,
+                order=2,
+            )
             if out.var is None:
                 var = None
             else:
-                var = affine_transform(out.var.filled(0.0), affine_matrix,
-                                       affine_offset, prefilter=False, order=2)
+                var = affine_transform(
+                    out.var.filled(0.0),
+                    affine_matrix,
+                    affine_offset,
+                    prefilter=False,
+                    order=2,
+                )
             if out.mask is np.ma.nomask:
                 mask = np.ma.nomask
             else:
-                mask = affine_transform(out.mask.astype(float), affine_matrix,
-                                        affine_offset, prefilter=False, order=2) > 0.1
+                mask = (
+                    affine_transform(
+                        out.mask.astype(float),
+                        affine_matrix,
+                        affine_offset,
+                        prefilter=False,
+                        order=2,
+                    )
+                    > 0.1
+                )
 
             # Install the modified arrays.
 
@@ -1024,7 +1181,6 @@ def apply_corrections(im, imfit, corrections="xy,scale,zero", resample=False,
         # Change the coordinates of the image to correct for position errors?
 
         else:
-
             out.wcs.set_crpix1(out.wcs.get_crpix1() + dx)
             out.wcs.set_crpix2(out.wcs.get_crpix2() + dy)
 

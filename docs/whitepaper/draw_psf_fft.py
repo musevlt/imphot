@@ -4,7 +4,6 @@ import numpy as np
 
 
 def circular_moffat_profile(rsq, fwhm, beta):
-
     """Return the value of a circularly symmetric Moffat profile at a
     specified value of the radius-squared from the center of the
     profile.
@@ -31,14 +30,14 @@ def circular_moffat_profile(rsq, fwhm, beta):
     #
     # Calculate a**2 from the FWHM and beta.
 
-    asq = fwhm**2 / 4.0 / (2.0**(1.0 / beta) - 1.0)
+    asq = fwhm**2 / 4.0 / (2.0 ** (1.0 / beta) - 1.0)
 
     # Compute the Moffat function at each value of rsq.
 
-    return 1.0 / (1.0 + rsq / asq)**beta
+    return 1.0 / (1.0 + rsq / asq) ** beta
+
 
 def circular_gaussian_profile(rsq, fwhm):
-
     """Return the value of a circularly symmetric Gaussian profile at a
     specified value of the radius-squared from the center of the
     profile.  The profile is normalized to be 1.0 at rsq=0.0.
@@ -65,11 +64,12 @@ def circular_gaussian_profile(rsq, fwhm):
     #
     # Calculate arg = -0.5/sigma**2
 
-    arg = -4.0 * np.log(2.0)/ fwhm**2
+    arg = -4.0 * np.log(2.0) / fwhm**2
 
     # Compute the Gaussian function at each value of rsq.
 
     return np.exp(arg * rsq)
+
 
 def main():
 
@@ -97,11 +97,11 @@ def main():
 
     # Set the maximum radial distance of the profile to be plotted.
 
-    xmax = 2.0    # Arcsec
+    xmax = 2.0  # Arcsec
 
     # Set the maximum radial frequency of the FFT to be plotted.
 
-    fmax = 1.5    # Cycles per arcsec
+    fmax = 1.5  # Cycles per arcsec
 
     # Calculate the interval between pixels in the image domain.
 
@@ -114,19 +114,18 @@ def main():
     # Calculate the coordinate of the center of each pixel along
     # the X and Y axes.
 
-    x = np.fft.fftfreq(n,df)
+    x = np.fft.fftfreq(n, df)
 
     # Calculate the frequency coordinate of the center of each Fourier
     # transform pixel along the X and Y axes.
 
-    f = np.fft.fftfreq(n,dx)
+    f = np.fft.fftfreq(n, dx)
 
     # Calculate the radius squared of each pixel in the image,
     # relative to the origin and wrap-around rules that are assumed by
     # the FFT algorithm.
 
-    rsq = np.fft.fftfreq(n, df)**2 + \
-          np.fft.fftfreq(n, df)[np.newaxis,:].T**2
+    rsq = np.fft.fftfreq(n, df) ** 2 + np.fft.fftfreq(n, df)[np.newaxis, :].T ** 2
 
     # Compute the pixels of the Gaussian and Moffat images.
 
@@ -143,7 +142,7 @@ def main():
     if interactive:
         fig = plt.figure()
     else:
-        fig = plt.figure(figsize=(7.5,3.5), dpi=600, tight_layout=True)
+        fig = plt.figure(figsize=(7.5, 3.5), dpi=600, tight_layout=True)
 
     # Configure a grid of 2 plots, one above the other.
 
@@ -152,37 +151,50 @@ def main():
     # In the first plot, draw a 1D cut through the positive part of
     # the Gaussian and Moffat profiles.
 
-    ax = fig.add_subplot(gs[0,0])
+    ax = fig.add_subplot(gs[0, 0])
     ax.set_autoscale_on(False)
     ax.set_xlim(0.0, xmax)
     ax.set_ylim(-0.1, 1.1)
     ax.set_xlabel("Radial distance (arcsec)")
     ax.set_ylabel("Fraction of peak")
-    xslice = slice(0,int((xmax+dx) / dx)+1)
-    gim_trace, = ax.plot(x[xslice], g_im[0, xslice],ls=':')
-    mim_trace, = ax.plot(x[xslice], m_im[0, xslice])
-    ax.legend([gim_trace, mim_trace], ["Gaussian PSF", "Moffat PSF"],
-              loc='upper right', fontsize=10, labelspacing=0.3, frameon=False)
-    ax.text(0.6*xmax, 0.5, "Image Plane", ha="center")
+    xslice = slice(0, int((xmax + dx) / dx) + 1)
+    (gim_trace,) = ax.plot(x[xslice], g_im[0, xslice], ls=":")
+    (mim_trace,) = ax.plot(x[xslice], m_im[0, xslice])
+    ax.legend(
+        [gim_trace, mim_trace],
+        ["Gaussian PSF", "Moffat PSF"],
+        loc="upper right",
+        fontsize=10,
+        labelspacing=0.3,
+        frameon=False,
+    )
+    ax.text(0.6 * xmax, 0.5, "Image Plane", ha="center")
 
     # In the second plot, draw a 1D cut through the positive part of
     # the Fourier transforms of the Gaussian and Moffat profiles.
 
-    ax = fig.add_subplot(gs[0,1])
+    ax = fig.add_subplot(gs[0, 1])
     ax.set_autoscale_on(False)
     ax.set_xlim(0.0, fmax)
     ax.set_ylim(-0.1, 1.1)
     ax.set_xlabel("Radial frequency (cycles/arcsec)")
     ax.set_ylabel("Fraction of peak")
-    fslice = slice(0,int((fmax+df) / df)+1)
-    gim_trace, = ax.plot(f[fslice], np.real(g_ft[0,fslice]/g_ft[0,0]),ls=':')
-    mim_trace, = ax.plot(f[fslice], np.real(m_ft[0,fslice]/m_ft[0,0]))
-    ax.legend([gim_trace, mim_trace], ["Gaussian PSF", "Moffat PSF"],
-              loc='upper right', fontsize=10, labelspacing=0.3, frameon=False)
-    ax.text(0.6*fmax, 0.5, "Fourier Plane", ha="center")
+    fslice = slice(0, int((fmax + df) / df) + 1)
+    (gim_trace,) = ax.plot(f[fslice], np.real(g_ft[0, fslice] / g_ft[0, 0]), ls=":")
+    (mim_trace,) = ax.plot(f[fslice], np.real(m_ft[0, fslice] / m_ft[0, 0]))
+    ax.legend(
+        [gim_trace, mim_trace],
+        ["Gaussian PSF", "Moffat PSF"],
+        loc="upper right",
+        fontsize=10,
+        labelspacing=0.3,
+        frameon=False,
+    )
+    ax.text(0.6 * fmax, 0.5, "Fourier Plane", ha="center")
     if interactive:
         plt.show()
     else:
         fig.savefig("psf_fft.pdf", landscape=True)
+
 
 main()
