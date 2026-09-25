@@ -1,6 +1,6 @@
 from mpdaf.obj import Image
 
-from .core import UserError, _default_hst_beta, _default_hst_fwhm, extract_function_args
+from .core import UserError, _default_hst_beta, _default_hst_fwhm
 from .fitimage import fit_image_photometry
 from .fitstar import fit_star_photometry
 from .mp import _FitPhotometryMP

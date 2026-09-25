@@ -9,11 +9,20 @@ import numpy as np
 from astropy.io import fits
 from mpdaf.obj import Cube, Image
 
-from .core import *
-from .fitboth import *
-from .fitimage import *
-from .fitstar import *
-from .makeimage import *
+from .core import (
+    FIT_BOTH,
+    HstFilterInfo,
+    ImphotArgumentParser,
+    UserError,
+    extract_function_args,
+    regrid_hst_like_muse,
+    rescale_hst_like_muse,
+)
+from .fitboth import FitImageAndStarPhotometryMP, fit_image_and_star_photometry
+from .fitimage import FitImagePhotometryMP, fit_image_photometry
+from .makeimage import bandpass_image
+
+# from .fitstar import fit_star_photometry
 
 __all__ = ['fit_photometry_main', 'regrid_hst_to_muse_main',
            'make_wideband_image_main']
@@ -71,16 +80,14 @@ def fit_photometry_main():
 
     # Extract a dictionary of the keyword/value arguments that are
     # specific to fit_image_photometry().
-
-    image_kwargs = extract_function_args(options, fit_image_photometry)
+    # image_kwargs = extract_function_args(options, fit_image_photometry)
 
     # If the --star option has been specified, also extract a dictionary of
     # the keyword/value arguments that are specific to fit_image_photometry().
-
-    if options.star is not None:
-        star_kwargs = extract_function_args(options, fit_star_photometry)
-    else:
-        star_kwargs = None
+    # if options.star is not None:
+    #     star_kwargs = extract_function_args(options, fit_star_photometry)
+    # else:
+    #     star_kwargs = None
 
     # True for the first reported line.
 
@@ -238,7 +245,7 @@ def regrid_hst_to_muse_main():
                 muse = Image(options.muse_image)
                 if muse.ndim != 2:
                     raise ValueError("Invalid image dimensions")
-            except:
+            except Exception:
                 muse = Cube(options.muse_image)
                 if muse.ndim != 3:
                     raise ValueError("Invalid cube dimensions")

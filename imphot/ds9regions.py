@@ -134,7 +134,7 @@ class Ds9Regions:
                 # All lines that describe regions specify the shape followed by
                 # an open parenthesis
 
-                if re.match('[a-z]+\(', line) is None:
+                if re.match(r'[a-z]+\(', line) is None:
                     continue
 
                 # Split the line into its fields.
