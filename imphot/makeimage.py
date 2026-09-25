@@ -199,17 +199,17 @@ def bandpass_image(
 
         # Integrate the overal bandpass filter curve.
 
-        total = integrate.trapz(sensitivities, wavelengths)
+        total = integrate.trapezoid(sensitivities, wavelengths)
 
         # Also integrate over just the truncated parts of the curve.
 
         lost = 0.0
         if bpstart > 0:
             s = slice(0, bpstart)
-            lost += integrate.trapz(sensitivities[s], wavelengths[s])
+            lost += integrate.trapezoid(sensitivities[s], wavelengths[s])
         if bpstop < wavelengths.shape[0]:
             s = slice(bpstop, wavelengths.shape[0])
-            lost += integrate.trapz(sensitivities[s], wavelengths[s])
+            lost += integrate.trapezoid(sensitivities[s], wavelengths[s])
 
         # Compute the fraction of the integrated bandpass response
         # that has been truncated.

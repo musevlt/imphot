@@ -20,7 +20,12 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Physics",
 ]
 requires-python = ">=3.11"
-dependencies = ["mpdaf", "lmfit"]
+dependencies = [
+    "lmfit",
+    "mpdaf",
+    "numpy",
+    "scipy>1.6.0",
+]
 dynamic = ["version"]
 
 [project.optional-dependencies]
